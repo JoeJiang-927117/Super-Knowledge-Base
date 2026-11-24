@@ -55,26 +55,26 @@
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/01-login.png" alt="商业登录页" />
+      <img src="./docs/screenshots/01-login.png" alt="登录页" />
       <br />
-      <strong>全屏商业登录页</strong> · 支持「晴空 / 暮光」壁纸与亮暗主题联动
+      <strong>登录页</strong>
     </td>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/03-knowledge.png" alt="三栏知识库" />
+      <img src="./docs/screenshots/03-knowledge.png" alt="知识库" />
       <br />
-      <strong>三栏知识工作台</strong> · 分栏编辑 / 版本差异 / 原文依据检查器
+      <strong>知识库</strong>
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/04-admin.png" alt="系统控制中心" />
+      <img src="./docs/screenshots/04-admin.png" alt="系统后台" />
       <br />
-      <strong>全景系统控制中心</strong> · 三类 API 路由 / 防删回收站 / 多账号管理
+      <strong>系统后台</strong>
     </td>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/02-workspace.png" alt="多轮问答工作台" />
+      <img src="./docs/screenshots/02-workspace.png" alt="工作台" />
       <br />
-      <strong>多轮问答工作台</strong> · 上下文追问 / 命中高亮 / 一键沉淀草稿
+      <strong>工作台</strong>
     </td>
   </tr>
 </table>
