@@ -157,8 +157,8 @@ flowchart LR
 ### 桌面端本地运行
 
 ```bash
-git clone https://github.com/JoeJiang-927117/Agentic-Knowledge-Base-.git
-cd Agentic-Knowledge-Base-
+git clone https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base.git
+cd ZHIXUAgentic-Knowledge-Base
 npm install
 npm run dev
 ```
