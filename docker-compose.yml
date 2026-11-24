@@ -1,0 +1,37 @@
+# 知序 ZHIXU — 可动部署完整版 (External API First · LLLM/LLM/VM · Admin Auth)
+services:
+  zhixu-server:
+    build: .
+    container_name: zhixu-server
+    restart: unless-stopped
+    ports:
+      - "${ZHIXU_PORT:-8787}:8787"
+    environment:
+      ZHIXU_HOST: "0.0.0.0"
+      ZHIXU_PORT: "8787"
+      ZHIXU_ROOT: "/data/knowledge-base"
+      ZHIXU_MODE: "${ZHIXU_MODE:-cloud}"
+      ZHIXU_PROVIDER: "${ZHIXU_PROVIDER:-openai}"
+      ZHIXU_MODEL_BASE_URL: "${ZHIXU_MODEL_BASE_URL:-https://api.deepseek.com/v1}"
+      ZHIXU_API_KEY: "${ZHIXU_API_KEY:-}"
+      ZHIXU_LLLM_BASE_URL: "${ZHIXU_LLLM_BASE_URL:-}"
+      ZHIXU_LLLM_API_KEY: "${ZHIXU_LLLM_API_KEY:-}"
+      ZHIXU_LLLM_MODEL: "${ZHIXU_LLLM_MODEL:-deepseek-reasoner}"
+      ZHIXU_LLM_BASE_URL: "${ZHIXU_LLM_BASE_URL:-}"
+      ZHIXU_LLM_API_KEY: "${ZHIXU_LLM_API_KEY:-}"
+      ZHIXU_LLM_MODEL: "${ZHIXU_LLM_MODEL:-deepseek-chat}"
+      ZHIXU_VM_BASE_URL: "${ZHIXU_VM_BASE_URL:-}"
+      ZHIXU_VM_API_KEY: "${ZHIXU_VM_API_KEY:-}"
+      ZHIXU_VISION_MODEL: "${ZHIXU_VISION_MODEL:-qwen-vl-max}"
+      ZHIXU_EMBEDDING_MODEL: "${ZHIXU_EMBEDDING_MODEL:-text-embedding-3-small}"
+      ZHIXU_RERANK_BASE_URL: "${ZHIXU_RERANK_BASE_URL:-}"
+      ZHIXU_RERANK_API_KEY: "${ZHIXU_RERANK_API_KEY:-}"
+      ZHIXU_RERANK_MODEL: "${ZHIXU_RERANK_MODEL:-}"
+      ZHIXU_SERVER_TOKEN: "${ZHIXU_SERVER_TOKEN:-}"
+      ZHIXU_CORS_ORIGIN: "${ZHIXU_CORS_ORIGIN:-}"
+      ZHIXU_ADMIN_USER: "${ZHIXU_ADMIN_USER:-zhixu}"
+      ZHIXU_ADMIN_PASSWORD: "${ZHIXU_ADMIN_PASSWORD:-123456789}"
+    volumes:
+      - "${ZHIXU_DATA_DIR:-./data}:/data/knowledge-base"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

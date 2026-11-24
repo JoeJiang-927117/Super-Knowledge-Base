@@ -1,0 +1,68 @@
+{
+  "name": "zhixu",
+  "version": "0.1.0",
+  "private": true,
+  "description": "知序 ZHIXU — Local-first, model-maintained knowledge base for private documents",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-transform-types tests/verify_zhixu_core_upgrades.mjs && node tests/verify_zhixu_v2.mjs",
+    "server": "npm run build && node out/main/server.js",
+    "package": "npm run build && electron-builder",
+    "package:dir": "npm run build && electron-builder --dir"
+  },
+  "build": {
+    "appId": "com.zhixu.desktop",
+    "productName": "知序 ZHIXU",
+    "files": [
+      "out/**/*",
+      "assets/zhixu-icon.png",
+      "assets/zhixu-banner.png",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico"
+    }
+  },
+  "dependencies": {
+    "@orama/orama": "^3.1.18",
+    "diff": "^9.0.0",
+    "dompurify": "^3.4.18",
+    "gray-matter": "^4.0.3",
+    "isomorphic-git": "^1.44.17",
+    "lucide-react": "^1.74.0",
+    "mammoth": "^1.13.0",
+    "marked": "^18.2.1",
+    "pdfjs-dist": "^6.5.438",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/diff": "^7.0.2",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "electron": "^45.3.4",
+    "electron-builder": "^26.18.0",
+    "electron-vite": "^6.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  }
+}
