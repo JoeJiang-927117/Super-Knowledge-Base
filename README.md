@@ -23,6 +23,7 @@
   <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24+-15803D?style=flat-square&logo=node.js&logoColor=white" />
   <img alt="SQLite + Git" src="https://img.shields.io/badge/Storage-Markdown%20%2B%20SQLite%20%2B%20Git-4F46E5?style=flat-square" />
   <img alt="Tests" src="https://img.shields.io/badge/Verified-14%20Automated%20Checks-059669?style=flat-square" />
+  <img alt="Default Login" src="https://img.shields.io/badge/初始账密-zhixu%20%2F%20123456789-0F172A?style=flat-square" />
 </p>
 
 <br />
@@ -152,6 +153,9 @@ flowchart LR
 
 ## 快速开始
 
+> [!IMPORTANT]
+> **初始默认账密**：账号 `zhixu` / 密码 `123456789`（可通过环境变量 `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD` 覆盖，首次登录后可在「系统后台 → 账号安全」修改）。
+
 > **环境要求**：Node.js `>= 22.13`（推荐 `24.x`，原生内置 `node:sqlite`）
 
 ### 桌面端本地运行
@@ -163,7 +167,6 @@ npm install
 npm run dev
 ```
 
-- 默认初始化管理员账号：`zhixu` / `123456789`（可通过 `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD` 覆盖，建议首次登录后在「系统后台 → 账号安全」修改密码）。
 - 快捷键：`Ctrl + K` 唤起全局命令面板；编辑模式下 `Ctrl + S` 快速保存草稿。
 
 ### 类型检查、构建与自动化验证
