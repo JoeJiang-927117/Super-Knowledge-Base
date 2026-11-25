@@ -14,6 +14,7 @@ import logo from './assets/zhixu-icon.png'
 import wallpaperSky from './assets/wallpaper-sky.jpg'
 import wallpaperSunset from './assets/wallpaper-sunset.jpg'
 import AdminConsole from './components/AdminConsole'
+import BootLoader from './components/BootLoader'
 import CommandPalette from './components/CommandPalette'
 import LoginPage from './components/LoginPage'
 import SettingsDialog, { fillDraftFromMode } from './components/SettingsDialog'
@@ -60,6 +61,8 @@ export default function App() {
   const { locale, toggleLocale, tx, formatDate } = useI18n()
   const api = useMemo(() => getWorkspaceApi(), [])
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
+  const [bootMinElapsed, setBootMinElapsed] = useState(false)
+  const [bootDone, setBootDone] = useState(false)
   const [view, setView] = useState<View>('home')
   const [selectedSlug, setSelectedSlug] = useState('index')
   const [query, setQuery] = useState('')
@@ -144,6 +147,17 @@ export default function App() {
       window.localStorage.setItem('zhixu-theme', theme)
     } catch {}
   }, [theme])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setBootMinElapsed(true), 950)
+    return () => window.clearTimeout(timer)
+  }, [])
+
+  useEffect(() => {
+    if (!snapshot || !bootMinElapsed) return
+    const fade = window.setTimeout(() => setBootDone(true), 220)
+    return () => window.clearTimeout(fade)
+  }, [snapshot, bootMinElapsed])
 
   useEffect(() => {
     void api.getSnapshot().then(setSnapshot).catch(showError)
@@ -612,13 +626,8 @@ export default function App() {
     await importFiles(Array.from(event.dataTransfer.files))
   }
 
-  if (!snapshot) {
-    return (
-      <main className="boot-screen">
-        <img src={logo} alt={tx('知序', 'ZHIXU')} />
-        <LoaderCircle className="spin" />
-      </main>
-    )
+  if (!snapshot || !bootDone) {
+    return <BootLoader exiting={Boolean(snapshot && bootMinElapsed)} />
   }
 
   if (!snapshot.adminAuth.authenticated) {
