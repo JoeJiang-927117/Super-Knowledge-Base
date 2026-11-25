@@ -1,13 +1,14 @@
 import {
-  BookOpen, CheckCheck, FileText, FolderOpen, History, LayoutDashboard,
+  BookOpen, CheckCheck, FileText, FolderOpen, History, Languages, LayoutDashboard,
   Moon, Search, Settings2, Shield, ShieldCheck, Sparkles, Sun, Upload
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import type { WikiPage } from '../../../shared/types'
+import { useI18n } from '../i18n'
 
 export type CommandItem = {
   id: string
-  group: '操作' | '导航' | '知识页面'
+  group: string
   label: string
   meta?: string
   icon: typeof Search
@@ -41,6 +42,7 @@ export default function CommandPalette({
   onSelectWorkspace,
   onToggleTheme
 }: Props) {
+  const { locale, toggleLocale, tx } = useI18n()
   const [term, setTerm] = useState('')
   const [activeIndex, setActiveIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -53,40 +55,52 @@ export default function CommandPalette({
   }, [open])
 
   const items = useMemo<CommandItem[]>(() => {
+    const grpAction = tx('操作', 'Actions')
+    const grpNav = tx('导航', 'Navigation')
+    const grpPage = tx('知识页面', 'Pages')
+
     const actions: CommandItem[] = [
-      { id: 'act-import', group: '操作', label: '导入资料', meta: 'PDF / DOCX / MD / 图片', icon: Upload, run: onImport },
-      { id: 'act-organize', group: '操作', label: '更新知识库', meta: '增量编译 Wiki', icon: Sparkles, run: onOrganize },
-      { id: 'act-settings', group: '操作', label: '模型接口设置', meta: 'LLLM / LLM / VM', icon: Settings2, run: onOpenSettings },
-      { id: 'act-workspace', group: '操作', label: '切换知识库目录', icon: FolderOpen, run: onSelectWorkspace },
+      { id: 'act-import', group: grpAction, label: tx('导入资料', 'Import Files'), meta: tx('PDF / DOCX / XLSX / PPTX / 图片', 'PDF / DOCX / XLSX / PPTX / Images'), icon: Upload, run: onImport },
+      { id: 'act-organize', group: grpAction, label: tx('更新知识库', 'Compile Knowledge Base'), meta: tx('增量编译 Wiki', 'Incremental Wiki Build'), icon: Sparkles, run: onOrganize },
+      { id: 'act-settings', group: grpAction, label: tx('模型接口设置', 'Model API Settings'), meta: 'LLLM / LLM / VM', icon: Settings2, run: onOpenSettings },
+      { id: 'act-workspace', group: grpAction, label: tx('切换知识库目录', 'Switch Workspace Folder'), icon: FolderOpen, run: onSelectWorkspace },
       {
         id: 'act-theme',
-        group: '操作',
-        label: theme === 'dark' ? '切换浅色外观' : '切换深色外观',
+        group: grpAction,
+        label: theme === 'dark' ? tx('切换浅色外观', 'Switch to Light Mode') : tx('切换深色外观', 'Switch to Dark Mode'),
         icon: theme === 'dark' ? Sun : Moon,
         run: onToggleTheme
+      },
+      {
+        id: 'act-lang',
+        group: grpAction,
+        label: locale === 'zh' ? 'Switch to English' : '切换为简体中文',
+        meta: locale === 'zh' ? 'EN' : '中文',
+        icon: Languages,
+        run: toggleLocale
       }
     ]
     const navs: CommandItem[] = [
-      { id: 'nav-home', group: '导航', label: '工作台', icon: LayoutDashboard, run: () => onNavigate('home') },
-      { id: 'nav-knowledge', group: '导航', label: '知识库', icon: BookOpen, run: () => onNavigate('knowledge') },
-      { id: 'nav-review', group: '导航', label: '审核队列', icon: CheckCheck, run: () => onNavigate('review') },
-      { id: 'nav-health', group: '导航', label: '知识体检', icon: ShieldCheck, run: () => onNavigate('health') },
-      { id: 'nav-activity', group: '导航', label: '版本审计', icon: History, run: () => onNavigate('activity') },
-      { id: 'nav-admin', group: '导航', label: '系统后台', icon: Shield, run: () => onNavigate('admin') }
+      { id: 'nav-home', group: grpNav, label: tx('工作台', 'Workspace'), icon: LayoutDashboard, run: () => onNavigate('home') },
+      { id: 'nav-knowledge', group: grpNav, label: tx('知识库', 'Knowledge'), icon: BookOpen, run: () => onNavigate('knowledge') },
+      { id: 'nav-review', group: grpNav, label: tx('审核队列', 'Review Queue'), icon: CheckCheck, run: () => onNavigate('review') },
+      { id: 'nav-health', group: grpNav, label: tx('知识体检', 'Health Check'), icon: ShieldCheck, run: () => onNavigate('health') },
+      { id: 'nav-activity', group: grpNav, label: tx('版本审计', 'Version Audit'), icon: History, run: () => onNavigate('activity') },
+      { id: 'nav-admin', group: grpNav, label: tx('系统后台', 'Admin Console'), icon: Shield, run: () => onNavigate('admin') }
     ]
     const docItems: CommandItem[] = pages.slice(0, 60).map(page => ({
       id: `page-${page.slug}`,
-      group: '知识页面',
+      group: grpPage,
       label: page.title,
       meta: page.versionLabel ?? 'V1.0',
       icon: FileText,
       run: () => onOpenPage(page.slug)
     }))
     const all = [...actions, ...navs, ...docItems]
-    const q = term.trim().toLocaleLowerCase('zh-CN')
+    const q = term.trim().toLocaleLowerCase(locale === 'en' ? 'en-US' : 'zh-CN')
     if (!q) return all.slice(0, 14)
-    return all.filter(item => `${item.label} ${item.meta ?? ''} ${item.group}`.toLocaleLowerCase('zh-CN').includes(q)).slice(0, 18)
-  }, [pages, term, theme, onImport, onNavigate, onOpenPage, onOpenSettings, onOrganize, onSelectWorkspace, onToggleTheme])
+    return all.filter(item => `${item.label} ${item.meta ?? ''} ${item.group}`.toLocaleLowerCase(locale === 'en' ? 'en-US' : 'zh-CN').includes(q)).slice(0, 18)
+  }, [pages, term, theme, locale, tx, toggleLocale, onImport, onNavigate, onOpenPage, onOpenSettings, onOrganize, onSelectWorkspace, onToggleTheme])
 
   useEffect(() => {
     setActiveIndex(0)
@@ -119,7 +133,7 @@ export default function CommandPalette({
 
   return (
     <div className="cmd-backdrop" onClick={onClose}>
-      <div className="cmd-modal" role="dialog" aria-label="快捷命令" onClick={e => e.stopPropagation()}>
+      <div className="cmd-modal" role="dialog" aria-label={tx('快捷命令', 'Command Palette')} onClick={e => e.stopPropagation()}>
         <div className="cmd-input-row">
           <Search />
           <input
@@ -127,7 +141,7 @@ export default function CommandPalette({
             value={term}
             onChange={e => setTerm(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="搜索页面或执行命令…"
+            placeholder={tx('搜索页面或执行命令…', 'Search pages or run commands…')}
           />
           <kbd>ESC</kbd>
         </div>
@@ -152,7 +166,7 @@ export default function CommandPalette({
               )
             })
           ) : (
-            <div className="cmd-empty">无匹配结果</div>
+            <div className="cmd-empty">{tx('无匹配结果', 'No matching results')}</div>
           )}
         </div>
       </div>

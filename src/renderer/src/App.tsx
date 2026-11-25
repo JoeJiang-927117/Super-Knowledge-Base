@@ -1,6 +1,6 @@
 import {
   ArrowRight, ArrowUp, BookmarkPlus, BookOpen, Check, CheckCheck, ChevronRight, CircleAlert, Clock3,
-  FileText, FolderOpen, History, Layers, LayoutDashboard, LoaderCircle, Minus, Moon,
+  FileText, FolderOpen, History, Languages, Layers, LayoutDashboard, LoaderCircle, Minus, Moon,
   PanelLeftClose, PanelLeftOpen, Paperclip, Plus, Search, Settings2, Shield, ShieldCheck,
   Sparkles, Square, Sun, Upload, X
 } from 'lucide-react'
@@ -18,7 +18,8 @@ import CommandPalette from './components/CommandPalette'
 import LoginPage from './components/LoginPage'
 import SettingsDialog, { fillDraftFromMode } from './components/SettingsDialog'
 import { ActivityView, HealthView, PageView } from './components/views'
-import { dateFormatter, folderName, providerLabel, storageDomainLabel, workflowStatusLabel } from './labels'
+import { useI18n } from './i18n'
+import { folderName, providerLabel, storageDomainLabel, workflowStatusLabel } from './labels'
 
 type View = 'home' | 'knowledge' | 'review' | 'health' | 'activity' | 'admin'
 type QueryOptions = { includeDrafts: boolean; includeSources: boolean; domain?: StorageDomain }
@@ -55,35 +56,8 @@ function highlightQueryTerms(text: string, query: string): ReactNode {
   )
 }
 
-const NEW_PAGE_TEMPLATE: WikiPage = {
-  slug: '__new__',
-  title: '',
-  summary: '',
-  content: '## 概述\n\n',
-  sources: [],
-  links: [],
-  updatedAt: new Date().toISOString(),
-  pageType: 'concept',
-  status: 'draft',
-  evidenceLevel: 'field_record',
-  applicability: '通用',
-  modelVersion: 'manual',
-  reviewedBy: null,
-  reviewedAt: null,
-  storageDomain: 'foundation',
-  versionLabel: 'V0.1'
-}
-
-const viewTitles: Record<View, string> = {
-  home: '工作台',
-  knowledge: '知识库',
-  review: '审核队列',
-  health: '知识体检',
-  activity: '版本审计',
-  admin: '系统后台'
-}
-
 export default function App() {
+  const { locale, toggleLocale, tx, formatDate } = useI18n()
   const api = useMemo(() => getWorkspaceApi(), [])
   const [snapshot, setSnapshot] = useState<WorkspaceSnapshot | null>(null)
   const [view, setView] = useState<View>('home')
@@ -130,6 +104,40 @@ export default function App() {
   const streamEndRef = useRef<HTMLDivElement>(null)
   const dragDepth = useRef(0)
 
+  const newPageTemplate = useMemo<WikiPage>(
+    () => ({
+      slug: '__new__',
+      title: '',
+      summary: '',
+      content: locale === 'en' ? '## Overview\n\n' : '## 概述\n\n',
+      sources: [],
+      links: [],
+      updatedAt: new Date().toISOString(),
+      pageType: 'concept',
+      status: 'draft',
+      evidenceLevel: 'field_record',
+      applicability: locale === 'en' ? 'General' : '通用',
+      modelVersion: 'manual',
+      reviewedBy: null,
+      reviewedAt: null,
+      storageDomain: 'foundation',
+      versionLabel: 'V0.1'
+    }),
+    [locale]
+  )
+
+  const viewTitles = useMemo<Record<View, string>>(
+    () => ({
+      home: tx('工作台', 'Workspace'),
+      knowledge: tx('知识库', 'Knowledge'),
+      review: tx('审核队列', 'Review Queue'),
+      health: tx('知识体检', 'Health Check'),
+      activity: tx('版本审计', 'Version Audit'),
+      admin: tx('系统后台', 'Admin Console')
+    }),
+    [tx]
+  )
+
   useEffect(() => {
     document.documentElement.dataset.theme = theme
     try {
@@ -161,8 +169,8 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    document.title = `${viewTitles[view]} — 知序 ZHIXU`
-  }, [view])
+    document.title = `${viewTitles[view]} — ${locale === 'en' ? 'ZHIXU' : '知序 ZHIXU'}`
+  }, [view, viewTitles, locale])
 
   const pages = useMemo(() => (snapshot?.pages ?? []).filter(p => p.status !== 'deleted'), [snapshot])
   const selectedPage = (snapshot?.pages ?? []).find(page => page.slug === selectedSlug) ?? null
@@ -171,14 +179,15 @@ export default function App() {
     [pages]
   )
   const filteredKnowledgePages = useMemo(() => {
-    const term = query.trim().toLocaleLowerCase('zh-CN')
+    const lc = locale === 'en' ? 'en-US' : 'zh-CN'
+    const term = query.trim().toLocaleLowerCase(lc)
     return pages.filter(page => {
       if (knowledgeFilter === 'published' && page.status !== 'published') return false
       if (knowledgeFilter === 'review' && !['draft', 'moderating', 'validating', 'pending_delete'].includes(page.status)) return false
       if (!term) return true
-      return `${page.title} ${page.summary} ${page.content}`.toLocaleLowerCase('zh-CN').includes(term)
+      return `${page.title} ${page.summary} ${page.content}`.toLocaleLowerCase(lc).includes(term)
     })
-  }, [pages, query, knowledgeFilter])
+  }, [pages, query, knowledgeFilter, locale])
   const recentPages = useMemo(() => pages.filter(page => page.slug !== 'index').slice(0, 8), [pages])
   const queryOptions: QueryOptions = { includeDrafts, includeSources, domain: domain || undefined }
 
@@ -222,7 +231,7 @@ export default function App() {
       setCreatingNewPage(false)
       setSelectedSlug(res.slug)
       setView('knowledge')
-      setNotice(input.publishImmediately ? '页面已保存并发布' : '已保存为知识草稿')
+      setNotice(input.publishImmediately ? tx('页面已保存并发布', 'Page saved & published') : tx('已保存为知识草稿', 'Saved as draft'))
     } catch (reason) {
       showError(reason)
       throw reason
@@ -236,9 +245,9 @@ export default function App() {
       if (next?.pages) {
         setSnapshot(next)
         setSelectedSlug('index')
-        setNotice('知识库目录已更新')
+        setNotice(tx('知识库目录已更新', 'Workspace folder updated'))
       } else if (next) {
-        setNotice(`当前目录：${next.root ?? folderName(next.root ?? '')}`)
+        setNotice(`${tx('当前目录：', 'Workspace: ')}${next.root ?? folderName(next.root ?? '')}`)
       }
     } catch (reason) {
       showError(reason)
@@ -253,7 +262,11 @@ export default function App() {
       const result = await api.importDroppedFiles(files)
       setSnapshot(result.snapshot)
       if (result.imported.length) {
-        setNotice(`已导入 ${result.imported.length} 份资料${result.skipped.length ? `，跳过 ${result.skipped.length} 项` : ''}`)
+        setNotice(
+          locale === 'en'
+            ? `Imported ${result.imported.length} file(s)${result.skipped.length ? `, skipped ${result.skipped.length}` : ''}`
+            : `已导入 ${result.imported.length} 份资料${result.skipped.length ? `，跳过 ${result.skipped.length} 项` : ''}`
+        )
       } else if (result.skipped.length) {
         showError(result.skipped.join('\n'))
       }
@@ -268,7 +281,7 @@ export default function App() {
     setBusy(true)
     setNotice('')
     setError('')
-    setProgress({ stage: 'scan', message: '准备扫描资料', current: 0, total: 1 })
+    setProgress({ stage: 'scan', message: tx('准备扫描资料', 'Scanning source files'), current: 0, total: 1 })
     try {
       const result = await api.organize()
       setSnapshot(result.snapshot)
@@ -285,7 +298,7 @@ export default function App() {
     setError('')
     try {
       setSnapshot(await api.transitionWorkflow(slug, action, note))
-      setNotice('状态已更新')
+      setNotice(tx('状态已更新', 'Status updated'))
     } catch (reason) {
       showError(reason)
     }
@@ -294,27 +307,36 @@ export default function App() {
   async function publishAllDrafts() {
     try {
       setSnapshot(await api.publishAllDrafts())
-      setNotice('全部待审页面已发布')
+      setNotice(tx('全部待审页面已发布', 'All pending pages published'))
     } catch (reason) {
       showError(reason)
     }
   }
 
   async function rollbackVersion(slug: string, versionLabel: string) {
-    if (!window.confirm(`确认回滚至 ${versionLabel}？当前版本会自动备份。`)) return
+    const msg =
+      locale === 'en'
+        ? `Roll back to ${versionLabel}? Current version will be backed up.`
+        : `确认回滚至 ${versionLabel}？当前版本会自动备份。`
+    if (!window.confirm(msg)) return
     try {
       setSnapshot(await api.rollbackPageVersion(slug, versionLabel))
-      setNotice(`已回滚至 ${versionLabel}`)
+      setNotice(locale === 'en' ? `Rolled back to ${versionLabel}` : `已回滚至 ${versionLabel}`)
     } catch (reason) {
       showError(reason)
     }
   }
 
   async function undoRun(run: OrganizeRun) {
-    if (!window.confirm(`撤销“${run.summary.split('\n')[0]}”产生的页面变更？`)) return
+    const title = run.summary.split('\n')[0]
+    const msg =
+      locale === 'en'
+        ? `Revert page changes from "${title}"?`
+        : `撤销“${title}”产生的页面变更？`
+    if (!window.confirm(msg)) return
     try {
       setSnapshot(await api.undoRun(run.id))
-      setNotice('已撤销这次整理')
+      setNotice(tx('已撤销这次整理', 'Compile run reverted'))
     } catch (reason) {
       showError(reason)
     }
@@ -340,7 +362,13 @@ export default function App() {
       const result = await api.fixLint()
       setLintReport(result.report)
       setSnapshot(await api.getSnapshot())
-      setNotice(result.filesChanged ? `已修复 ${result.filesChanged} 篇页面` : '无断链需要修复')
+      setNotice(
+        result.filesChanged
+          ? locale === 'en'
+            ? `Fixed ${result.filesChanged} page(s)`
+            : `已修复 ${result.filesChanged} 篇页面`
+          : tx('无断链需要修复', 'No broken links to fix')
+      )
     } catch (reason) {
       showError(reason)
     } finally {
@@ -358,7 +386,7 @@ export default function App() {
     try {
       setSnapshot(await api.setModel(modelDraft))
       settingsDialog.current?.close()
-      setNotice('模型接口设置已保存')
+      setNotice(tx('模型接口设置已保存', 'Model API settings saved'))
     } catch (reason) {
       showError(reason)
     }
@@ -368,7 +396,7 @@ export default function App() {
     setError('')
     try {
       setSnapshot(await api.adminLogin(username, password))
-      setNotice(`已登录管理员 ${username}`)
+      setNotice(locale === 'en' ? `Signed in as ${username}` : `已登录管理员 ${username}`)
     } catch (reason) {
       showError(reason)
     }
@@ -377,7 +405,7 @@ export default function App() {
   async function adminLogout() {
     try {
       setSnapshot(await api.adminLogout())
-      setNotice('已退出后台')
+      setNotice(tx('已退出后台', 'Signed out'))
     } catch (reason) {
       showError(reason)
     }
@@ -387,7 +415,7 @@ export default function App() {
     setError('')
     try {
       setSnapshot(await api.adminChangePassword(oldPassword, newPassword))
-      setNotice('密码已更新')
+      setNotice(tx('密码已更新', 'Password updated'))
     } catch (reason) {
       showError(reason)
     }
@@ -397,7 +425,7 @@ export default function App() {
     setError('')
     try {
       setSnapshot(await api.adminCreateUser(username, password, role))
-      setNotice(`已创建账号 ${username}`)
+      setNotice(locale === 'en' ? `Created account ${username}` : `已创建账号 ${username}`)
     } catch (reason) {
       showError(reason)
     }
@@ -407,7 +435,7 @@ export default function App() {
     setError('')
     try {
       setSnapshot(await api.adminDeleteUser(username))
-      setNotice(`已删除账号 ${username}`)
+      setNotice(locale === 'en' ? `Deleted account ${username}` : `已删除账号 ${username}`)
     } catch (reason) {
       showError(reason)
     }
@@ -417,7 +445,7 @@ export default function App() {
     setError('')
     try {
       setSnapshot(await api.purgeDeletedPage(slug))
-      setNotice('已彻底清理')
+      setNotice(tx('已彻底清理', 'Permanently purged'))
     } catch (reason) {
       showError(reason)
     }
@@ -489,7 +517,7 @@ export default function App() {
         await api.submitFeedback({
           question: turn.question,
           rating,
-          comment: rating === 'helpful' ? '回答准确' : '需要核查补充',
+          comment: rating === 'helpful' ? tx('回答准确', 'Accurate answer') : tx('需要核查补充', 'Needs verification'),
           citedSlugs: turn.answer.citations.map(c => c.slug).filter((s): s is string => Boolean(s))
         })
       )
@@ -503,15 +531,23 @@ export default function App() {
     const turn = thread.find(t => t.id === turnId)
     if (!turn?.answer) return
     const ans = turn.answer
-    const mdLines = [
-      `## 核心结论\n\n${ans.conclusion}`,
-      ans.applicability ? `\n## 适用条件\n\n${ans.applicability}` : '',
-      ans.conflicts && ans.conflicts !== '无' ? `\n## 冲突说明\n\n${ans.conflicts}` : '',
-      ans.missingInfo && ans.missingInfo !== '无' ? `\n## 待补充项\n\n${ans.missingInfo}` : ''
-    ].filter(Boolean)
+    const mdLines =
+      locale === 'en'
+        ? [
+            `## Conclusion\n\n${ans.conclusion}`,
+            ans.applicability ? `\n## Applicability\n\n${ans.applicability}` : '',
+            ans.conflicts && ans.conflicts !== '无' && ans.conflicts !== 'None' ? `\n## Conflicts\n\n${ans.conflicts}` : '',
+            ans.missingInfo && ans.missingInfo !== '无' && ans.missingInfo !== 'None' ? `\n## Gaps\n\n${ans.missingInfo}` : ''
+          ].filter(Boolean)
+        : [
+            `## 核心结论\n\n${ans.conclusion}`,
+            ans.applicability ? `\n## 适用条件\n\n${ans.applicability}` : '',
+            ans.conflicts && ans.conflicts !== '无' ? `\n## 冲突说明\n\n${ans.conflicts}` : '',
+            ans.missingInfo && ans.missingInfo !== '无' ? `\n## 待补充项\n\n${ans.missingInfo}` : ''
+          ].filter(Boolean)
     const sources = ans.citations
       .filter(c => c.file && c.excerpt)
-      .map(c => ({ file: c.file!, locator: c.locator ?? '问答引用', excerpt: c.excerpt ?? '' }))
+      .map(c => ({ file: c.file!, locator: c.locator ?? tx('问答引用', 'Q&A Citation'), excerpt: c.excerpt ?? '' }))
     try {
       const res = await api.saveManualPage({
         title: turn.question.slice(0, 48),
@@ -520,11 +556,11 @@ export default function App() {
         applicability: ans.applicability,
         sources,
         publishImmediately: false,
-        note: '由工作台问答一键沉淀'
+        note: tx('由工作台问答一键沉淀', 'Saved from Q&A workspace')
       })
       setSnapshot(res.snapshot)
       setThread(prev => prev.map(t => (t.id === turnId ? { ...t, savedSlug: res.slug } : t)))
-      setNotice('已沉淀为知识草稿')
+      setNotice(tx('已沉淀为知识草稿', 'Saved as knowledge draft'))
     } catch (reason) {
       showError(reason)
     }
@@ -568,7 +604,7 @@ export default function App() {
   if (!snapshot) {
     return (
       <main className="boot-screen">
-        <img src={logo} alt="知序" />
+        <img src={logo} alt={tx('知序', 'ZHIXU')} />
         <LoaderCircle className="spin" />
       </main>
     )
@@ -588,12 +624,12 @@ export default function App() {
   }
 
   const navItems: { id: View; label: string; icon: typeof LayoutDashboard; badge?: number }[] = [
-    { id: 'home', label: '工作台', icon: LayoutDashboard },
-    { id: 'knowledge', label: '知识库', icon: BookOpen, badge: snapshot.publishedCount },
-    { id: 'review', label: '审核队列', icon: CheckCheck, badge: snapshot.draftCount },
-    { id: 'health', label: '知识体检', icon: ShieldCheck },
-    { id: 'activity', label: '版本审计', icon: History },
-    { id: 'admin', label: '系统后台', icon: Shield, badge: snapshot.pendingDeleteCount || undefined }
+    { id: 'home', label: viewTitles.home, icon: LayoutDashboard },
+    { id: 'knowledge', label: viewTitles.knowledge, icon: BookOpen, badge: snapshot.publishedCount },
+    { id: 'review', label: viewTitles.review, icon: CheckCheck, badge: snapshot.draftCount },
+    { id: 'health', label: viewTitles.health, icon: ShieldCheck },
+    { id: 'activity', label: viewTitles.activity, icon: History },
+    { id: 'admin', label: viewTitles.admin, icon: Shield, badge: snapshot.pendingDeleteCount || undefined }
   ]
 
   return (
@@ -620,11 +656,11 @@ export default function App() {
       <aside className="studio-sidebar">
         <div className="sidebar-brand-bar">
           <button className="brand-home-btn" onClick={resetConversation}>
-            <img src={logo} alt="知序" />
-            <span className="brand-title">知序</span>
+            <img src={logo} alt={tx('知序', 'ZHIXU')} />
+            <span className="brand-title">{tx('知序', 'ZHIXU')}</span>
             <span className="brand-ver">PRO</span>
           </button>
-          <button className="icon-btn-sm" onClick={() => setSidebarOpen(false)} aria-label="收起侧栏" title="收起侧栏">
+          <button className="icon-btn-sm" onClick={() => setSidebarOpen(false)} aria-label={tx('收起侧栏', 'Collapse sidebar')} title={tx('收起侧栏', 'Collapse sidebar')}>
             <PanelLeftClose />
           </button>
         </div>
@@ -632,17 +668,17 @@ export default function App() {
         <div className="sidebar-controls">
           <button className="cmd-trigger" onClick={() => setCmdOpen(true)}>
             <Search />
-            <span>快速检索…</span>
+            <span>{tx('快速检索…', 'Quick search…')}</span>
             <kbd>Ctrl K</kbd>
           </button>
-          <button className="workspace-switcher" onClick={() => void selectWorkspace()} title={snapshot.root ?? '选择知识库目录'}>
+          <button className="workspace-switcher" onClick={() => void selectWorkspace()} title={snapshot.root ?? tx('选择知识库目录', 'Select workspace folder')}>
             <FolderOpen />
-            <span>{snapshot.root ? folderName(snapshot.root) : '选择目录'}</span>
+            <span>{snapshot.root ? folderName(snapshot.root) : tx('选择目录', 'Select folder')}</span>
             <ChevronRight />
           </button>
         </div>
 
-        <nav className="nav-section" aria-label="主导航">
+        <nav className="nav-section" aria-label={tx('主导航', 'Primary navigation')}>
           {navItems.map(item => {
             const Icon = item.icon
             const active = view === item.id
@@ -663,8 +699,8 @@ export default function App() {
 
         <div className="sidebar-tree">
           <div className="tree-heading">
-            <span>最近文档</span>
-            <button onClick={() => navigate('knowledge')}>全部</button>
+            <span>{tx('最近文档', 'Recent Pages')}</span>
+            <button onClick={() => navigate('knowledge')}>{tx('全部', 'All')}</button>
           </div>
           <div className="tree-list">
             {recentPages.length ? (
@@ -680,7 +716,7 @@ export default function App() {
                 </button>
               ))
             ) : (
-              <div className="tree-empty">暂无文档</div>
+              <div className="tree-empty">{tx('暂无文档', 'No pages yet')}</div>
             )}
           </div>
         </div>
@@ -688,9 +724,9 @@ export default function App() {
         <div className="sidebar-footer">
           <button className="btn-primary btn-block btn-sm" onClick={() => fileInput.current?.click()} disabled={importing}>
             {importing ? <LoaderCircle className="spin" /> : <Upload />}
-            {importing ? '导入中…' : '导入资料'}
+            {importing ? tx('导入中…', 'Importing…') : tx('导入资料', 'Import Files')}
           </button>
-          <button className="model-footer-row" onClick={openSettings} title="配置 LLLM / LLM / VM">
+          <button className="model-footer-row" onClick={openSettings} title={tx('配置 LLLM / LLM / VM', 'Configure LLLM / LLM / VM')}>
             <i className={snapshot.modelOnline ? 'online' : ''} />
             <span>{snapshot.modelProvider.model}</span>
             <Settings2 />
@@ -703,7 +739,7 @@ export default function App() {
         <header className="studio-titlebar">
           <div className="titlebar-left">
             {!sidebarOpen && (
-              <button className="icon-btn-sm" onClick={() => setSidebarOpen(true)} aria-label="展开侧栏" title="展开侧栏">
+              <button className="icon-btn-sm" onClick={() => setSidebarOpen(true)} aria-label={tx('展开侧栏', 'Expand sidebar')} title={tx('展开侧栏', 'Expand sidebar')}>
                 <PanelLeftOpen />
               </button>
             )}
@@ -718,46 +754,58 @@ export default function App() {
               {view === 'home' && thread.length > 0 && (
                 <>
                   <ChevronRight />
-                  <button className="crumb-reset" onClick={resetConversation}>新对话 ({thread.length})</button>
+                  <button className="crumb-reset" onClick={resetConversation}>
+                    {tx('新对话', 'New Thread')} ({thread.length})
+                  </button>
                 </>
               )}
             </div>
           </div>
 
           <div className="titlebar-right">
-            <button className="tier-pill-btn" onClick={openSettings} title="点击配置 LLLM / LLM / VM">
+            <button className="tier-pill-btn" onClick={openSettings} title={tx('点击配置 LLLM / LLM / VM', 'Configure LLLM / LLM / VM')}>
               <i className={snapshot.modelOnline ? 'online' : ''} />
-              <span>{providerLabel(snapshot.modelProvider)}</span>
+              <span>{providerLabel(snapshot.modelProvider, locale)}</span>
             </button>
 
             {busy ? (
               <button className="btn-secondary btn-sm" onClick={() => void api.cancelOrganize()}>
-                <Square /> 取消整理
+                <Square /> {tx('取消整理', 'Cancel')}
               </button>
             ) : (
               <button className="btn-primary btn-sm" onClick={() => void organize()} disabled={!snapshot.fileCount}>
-                <Sparkles /> {snapshot.pages.length ? '更新知识库' : '开始整理'}
+                <Sparkles /> {snapshot.pages.length ? tx('更新知识库', 'Compile Wiki') : tx('开始整理', 'Build Wiki')}
               </button>
             )}
 
             <button
+              className="lang-btn"
+              onClick={toggleLocale}
+              aria-label={tx('切换语言', 'Switch language')}
+              title={locale === 'zh' ? 'Switch to English' : '切换为简体中文'}
+            >
+              <Languages />
+              <span>{locale === 'zh' ? 'EN' : '中文'}</span>
+            </button>
+
+            <button
               className="icon-btn-sm"
               onClick={() => setTheme(prev => (prev === 'light' ? 'dark' : 'light'))}
-              aria-label="切换主题"
-              title={theme === 'light' ? '切换深色模式' : '切换浅色模式'}
+              aria-label={tx('切换主题', 'Toggle theme')}
+              title={theme === 'light' ? tx('切换深色模式', 'Switch to Dark Mode') : tx('切换浅色模式', 'Switch to Light Mode')}
             >
               {theme === 'light' ? <Moon /> : <Sun />}
             </button>
 
-            <button className="icon-btn-sm" onClick={openSettings} aria-label="设置" title="模型接口设置">
+            <button className="icon-btn-sm" onClick={openSettings} aria-label={tx('设置', 'Settings')} title={tx('模型接口设置', 'Model API Settings')}>
               <Settings2 />
             </button>
 
             {api.windowControls && (
-              <div className="win-controls" aria-label="窗口控制">
-                <button onClick={() => void api.windowControls?.minimize()} aria-label="最小化"><Minus /></button>
-                <button onClick={() => void api.windowControls?.toggleMaximize()} aria-label="最大化"><Square /></button>
-                <button className="win-close" onClick={() => void api.windowControls?.close()} aria-label="关闭"><X /></button>
+              <div className="win-controls" aria-label={tx('窗口控制', 'Window controls')}>
+                <button onClick={() => void api.windowControls?.minimize()} aria-label={tx('最小化', 'Minimize')}><Minus /></button>
+                <button onClick={() => void api.windowControls?.toggleMaximize()} aria-label={tx('最大化', 'Maximize')}><Square /></button>
+                <button className="win-close" onClick={() => void api.windowControls?.close()} aria-label={tx('关闭', 'Close')}><X /></button>
               </div>
             )}
           </div>
@@ -767,7 +815,7 @@ export default function App() {
           <div className="progress-bar-dock">
             <div className="progress-row">
               <LoaderCircle className="spin" />
-              <span>{progress?.message ?? '正在整理'}</span>
+              <span>{progress?.message ?? tx('正在整理', 'Compiling')}</span>
               <small className="mono">{progress && progress.total > 1 ? `${progress.current} / ${progress.total}` : ''}</small>
             </div>
             <progress max={progress?.total ?? 1} value={progress?.current || undefined} />
@@ -781,14 +829,14 @@ export default function App() {
               <div className="copilot-primary">
                 <div className="kpi-grid cols-5 compact-kpi">
                   <button className="kpi-cell clickable" onClick={() => navigate('knowledge')}>
-                    <span>已发布</span><strong>{snapshot.publishedCount}</strong>
+                    <span>{tx('已发布', 'Published')}</span><strong>{snapshot.publishedCount}</strong>
                   </button>
                   <button className="kpi-cell clickable" onClick={() => navigate('review')}>
-                    <span>待审核</span><strong>{snapshot.draftCount}</strong>
+                    <span>{tx('待审核', 'Pending')}</span><strong>{snapshot.draftCount}</strong>
                   </button>
-                  <div className="kpi-cell"><span>原件资料</span><strong>{snapshot.fileCount}</strong></div>
-                  <div className="kpi-cell"><span>结构切块</span><strong>{snapshot.chunkCount}</strong></div>
-                  <div className="kpi-cell"><span>持久向量</span><strong>{snapshot.cachedEmbeddingCount}</strong></div>
+                  <div className="kpi-cell"><span>{tx('原件资料', 'Sources')}</span><strong>{snapshot.fileCount}</strong></div>
+                  <div className="kpi-cell"><span>{tx('结构切块', 'Chunks')}</span><strong>{snapshot.chunkCount}</strong></div>
+                  <div className="kpi-cell"><span>{tx('持久向量', 'Vectors')}</span><strong>{snapshot.cachedEmbeddingCount}</strong></div>
                 </div>
 
                 <div className="copilot-stream">
@@ -804,17 +852,17 @@ export default function App() {
                           {turn.answer && (
                             <article className={`answer-panel ${turn.answer.insufficientEvidence ? 'is-warn' : ''}`}>
                               <div className="answer-panel-head">
-                                <strong><Sparkles /> 回答</strong>
+                                <strong><Sparkles /> {tx('回答', 'Answer')}</strong>
                                 <span className="mono muted-text">{turn.answer.knowledgeVersion}</span>
                               </div>
                               <p className="answer-body">{turn.answer.conclusion}</p>
                               <div className="answer-meta-grid">
-                                <div><h3>适用条件</h3><p>{turn.answer.applicability}</p></div>
-                                <div><h3>冲突与缺失</h3><p>{turn.answer.conflicts} · {turn.answer.missingInfo}</p></div>
+                                <div><h3>{tx('适用条件', 'Applicability')}</h3><p>{turn.answer.applicability}</p></div>
+                                <div><h3>{tx('冲突与缺失', 'Conflicts & Gaps')}</h3><p>{turn.answer.conflicts} · {turn.answer.missingInfo}</p></div>
                               </div>
                               {turn.answer.citations.length > 0 && (
                                 <div className="citation-list">
-                                  <h3>引用来源</h3>
+                                  <h3>{tx('引用来源', 'Citations')}</h3>
                                   {turn.answer.citations.map((citation, index) => (
                                     <button
                                       key={index}
@@ -836,18 +884,18 @@ export default function App() {
                               )}
                               <div className="feedback-bar">
                                 <button className={turn.feedback === 'helpful' ? 'active' : ''} onClick={() => void sendFeedback(turn.id, 'helpful')} disabled={turn.feedback !== null}>
-                                  <Check /> 有帮助
+                                  <Check /> {tx('有帮助', 'Helpful')}
                                 </button>
                                 <button className={turn.feedback === 'needs_fix' ? 'active' : ''} onClick={() => void sendFeedback(turn.id, 'needs_fix')} disabled={turn.feedback !== null}>
-                                  <CircleAlert /> 需修正
+                                  <CircleAlert /> {tx('需修正', 'Needs Fix')}
                                 </button>
                                 {turn.savedSlug ? (
                                   <button className="btn-saved" onClick={() => openPage(turn.savedSlug!)}>
-                                    <Check /> 查看沉淀草稿
+                                    <Check /> {tx('查看沉淀草稿', 'Open Draft')}
                                   </button>
                                 ) : (
                                   <button className="save-draft-btn" onClick={() => void saveAnswerAsDraft(turn.id)}>
-                                    <BookmarkPlus /> 沉淀为草稿
+                                    <BookmarkPlus /> {tx('沉淀为草稿', 'Save as Draft')}
                                   </button>
                                 )}
                               </div>
@@ -857,32 +905,32 @@ export default function App() {
                           {turn.hits && (
                             <div className="evidence-section">
                               <div className="section-bar">
-                                <h3>命中证据 ({turn.hits.length})</h3>
+                                <h3>{tx('命中证据', 'Matched Evidence')} ({turn.hits.length})</h3>
                               </div>
                               {turn.hits.length ? (
                                 <div className="data-table">
                                   {turn.hits.map(hit => (
                                     <div className="table-row cols-evidence" key={hit.id}>
                                       <span className="meta-pill">
-                                        {hit.kind === 'wiki' ? 'Wiki' : hit.kind === 'chunk' ? '切块' : '笔记'} · {hit.score}
+                                        {hit.kind === 'wiki' ? 'Wiki' : hit.kind === 'chunk' ? tx('切块', 'Chunk') : tx('笔记', 'Note')} · {hit.score}
                                       </span>
                                       <div className="evidence-copy">
                                         <strong>{highlightQueryTerms(hit.title, turn.question)}</strong>
                                         <p>{highlightQueryTerms(hit.snippet, turn.question)}</p>
-                                        {!!hit.matchedEntities?.length && <small>实体：{hit.matchedEntities.join(' / ')}</small>}
+                                        {!!hit.matchedEntities?.length && <small>{tx('实体：', 'Entities: ')}{hit.matchedEntities.join(' / ')}</small>}
                                       </div>
                                       <div>
                                         {hit.kind === 'wiki' && hit.slug ? (
-                                          <button className="btn-secondary btn-xs" onClick={() => openPage(hit.slug!)}>打开</button>
+                                          <button className="btn-secondary btn-xs" onClick={() => openPage(hit.slug!)}>{tx('打开', 'Open')}</button>
                                         ) : hit.file ? (
-                                          <button className="btn-secondary btn-xs" onClick={() => void openSource(hit.file!)}>原件</button>
+                                          <button className="btn-secondary btn-xs" onClick={() => void openSource(hit.file!)}>{tx('原件', 'Source')}</button>
                                         ) : null}
                                       </div>
                                     </div>
                                   ))}
                                 </div>
                               ) : (
-                                <div className="empty-inline">未命中相关证据</div>
+                                <div className="empty-inline">{tx('未命中相关证据', 'No matching evidence')}</div>
                               )}
                             </div>
                           )}
@@ -892,7 +940,7 @@ export default function App() {
                       {qaLoading && (
                         <div className="inline-loading stream-loading">
                           <LoaderCircle className="spin" />
-                          <span>正在结合上下文检索并生成回答…</span>
+                          <span>{tx('正在结合上下文检索并生成回答…', 'Retrieving context and generating answer…')}</span>
                         </div>
                       )}
                       <div ref={streamEndRef} />
@@ -900,60 +948,60 @@ export default function App() {
                   ) : qaLoading ? (
                     <div className="inline-loading stream-loading">
                       <LoaderCircle className="spin" />
-                      <span>正在检索并生成回答…</span>
+                      <span>{tx('正在检索并生成回答…', 'Searching and generating answer…')}</span>
                     </div>
                   ) : (
                     <div className="workspace-overview">
                       <div className="quick-strip">
                         <button className="quick-tile" onClick={() => fileInput.current?.click()}>
                           <Upload />
-                          <div><strong>导入资料</strong><small>PDF / DOCX / XLSX / PPTX / 图片</small></div>
+                          <div><strong>{tx('导入资料', 'Import Files')}</strong><small>{tx('PDF / DOCX / XLSX / PPTX / 图片', 'PDF / DOCX / XLSX / PPTX / Images')}</small></div>
                           <ArrowRight />
                         </button>
                         <button className="quick-tile" onClick={startNewManualPage}>
                           <Plus />
-                          <div><strong>新建知识页</strong><small>内置分栏 Markdown 编辑</small></div>
+                          <div><strong>{tx('新建知识页', 'New Wiki Page')}</strong><small>{tx('内置分栏 Markdown 编辑', 'Split Markdown Editor')}</small></div>
                           <ArrowRight />
                         </button>
                         <button className="quick-tile" onClick={() => navigate('review')}>
                           <CheckCheck />
-                          <div><strong>审核队列</strong><small>{snapshot.draftCount} 项待审批</small></div>
+                          <div><strong>{tx('审核队列', 'Review Queue')}</strong><small>{locale === 'en' ? `${snapshot.draftCount} pending` : `${snapshot.draftCount} 项待审批`}</small></div>
                           <ArrowRight />
                         </button>
                       </div>
 
                       <div className="section-bar">
-                        <h3>最近更新文档</h3>
-                        <button className="link-btn" onClick={() => navigate('knowledge')}>进入知识库</button>
+                        <h3>{tx('最近更新文档', 'Recently Updated')}</h3>
+                        <button className="link-btn" onClick={() => navigate('knowledge')}>{tx('进入知识库', 'Browse All')}</button>
                       </div>
 
                       {recentPages.length ? (
                         <div className="data-table">
                           <div className="table-head cols-doc">
-                            <span>标题</span>
-                            <span>知识域</span>
-                            <span>状态</span>
-                            <span>更新时间</span>
+                            <span>{tx('标题', 'Title')}</span>
+                            <span>{tx('知识域', 'Domain')}</span>
+                            <span>{tx('状态', 'Status')}</span>
+                            <span>{tx('更新时间', 'Updated')}</span>
                           </div>
                           {recentPages.map(page => (
                             <button className="table-row cols-doc clickable-row" key={page.slug} onClick={() => openPage(page.slug)}>
                               <span className="doc-cell-title"><FileText /> {page.title}</span>
-                              <span className="muted-text">{storageDomainLabel(page.storageDomain ?? 'foundation')}</span>
-                              <span><em className={`status-pill ${page.status}`}>{workflowStatusLabel(page.status)}</em></span>
-                              <span className="mono muted-text">{dateFormatter.format(new Date(page.updatedAt))}</span>
+                              <span className="muted-text">{storageDomainLabel(page.storageDomain ?? 'foundation', locale)}</span>
+                              <span><em className={`status-pill ${page.status}`}>{workflowStatusLabel(page.status, locale)}</em></span>
+                              <span className="mono muted-text">{formatDate(page.updatedAt)}</span>
                             </button>
                           ))}
                         </div>
                       ) : (
                         <div className="empty-box muted">
                           <BookOpen />
-                          <h2>暂无知识页面</h2>
+                          <h2>{tx('暂无知识页面', 'No knowledge pages')}</h2>
                           <div className="head-actions">
                             <button className="btn-primary btn-sm" onClick={() => fileInput.current?.click()}>
-                              <Plus /> 导入资料
+                              <Plus /> {tx('导入资料', 'Import Files')}
                             </button>
                             <button className="btn-secondary btn-sm" onClick={startNewManualPage}>
-                              <Plus /> 新建页面
+                              <Plus /> {tx('新建页面', 'New Page')}
                             </button>
                           </div>
                         </div>
@@ -970,47 +1018,47 @@ export default function App() {
                       value={question}
                       onChange={event => setQuestion(event.target.value)}
                       onKeyDown={composerKeyDown}
-                      placeholder="输入问题检索或向知识库提问（Enter 发送，Shift+Enter 换行）…"
-                      aria-label="向知识库提问"
+                      placeholder={tx('输入问题检索或向知识库提问（Enter 发送，Shift+Enter 换行）…', 'Search or ask the knowledge base (Enter to ask, Shift+Enter for newline)…')}
+                      aria-label={tx('向知识库提问', 'Ask the knowledge base')}
                       rows={2}
                     />
                     <div className="composer-bar">
                       <div className="composer-left">
-                        <button className="icon-btn-sm" onClick={() => fileInput.current?.click()} title="导入资料">
+                        <button className="icon-btn-sm" onClick={() => fileInput.current?.click()} title={tx('导入资料', 'Import Files')}>
                           <Paperclip />
                         </button>
                         <button
                           className={`toggle-chip ${includeSources ? 'active' : ''}`}
                           onClick={() => setIncludeSources(!includeSources)}
                         >
-                          <Layers /> 原文切块
+                          <Layers /> {tx('原文切块', 'Source Chunks')}
                         </button>
                         <button
                           className={`toggle-chip ${includeDrafts ? 'active' : ''}`}
                           onClick={() => setIncludeDrafts(!includeDrafts)}
                         >
-                          含待审
+                          {tx('含待审', 'Include Drafts')}
                         </button>
                         <select
                           className="domain-select"
-                          aria-label="知识域"
+                          aria-label={tx('知识域', 'Knowledge domain')}
                           value={domain}
                           onChange={event => setDomain(event.target.value as StorageDomain | '')}
                         >
-                          <option value="">全部知识域</option>
-                          <option value="foundation">基础概念</option>
-                          <option value="domain_knowledge">专业知识</option>
-                          <option value="cases">案例复盘</option>
-                          <option value="concrete_media">图像与实体</option>
-                          <option value="permissions">权限规范</option>
+                          <option value="">{tx('全部知识域', 'All Domains')}</option>
+                          <option value="foundation">{tx('基础概念', 'Foundation')}</option>
+                          <option value="domain_knowledge">{tx('专业知识', 'Domain Knowledge')}</option>
+                          <option value="cases">{tx('案例复盘', 'Cases')}</option>
+                          <option value="concrete_media">{tx('图像与实体', 'Media & Entities')}</option>
+                          <option value="permissions">{tx('权限规范', 'Permissions')}</option>
                         </select>
                       </div>
                       <div className="composer-right">
                         <button className="btn-secondary btn-sm" onClick={() => void runSearch()} disabled={!question.trim() || qaLoading}>
-                          <Search /> 检索
+                          <Search /> {tx('检索', 'Search')}
                         </button>
                         <button className="btn-primary btn-sm" onClick={() => void runAsk()} disabled={!question.trim() || qaLoading}>
-                          {qaLoading ? <LoaderCircle className="spin" /> : <ArrowUp />} 提问
+                          {qaLoading ? <LoaderCircle className="spin" /> : <ArrowUp />} {tx('提问', 'Ask')}
                         </button>
                       </div>
                     </div>
@@ -1028,26 +1076,26 @@ export default function App() {
                   <div className="dock-visual-meta">
                     <span className="dock-visual-status">
                       <i className={snapshot.modelOnline ? 'online' : ''} />
-                      {snapshot.modelOnline ? '服务在线' : '待配置'}
+                      {snapshot.modelOnline ? tx('服务在线', 'Online') : tx('待配置', 'Setup Needed')}
                     </span>
                     <button
                       className="dock-theme-chip"
                       onClick={() => setTheme(prev => (prev === 'light' ? 'dark' : 'light'))}
-                      title="切换晴空 / 暮光"
+                      title={tx('切换晴空 / 暮光', 'Switch Sky / Sunset')}
                     >
                       {theme === 'light' ? <Moon /> : <Sun />}
                     </button>
                   </div>
                   <div className="dock-visual-foot">
-                    <strong>{snapshot.root ? folderName(snapshot.root) : '知序工作区'}</strong>
+                    <strong>{snapshot.root ? folderName(snapshot.root) : tx('知序工作区', 'ZHIXU Workspace')}</strong>
                     <span className="mono">{snapshot.adminAuth.user?.username ?? 'zhixu'}</span>
                   </div>
                 </div>
 
                 <section className="dock-section">
                   <div className="dock-head">
-                    <h3>三类接口路由</h3>
-                    <button className="link-btn" onClick={openSettings}>配置</button>
+                    <h3>{tx('三类接口路由', '3-Tier Routing')}</h3>
+                    <button className="link-btn" onClick={openSettings}>{tx('配置', 'Edit')}</button>
                   </div>
                   <div className="tier-mini-list">
                     <button className="tier-mini-row" onClick={openSettings}>
@@ -1060,37 +1108,37 @@ export default function App() {
                     </button>
                     <button className="tier-mini-row" onClick={openSettings}>
                       <span className="tier-badge vm">VM</span>
-                      <span>{snapshot.modelProvider.visionModel || '未配置'}</span>
+                      <span>{snapshot.modelProvider.visionModel || tx('未配置', 'Not set')}</span>
                     </button>
                   </div>
                 </section>
 
                 <section className="dock-section">
                   <div className="dock-head">
-                    <h3>待审队列 ({reviewPages.length})</h3>
-                    {reviewPages.length > 0 && <button className="link-btn" onClick={() => navigate('review')}>全部</button>}
+                    <h3>{tx('待审队列', 'Pending Review')} ({reviewPages.length})</h3>
+                    {reviewPages.length > 0 && <button className="link-btn" onClick={() => navigate('review')}>{tx('全部', 'All')}</button>}
                   </div>
                   {reviewPages.length ? (
                     <div className="dock-queue-list">
                       {reviewPages.slice(0, 6).map(page => (
                         <button key={page.slug} onClick={() => openPage(page.slug)}>
                           <span className="dock-q-title">{page.title}</span>
-                          <em className={`status-pill ${page.status}`}>{workflowStatusLabel(page.status)}</em>
+                          <em className={`status-pill ${page.status}`}>{workflowStatusLabel(page.status, locale)}</em>
                         </button>
                       ))}
                     </div>
                   ) : (
-                    <div className="dock-empty">无待审核项</div>
+                    <div className="dock-empty">{tx('无待审核项', 'Queue clear')}</div>
                   )}
                 </section>
 
                 <section className="dock-section">
-                  <div className="dock-head"><h3>知识底座</h3></div>
+                  <div className="dock-head"><h3>{tx('知识底座', 'Index Metrics')}</h3></div>
                   <div className="stat-kv-list">
-                    <div><span>Schema 实体</span><strong className="mono">{snapshot.entityCount}</strong></div>
-                    <div><span>双向互索引</span><strong className="mono">{snapshot.mutualLinkCount}</strong></div>
-                    <div><span>待删审批</span><strong className="mono">{snapshot.pendingDeleteCount}</strong></div>
-                    <div><span>回收站</span><strong className="mono">{snapshot.deletedCount}</strong></div>
+                    <div><span>{tx('Schema 实体', 'Schema Entities')}</span><strong className="mono">{snapshot.entityCount}</strong></div>
+                    <div><span>{tx('双向互索引', 'Mutual Links')}</span><strong className="mono">{snapshot.mutualLinkCount}</strong></div>
+                    <div><span>{tx('待删审批', 'Pending Delete')}</span><strong className="mono">{snapshot.pendingDeleteCount}</strong></div>
+                    <div><span>{tx('回收站', 'Recycle Bin')}</span><strong className="mono">{snapshot.deletedCount}</strong></div>
                   </div>
                 </section>
               </aside>
@@ -1105,16 +1153,16 @@ export default function App() {
                   <div className="doc-search-row">
                     <div className="search-input-wrap">
                       <Search />
-                      <input value={query} onChange={e => setQuery(e.target.value)} placeholder="筛选页面…" />
+                      <input value={query} onChange={e => setQuery(e.target.value)} placeholder={tx('筛选页面…', 'Filter pages…')} />
                     </div>
-                    <button className="btn-primary btn-xs" onClick={startNewManualPage} title="新建知识页面">
-                      <Plus /> 新建
+                    <button className="btn-primary btn-xs" onClick={startNewManualPage} title={tx('新建知识页面', 'New Wiki Page')}>
+                      <Plus /> {tx('新建', 'New')}
                     </button>
                   </div>
                   <div className="seg-tabs">
-                    <button className={knowledgeFilter === 'all' ? 'active' : ''} onClick={() => setKnowledgeFilter('all')}>全部</button>
-                    <button className={knowledgeFilter === 'published' ? 'active' : ''} onClick={() => setKnowledgeFilter('published')}>已发布</button>
-                    <button className={knowledgeFilter === 'review' ? 'active' : ''} onClick={() => setKnowledgeFilter('review')}>待审</button>
+                    <button className={knowledgeFilter === 'all' ? 'active' : ''} onClick={() => setKnowledgeFilter('all')}>{tx('全部', 'All')}</button>
+                    <button className={knowledgeFilter === 'published' ? 'active' : ''} onClick={() => setKnowledgeFilter('published')}>{tx('已发布', 'Published')}</button>
+                    <button className={knowledgeFilter === 'review' ? 'active' : ''} onClick={() => setKnowledgeFilter('review')}>{tx('待审', 'Review')}</button>
                   </div>
                 </div>
                 <div className="doc-list-scroll">
@@ -1130,19 +1178,19 @@ export default function App() {
                       </div>
                       <div className="doc-item-sub">
                         <span className={`dot ${page.status}`} />
-                        <span>{workflowStatusLabel(page.status)}</span>
-                        <span>· {page.sources.length} 依据</span>
+                        <span>{workflowStatusLabel(page.status, locale)}</span>
+                        <span>· {locale === 'en' ? `${page.sources.length} src` : `${page.sources.length} 依据`}</span>
                       </div>
                     </button>
                   ))}
-                  {!filteredKnowledgePages.length && <div className="tree-empty">无匹配页面</div>}
+                  {!filteredKnowledgePages.length && <div className="tree-empty">{tx('无匹配页面', 'No matching pages')}</div>}
                 </div>
               </aside>
 
               <div className="doc-main-pane">
                 {creatingNewPage ? (
                   <PageView
-                    page={NEW_PAGE_TEMPLATE}
+                    page={newPageTemplate}
                     pages={pages}
                     initialEditing={true}
                     onNavigate={openPage}
@@ -1170,13 +1218,13 @@ export default function App() {
                 ) : (
                   <div className="empty-box muted">
                     <BookOpen />
-                    <h2>暂无知识页面</h2>
+                    <h2>{tx('暂无知识页面', 'No knowledge pages')}</h2>
                     <div className="head-actions">
                       <button className="btn-primary btn-sm" onClick={() => fileInput.current?.click()}>
-                        <Plus /> 导入资料
+                        <Plus /> {tx('导入资料', 'Import Files')}
                       </button>
                       <button className="btn-secondary btn-sm" onClick={startNewManualPage}>
-                        <Plus /> 新建页面
+                        <Plus /> {tx('新建页面', 'New Page')}
                       </button>
                     </div>
                   </div>
@@ -1189,10 +1237,10 @@ export default function App() {
           {view === 'review' && (
             <section className="page-container">
               <header className="page-head">
-                <h1>审核队列 ({reviewPages.length})</h1>
+                <h1>{tx('审核队列', 'Review Queue')} ({reviewPages.length})</h1>
                 {reviewPages.some(p => p.status !== 'pending_delete') && (
                   <button className="btn-primary btn-sm" onClick={() => void publishAllDrafts()}>
-                    <CheckCheck /> 全部发布
+                    <CheckCheck /> {tx('全部发布', 'Publish All')}
                   </button>
                 )}
               </header>
@@ -1200,11 +1248,11 @@ export default function App() {
               {reviewPages.length ? (
                 <div className="data-table">
                   <div className="table-head cols-review">
-                    <span>页面</span>
-                    <span>状态</span>
-                    <span>依据</span>
-                    <span>更新时间</span>
-                    <span>操作</span>
+                    <span>{tx('页面', 'Page')}</span>
+                    <span>{tx('状态', 'Status')}</span>
+                    <span>{tx('依据', 'Sources')}</span>
+                    <span>{tx('更新时间', 'Updated')}</span>
+                    <span>{tx('操作', 'Actions')}</span>
                   </div>
                   {reviewPages.map(page => (
                     <div className="table-row cols-review" key={page.slug}>
@@ -1212,25 +1260,25 @@ export default function App() {
                         <strong>{page.title}</strong>
                         <small>{page.workflowNote || page.summary}</small>
                       </button>
-                      <span><em className={`status-pill ${page.status}`}>{workflowStatusLabel(page.status)}</em></span>
+                      <span><em className={`status-pill ${page.status}`}>{workflowStatusLabel(page.status, locale)}</em></span>
                       <span className="mono muted-text">{page.sources.length}</span>
-                      <span className="mono muted-text"><Clock3 className="inline-ico" /> {dateFormatter.format(new Date(page.updatedAt))}</span>
+                      <span className="mono muted-text"><Clock3 className="inline-ico" /> {formatDate(page.updatedAt)}</span>
                       <div className="row-actions">
-                        <button className="btn-secondary btn-xs" onClick={() => openPage(page.slug)}>详情</button>
+                        <button className="btn-secondary btn-xs" onClick={() => openPage(page.slug)}>{tx('详情', 'View')}</button>
                         {page.status === 'pending_delete' ? (
                           <>
-                            <button className="btn-secondary btn-xs" onClick={() => void transitionWorkflow(page.slug, 'reject_delete', '驳回删除')}>保留</button>
-                            <button className="btn-danger btn-xs" onClick={() => void transitionWorkflow(page.slug, 'confirm_delete', '确认移入回收站')}>移入回收站</button>
+                            <button className="btn-secondary btn-xs" onClick={() => void transitionWorkflow(page.slug, 'reject_delete', tx('驳回删除', 'Rejected deletion'))}>{tx('保留', 'Keep')}</button>
+                            <button className="btn-danger btn-xs" onClick={() => void transitionWorkflow(page.slug, 'confirm_delete', tx('确认移入回收站', 'Moved to recycle bin'))}>{tx('移入回收站', 'Recycle')}</button>
                           </>
                         ) : (
-                          <button className="btn-primary btn-xs" onClick={() => void transitionWorkflow(page.slug, 'publish')}>发布</button>
+                          <button className="btn-primary btn-xs" onClick={() => void transitionWorkflow(page.slug, 'publish')}>{tx('发布', 'Publish')}</button>
                         )}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="empty-box"><CheckCheck /><h2>暂无待审核项</h2></div>
+                <div className="empty-box"><CheckCheck /><h2>{tx('暂无待审核项', 'No items pending review')}</h2></div>
               )}
             </section>
           )}
@@ -1263,7 +1311,7 @@ export default function App() {
               onOpenSettings={openSettings}
               onSaveModelSettings={async next => {
                 setSnapshot(await api.setModel(next))
-                setNotice('模型接口设置已保存')
+                setNotice(tx('模型接口设置已保存', 'Model API settings saved'))
               }}
               onTransitionWorkflow={transitionWorkflow}
               onPurgeDeleted={purgeDeletedPage}
@@ -1276,8 +1324,8 @@ export default function App() {
       {dragActive && (
         <div className="drop-overlay">
           <Upload />
-          <strong>松手导入资料</strong>
-          <span>PDF / DOCX / XLSX / PPTX / MD / TXT / HTML / 图片</span>
+          <strong>{tx('松手导入资料', 'Drop files to import')}</strong>
+          <span>{tx('PDF / DOCX / XLSX / PPTX / MD / TXT / HTML / 图片', 'PDF / DOCX / XLSX / PPTX / MD / TXT / HTML / Images')}</span>
         </div>
       )}
 
@@ -1285,7 +1333,7 @@ export default function App() {
         <div className="toast error-toast" role="alert">
           <CircleAlert />
           <span>{error}</span>
-          <button onClick={() => setError('')} aria-label="关闭"><X /></button>
+          <button onClick={() => setError('')} aria-label={tx('关闭', 'Close')}><X /></button>
         </div>
       )}
 
@@ -1293,7 +1341,7 @@ export default function App() {
         <div className="toast success-toast" role="status">
           <Check />
           <span>{notice}</span>
-          <button onClick={() => setNotice('')} aria-label="关闭"><X /></button>
+          <button onClick={() => setNotice('')} aria-label={tx('关闭', 'Close')}><X /></button>
         </div>
       )}
 

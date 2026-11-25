@@ -2,7 +2,14 @@
   "name": "zhixu",
   "version": "0.1.0",
   "private": true,
-  "description": "知序 ZHIXU — Local-first, model-maintained knowledge base for private documents",
+  "license": "Apache-2.0",
+  "author": "Joe Jiang (Felix Joe)",
+  "homepage": "https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base.git"
+  },
+  "description": "知序 ZHIXU — Enterprise-oriented local-first AI knowledge base compiler & governance studio",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",

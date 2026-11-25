@@ -3,6 +3,7 @@ import { useState, type FormEvent } from 'react'
 import logo from '../assets/zhixu-icon.png'
 import wallpaperSky from '../assets/wallpaper-sky.jpg'
 import wallpaperSunset from '../assets/wallpaper-sunset.jpg'
+import { useI18n } from '../i18n'
 
 type Props = {
   theme: 'light' | 'dark'
@@ -25,6 +26,7 @@ export default function LoginPage({
   onLogin,
   windowControls
 }: Props) {
+  const { locale, setLocale, tx } = useI18n()
   const [username, setUsername] = useState('zhixu')
   const [password, setPassword] = useState('')
   const [showPwd, setShowPwd] = useState(false)
@@ -64,31 +66,47 @@ export default function LoginPage({
       {/* Top draggable titlebar with native controls */}
       <header className="login-topbar">
         <div className="login-topbar-brand">
-          <img src={logo} alt="知序" />
-          <span>知序 ZHIXU</span>
+          <img src={logo} alt={tx('知序', 'ZHIXU')} />
+          <span>{tx('知序 ZHIXU', 'ZHIXU')}</span>
         </div>
         <div className="login-topbar-actions">
-          <div className="scene-switch" role="group" aria-label="壁纸切换">
+          <div className="scene-switch" role="group" aria-label={tx('语言切换', 'Language')}>
+            <button
+              type="button"
+              className={locale === 'zh' ? 'active' : ''}
+              onClick={() => setLocale('zh')}
+            >
+              中文
+            </button>
+            <button
+              type="button"
+              className={locale === 'en' ? 'active' : ''}
+              onClick={() => setLocale('en')}
+            >
+              EN
+            </button>
+          </div>
+          <div className="scene-switch" role="group" aria-label={tx('壁纸切换', 'Theme wallpaper')}>
             <button
               type="button"
               className={scene === 'sky' ? 'active' : ''}
               onClick={() => switchScene('sky')}
             >
-              <Sun /> 晴空
+              <Sun /> {tx('晴空', 'Sky')}
             </button>
             <button
               type="button"
               className={scene === 'sunset' ? 'active' : ''}
               onClick={() => switchScene('sunset')}
             >
-              <Moon /> 暮光
+              <Moon /> {tx('暮光', 'Sunset')}
             </button>
           </div>
           {windowControls && (
             <div className="login-win-controls">
-              <button type="button" onClick={() => void windowControls.minimize()} aria-label="最小化"><Minus /></button>
-              <button type="button" onClick={() => void windowControls.toggleMaximize()} aria-label="最大化"><Square /></button>
-              <button type="button" className="win-close" onClick={() => void windowControls.close()} aria-label="关闭"><X /></button>
+              <button type="button" onClick={() => void windowControls.minimize()} aria-label={tx('最小化', 'Minimize')}><Minus /></button>
+              <button type="button" onClick={() => void windowControls.toggleMaximize()} aria-label={tx('最大化', 'Maximize')}><Square /></button>
+              <button type="button" className="win-close" onClick={() => void windowControls.close()} aria-label={tx('关闭', 'Close')}><X /></button>
             </div>
           )}
         </div>
@@ -103,24 +121,24 @@ export default function LoginPage({
             <div className="login-visual-overlay" />
             <div className="login-visual-bottom">
               <div className="visual-badge">
-                <img src={logo} alt="知序" />
+                <img src={logo} alt={tx('知序', 'ZHIXU')} />
                 <div>
-                  <strong>知序 ZHIXU</strong>
+                  <strong>{tx('知序 ZHIXU', 'ZHIXU')}</strong>
                   <span>PRO DESKTOP</span>
                 </div>
               </div>
-              <div className="visual-dots" aria-label="切换壁纸">
+              <div className="visual-dots" aria-label={tx('切换壁纸', 'Switch wallpaper')}>
                 <button
                   type="button"
                   className={scene === 'sky' ? 'active' : ''}
                   onClick={() => switchScene('sky')}
-                  aria-label="晴空壁纸"
+                  aria-label={tx('晴空壁纸', 'Sky wallpaper')}
                 />
                 <button
                   type="button"
                   className={scene === 'sunset' ? 'active' : ''}
                   onClick={() => switchScene('sunset')}
-                  aria-label="暮光壁纸"
+                  aria-label={tx('暮光壁纸', 'Sunset wallpaper')}
                 />
               </div>
             </div>
@@ -129,8 +147,8 @@ export default function LoginPage({
           {/* Right Clean Glass Login Form */}
           <form className="login-form-pane" onSubmit={event => void handleSubmit(event)}>
             <div className="login-form-head">
-              <img src={logo} alt="知序" />
-              <h1>登录知序</h1>
+              <img src={logo} alt={tx('知序', 'ZHIXU')} />
+              <h1>{tx('登录知序', 'Sign in to ZHIXU')}</h1>
             </div>
 
             {error && (
@@ -142,20 +160,20 @@ export default function LoginPage({
 
             <div className="login-fields">
               <div className="field-row">
-                <label htmlFor="login-username">账号</label>
+                <label htmlFor="login-username">{tx('账号', 'Username')}</label>
                 <input
                   id="login-username"
                   className="login-input"
                   value={username}
                   onChange={e => setUsername(e.target.value)}
-                  placeholder="输入账号"
+                  placeholder={tx('输入账号', 'Enter username')}
                   autoComplete="username"
                   autoFocus
                 />
               </div>
 
               <div className="field-row">
-                <label htmlFor="login-password">密码</label>
+                <label htmlFor="login-password">{tx('密码', 'Password')}</label>
                 <div className="pwd-wrap">
                   <input
                     id="login-password"
@@ -163,14 +181,14 @@ export default function LoginPage({
                     type={showPwd ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    placeholder="输入密码"
+                    placeholder={tx('输入密码', 'Enter password')}
                     autoComplete="current-password"
                   />
                   <button
                     type="button"
                     className="pwd-toggle"
                     onClick={() => setShowPwd(prev => !prev)}
-                    aria-label={showPwd ? '隐藏密码' : '显示密码'}
+                    aria-label={showPwd ? tx('隐藏密码', 'Hide password') : tx('显示密码', 'Show password')}
                   >
                     {showPwd ? <EyeOff /> : <Eye />}
                   </button>
@@ -184,7 +202,7 @@ export default function LoginPage({
               disabled={submitting || !username.trim() || !password}
             >
               {submitting ? <LoaderCircle className="spin" /> : <KeyRound />}
-              {submitting ? '正在验证…' : '登录工作台'}
+              {submitting ? tx('正在验证…', 'Verifying…') : tx('登录工作台', 'Sign In')}
             </button>
           </form>
         </div>

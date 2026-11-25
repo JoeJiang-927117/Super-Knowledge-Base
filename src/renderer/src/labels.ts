@@ -1,24 +1,57 @@
 import type { DeploymentMode, OrganizeRun, SearchHit, StorageDomain, WikiLintReport, WikiPage, WorkflowAction, WorkspaceSnapshot } from '../../shared/types'
+import { formatLocalizedDate, type Locale } from './i18n'
 
 export const dateFormatter = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' })
+
+export function formatDateTime(input: string | number | Date, locale: Locale = 'zh'): string {
+  return formatLocalizedDate(input, locale)
+}
 
 export function folderName(root: string): string {
   return root.split(/[\\/]/).filter(Boolean).pop() ?? root
 }
 
-export function deploymentModeLabel(mode: DeploymentMode): string {
+export function deploymentModeLabel(mode: DeploymentMode, locale: Locale = 'zh'): string {
+  if (locale === 'en') {
+    return { cloud: 'Cloud API', lan_gpu: 'LAN GPU', local: 'Local Ollama' }[mode] ?? 'Cloud API'
+  }
   return { cloud: '外部 API', lan_gpu: '局域网 GPU', local: '本机 Ollama' }[mode] ?? '外部 API'
 }
 
-export function providerLabel(provider: WorkspaceSnapshot['modelProvider']): string {
-  return `${deploymentModeLabel(provider.mode ?? 'cloud')} · ${provider.provider === 'ollama' ? 'Ollama' : 'OpenAI-API'}`
+export function providerLabel(provider: WorkspaceSnapshot['modelProvider'], locale: Locale = 'zh'): string {
+  return `${deploymentModeLabel(provider.mode ?? 'cloud', locale)} · ${provider.provider === 'ollama' ? 'Ollama' : 'OpenAI-API'}`
 }
 
-export function storageDomainLabel(domain: StorageDomain): string {
+export function storageDomainLabel(domain: StorageDomain, locale: Locale = 'zh'): string {
+  if (locale === 'en') {
+    return (
+      {
+        permissions: 'Permissions',
+        foundation: 'Foundation',
+        cases: 'Cases',
+        concrete_media: 'Media & Entities',
+        domain_knowledge: 'Domain Knowledge',
+        versions: 'Versions'
+      }[domain] ?? domain
+    )
+  }
   return { permissions: '权限', foundation: '基础', cases: '案例', concrete_media: '图像与实体', domain_knowledge: '专业知识', versions: '版本' }[domain] ?? domain
 }
 
-export function workflowStatusLabel(status: WikiPage['status']): string {
+export function workflowStatusLabel(status: WikiPage['status'], locale: Locale = 'zh'): string {
+  if (locale === 'en') {
+    return (
+      {
+        draft: 'Draft',
+        moderating: 'Moderating',
+        validating: 'Validating',
+        published: 'Published',
+        archived: 'Archived',
+        pending_delete: 'Pending Delete',
+        deleted: 'Recycle Bin'
+      }[status] ?? status
+    )
+  }
   return {
     draft: '待审核',
     moderating: '初审中',
@@ -30,7 +63,22 @@ export function workflowStatusLabel(status: WikiPage['status']): string {
   }[status] ?? status
 }
 
-export function workflowActionLabel(action: WorkflowAction): string {
+export function workflowActionLabel(action: WorkflowAction, locale: Locale = 'zh'): string {
+  if (locale === 'en') {
+    return {
+      submit_moderation: 'Submit Moderation',
+      refuse_moderation: 'Return to Draft',
+      submit_validation: 'Submit Validation',
+      refuse_validation: 'Reject to Draft',
+      publish: 'Approve & Publish',
+      unpublish: 'Unpublish',
+      archive: 'Archive',
+      publish_from_archive: 'Restore & Publish',
+      confirm_delete: 'Move to Recycle Bin',
+      reject_delete: 'Reject Delete',
+      restore_deleted: 'Restore from Recycle Bin'
+    }[action]
+  }
   return {
     submit_moderation: '提交初审',
     refuse_moderation: '退回草稿',
@@ -46,15 +94,42 @@ export function workflowActionLabel(action: WorkflowAction): string {
   }[action]
 }
 
-export function actionName(action: OrganizeRun['changes'][number]['action']): string {
+export function actionName(action: OrganizeRun['changes'][number]['action'], locale: Locale = 'zh'): string {
+  if (locale === 'en') {
+    return { create: 'Create', update: 'Update', delete: 'Suggest Delete' }[action]
+  }
   return { create: '新建', update: '更新', delete: '建议删除' }[action]
 }
 
-export function evidenceLevelLabel(level: WikiPage['evidenceLevel']): string {
+export function evidenceLevelLabel(level: WikiPage['evidenceLevel'], locale: Locale = 'zh'): string {
+  if (locale === 'en') {
+    return (
+      {
+        official_doc: 'Official Doc',
+        operational_doc: 'SOP / Runbook',
+        synthesis_draft: 'Synthesis',
+        field_record: 'Field Record'
+      }[level] ?? level
+    )
+  }
   return { official_doc: '正式文档', operational_doc: '规程文档', synthesis_draft: '综合整理', field_record: '实测记录' }[level] ?? level
 }
 
-export function statusLabel(status: SearchHit['status']): string {
+export function statusLabel(status: SearchHit['status'], locale: Locale = 'zh'): string {
+  if (locale === 'en') {
+    return (
+      {
+        published: 'Published',
+        draft: 'Draft',
+        moderating: 'Moderating',
+        validating: 'Validating',
+        archived: 'Archived',
+        pending_delete: 'Pending Delete',
+        deleted: 'Recycle Bin',
+        raw: 'Raw Source'
+      }[status] ?? status
+    )
+  }
   return {
     published: '已发布',
     draft: '草稿',
@@ -67,11 +142,25 @@ export function statusLabel(status: SearchHit['status']): string {
   }[status] ?? status
 }
 
-export function severityLabel(severity: WikiLintReport['issues'][number]['severity']): string {
+export function severityLabel(severity: WikiLintReport['issues'][number]['severity'], locale: Locale = 'zh'): string {
+  if (locale === 'en') {
+    return { error: 'High', warning: 'Warn', info: 'Info' }[severity]
+  }
   return { error: '高危', warning: '警告', info: '提示' }[severity]
 }
 
-export function lintCategoryLabel(cat: WikiLintReport['issues'][number]['category']): string {
+export function lintCategoryLabel(cat: WikiLintReport['issues'][number]['category'], locale: Locale = 'zh'): string {
+  if (locale === 'en') {
+    return {
+      orphan: 'Orphan Page',
+      no_sources: 'No Sources',
+      broken_link: 'Broken Link',
+      draft_backlog: 'Pending Review',
+      stale_source: 'Stale Source',
+      duplicate_title: 'Duplicate Title',
+      schema_violation: 'Schema Violation'
+    }[cat]
+  }
   return {
     orphan: '孤立页',
     no_sources: '缺少来源',

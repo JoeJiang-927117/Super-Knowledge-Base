@@ -14,5 +14,10 @@ data/
 config.env
 admin-users.json
 settings.json
+*.pfx
+*.p12
+*.key
+*.pem
+*.snk
 .DS_Store
 Thumbs.db

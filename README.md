@@ -7,16 +7,23 @@
 <p><strong>面向企业级场景的轻量开源 AI 知识库架构：可审阅、可溯源、可回滚的本地知识编译器与桌面工作台</strong></p>
 
 <p>
+  <strong>简体中文</strong> | <a href="./README_EN.md">English</a>
+</p>
+
+<p>
   <a href="#项目简介">项目简介</a> ·
   <a href="#界面预览">界面预览</a> ·
   <a href="#与企业级开源知识库架构对比">架构对比</a> ·
   <a href="#技术架构与原理">技术原理</a> ·
   <a href="#模型路由与推荐搭配">模型搭配</a> ·
   <a href="#快速开始">快速开始</a> ·
-  <a href="#部署与-api">部署与 API</a>
+  <a href="#部署与-api">部署与 API</a> ·
+  <a href="#开源许可与代码签名证书">许可与证书</a>
 </p>
 
 <p>
+  <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
+  <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-中文%20%2F%20English-0EA5E9?style=flat-square" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
   <img alt="Electron" src="https://img.shields.io/badge/Electron-Desktop-0F172A?style=flat-square&logo=electron&logoColor=38BDF8" />
   <img alt="React 19" src="https://img.shields.io/badge/React-19-1D4ED8?style=flat-square&logo=react&logoColor=white" />
@@ -290,8 +297,17 @@ npm run server
 
 - [x] 多格式原件解析（含零依赖 `.xlsx` / `.pptx`）与代码围栏安全切块
 - [x] RRF 混合检索、SQLite 持久化向量缓存、词边界 TF-IDF 互索引与 Sigmoid 精排
-- [x] 内置分栏 Markdown 编辑器、多轮连续追问与问答一键沉淀草稿
+- [x] 内置分栏 Markdown 编辑器、多轮连续追问、问答一键沉淀草稿与中英双语界面
 - [x] 声明式审核流、AI 删除审批拦截、回收站与 Git 版本链
 - [ ] 页面级 RBAC 访问隔离与组织角色映射
 - [ ] 扫描版 PDF 本地 OCR 与复杂多栏版面还原
 - [ ] 检索召回率与引用忠实度自动化评估基准集
+
+---
+
+## 开源许可与代码签名证书
+
+- **开源协议**：本项目基于 **[Apache License 2.0](./LICENSE)** 开源（可商用、支持二次开发，含专利授权；分发修改版请保留 [LICENSE](./LICENSE) 与 [NOTICE](./NOTICE) 声明）。
+- **第三方许可**：依赖组件开源协议清单见 [THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md)。
+- **安全策略**：默认安全基线与漏洞披露流程见 [SECURITY.md](./SECURITY.md)。
+- **Windows 代码签名证书**：仓库提供公开校验签名证书 [`certs/zhixu-codesign.cer`](./certs/zhixu-codesign.cer)（RSA 4096 / SHA-256，指纹 `252C0ECD64B70B122EF0FEF369120D624B1175D2`），支持内网分发校验与企业信任导入；签名脚本与商业 CA 替换方式见 [`certs/README.md`](./certs/README.md)。
