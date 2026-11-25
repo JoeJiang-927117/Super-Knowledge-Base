@@ -22,6 +22,7 @@
 </p>
 
 <p>
+  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
   <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases"><img alt="Release" src="https://img.shields.io/badge/Release-v0.2.0-059669?style=flat-square" /></a>
   <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-English%20%2F%20中文-0EA5E9?style=flat-square" />
