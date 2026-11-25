@@ -1,171 +1,172 @@
 <div align="center">
 
-<img src="./assets/zhixu-icon.png" alt="知序 ZHIXU" width="108" />
+<img src="./assets/zhixu-icon.png" alt="ZHIXU" width="108" />
 
-<h1>知序 · ZHIXU</h1>
+<h1>ZHIXU · 知序</h1>
 
-<p><strong>面向企业级场景的轻量开源 AI 知识库架构：可审阅、可溯源、可回滚的本地知识编译器与桌面工作台</strong></p>
+<p><strong>Lightweight Enterprise-Grade Open-Source AI Knowledge Base Architecture: Auditable, Verifiable, and Reversible Local-First Knowledge Compiler &amp; Desktop Studio</strong></p>
 
 <p>
-  <strong>简体中文</strong> | <a href="./README_EN.md">English</a>
+  <strong>English</strong> | <a href="./README_ZH.md">简体中文</a>
 </p>
 
 <p>
-  <a href="#项目简介">项目简介</a> ·
-  <a href="#界面预览">界面预览</a> ·
-  <a href="#与企业级开源知识库架构对比">架构对比</a> ·
-  <a href="#技术架构与原理">技术原理</a> ·
-  <a href="#模型路由与推荐搭配">模型搭配</a> ·
-  <a href="#快速开始">快速开始</a> ·
-  <a href="#部署与-api">部署与 API</a> ·
-  <a href="#开源许可与代码签名证书">许可与证书</a>
+  <a href="#overview">Overview</a> ·
+  <a href="#interface-preview">Preview</a> ·
+  <a href="#comparison-with-enterprise-open-source-kb-architectures">Comparison</a> ·
+  <a href="#architecture--core-engineering">Architecture</a> ·
+  <a href="#model-routing">Model Routing</a> ·
+  <a href="#quick-start">Quick Start</a> ·
+  <a href="#deployment--api">Deployment &amp; API</a> ·
+  <a href="#license--code-signing-certificate">License &amp; Cert</a>
 </p>
 
 <p>
   <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
-  <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-中文%20%2F%20English-0EA5E9?style=flat-square" />
+  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases"><img alt="Release" src="https://img.shields.io/badge/Release-v0.1.0-059669?style=flat-square" /></a>
+  <img alt="Tests" src="https://img.shields.io/badge/Checks-14%20Passed-059669?style=flat-square" />
+  <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-English%20%2F%20中文-0EA5E9?style=flat-square" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
   <img alt="Electron" src="https://img.shields.io/badge/Electron-Desktop-0F172A?style=flat-square&logo=electron&logoColor=38BDF8" />
   <img alt="React 19" src="https://img.shields.io/badge/React-19-1D4ED8?style=flat-square&logo=react&logoColor=white" />
   <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24+-15803D?style=flat-square&logo=node.js&logoColor=white" />
   <img alt="SQLite + Git" src="https://img.shields.io/badge/Storage-Markdown%20%2B%20SQLite%20%2B%20Git-4F46E5?style=flat-square" />
-  <img alt="Tests" src="https://img.shields.io/badge/Verified-14%20Automated%20Checks-059669?style=flat-square" />
-  <img alt="Default Login" src="https://img.shields.io/badge/初始账密-zhixu%20%2F%20123456789-0F172A?style=flat-square" />
+  <img alt="Default Login" src="https://img.shields.io/badge/Default%20Login-zhixu%20%2F%20123456789-0F172A?style=flat-square" />
 </p>
 
 <br />
 
-<img src="./docs/screenshots/02-workspace.png" alt="知序工作台" width="96%" />
+<img src="./docs/screenshots/02-workspace-en.png" alt="ZHIXU Workspace" width="96%" />
 
 </div>
 
 ---
 
-## 项目简介
+## Overview
 
-知序（ZHIXU）直接对标**企业级开源知识库架构**（如 RAGFlow、Dify、AnythingLLM、XWiki），聚焦企业落地 AI 知识库时最真实的工程痛点：**既要企业级的严谨治理、可审计与安全边界，又不想背负 Elasticsearch + MinIO + Redis + MySQL + 多容器编排的沉重运维负担**。
+**ZHIXU (知序)** is benchmarked directly against **enterprise open-source knowledge base architectures** (such as RAGFlow, Dify, AnythingLLM, and XWiki), built for teams that need **enterprise governance, auditability, and strict security boundaries without the operational overhead of Elasticsearch + MinIO + Redis + MySQL multi-container stacks**.
 
-在研发、运维、制度合规、项目管理等企业业务中，核心知识高度分散在 PDF 规范、Word 规程、Excel 台账、PPT 汇报与现场图片之中。现有方案通常存在三类落差：
-- **传统企业 Wiki（Confluence / XWiki / Outline）**：权限与流程成熟，但完全依赖人工整理，存量文档无法自动转化为结构化知识，长期维护成本极高。
-- **重型企业 RAG 平台（RAGFlow / Dify）**：流水线功能齐全，但部署链路重、组件多、硬件门槛高，且以“切片向量检索”为主，缺乏面向正式制度与规程的「草稿审核 → 发布基线 → AI 删除拦截 → Git 回滚」治理闭环。
-- **轻量本地问答工具（AnythingLLM 等）**：上手快，但偏向个人对话助手，缺少结构化 Wiki 编译、原文摘录回查核验、分栏人工修订与多级审批审计能力。
+In engineering, operations, compliance, and project delivery, critical knowledge lives scattered across PDF specs, Word SOPs, Excel inventories, PowerPoint decks, and field photos. Existing options leave three common gaps:
+- **Traditional Enterprise Wikis (Confluence / XWiki / Outline)**: Mature review workflows, but entirely manual—legacy documents cannot be compiled into structured knowledge automatically.
+- **Heavyweight RAG Platforms (RAGFlow / Dify)**: Feature-rich pipelines, but heavy deployment footprint and chunk-only retrieval that lacks formal Wiki governance (`Draft → Review → Published Baseline → AI Delete Guard → Git Rollback`).
+- **Lightweight Local Chat Tools (AnythingLLM, etc.)**: Fast to run locally, but oriented around personal chat rather than structured Wiki compilation, excerpt line/page verification, split manual editing, and multi-stage approval.
 
-**知序采用「轻量单体、企业内核」的 AI 知识编译架构**：
+**ZHIXU takes a "Lightweight Monolith, Enterprise Kernel" approach:**
 
-1. **不可变证据底座**：所有导入的 PDF、DOCX、XLSX、PPTX、Markdown 与图片作为不可变原始凭证本地落盘，按 SHA-256 哈希增量识别变化，任何 AI 操作绝不改写原件。
-2. **两阶段知识编译与摘录核验**：通过结构感知切块、零重依赖 OOXML 解析与两阶段模型编译，将异构资料自动沉淀为结构化 Markdown Wiki、六大知识域分类与 TF-IDF 实体互索引；所有引用摘录自动回查原文行/页定位，无法核验的幻觉内容直接剔除。
-3. **企业级变更治理闭环**：AI 新增与更新全部先进入声明式审核流（`草稿 → 初审 → 终审 → 发布 → 归档`），AI 删除建议强制拦截进入「待删审批 → 回收站」；内置分栏 Markdown 编辑器支持人工随时修订与新建，每次变更均可对比已发布基线的行级 Diff，并依托 SQLite 版本快照与 `isomorphic-git` 实现任意版本回滚与一键撤销整理。
-4. **开放数据主权与低成本交付**：知识正文即标准 Markdown，索引与持久化向量存于本地 SQLite，版本审计存于标准 `.git` 仓库。单机可跑桌面客户端，内网/服务器通过单个 Node 进程或单容器 Docker 即可一键交付团队使用。
+1. **Immutable Evidence Base**: Imported PDF, DOCX, XLSX, PPTX, Markdown, and image files are stored locally as immutable source records tracked by SHA-256 hashes. AI never mutates original files.
+2. **Two-Stage Knowledge Compilation & Excerpt Verification**: Structure-aware chunking, zero-bloat OOXML parsing, and two-stage compilation turn heterogeneous sources into a structured Markdown Wiki across six knowledge domains with TF-IDF mutual entity indexing. Cited excerpts are verified back against original line/page locators; unverifiable hallucinations are dropped.
+3. **Enterprise Change Governance**: AI creations and updates enter a declarative review workflow (`Draft → Moderating → Validating → Published → Archived`). AI delete proposals are intercepted into `Pending Delete → Recycle Bin`. A built-in split Markdown editor allows human editing with baseline line-level diffs, SQLite version snapshots, and `isomorphic-git` rollback.
+4. **Open Data Sovereignty & Bilingual Experience**: Knowledge lives as plain Markdown, indexes and persistent vectors live in local SQLite, and revision history lives in standard `.git`. Supports one-click **English / Chinese (`EN / 中文`)** UI switching and deploys as a desktop app, single Node process, or single Docker container.
 
-### 典型企业落地场景
+### Typical Enterprise Scenarios
 
-- **研发与运维知识底座**：沉淀服务器台账（`.xlsx`）、巡检规程（`.docx`/`.pdf`）、排障脚本与事故复盘，利用精确 IP/端口/版本号提权检索快速定位处置方案。
-- **制度、标准与合规资料库**：对准确度与审计要求极高的场景——强制人工审核发布、保留历史正式基线、问答严格标注适用条件与冲突缺口，杜绝“AI 偷偷改规范”。
-- **项目经验与方案复盘**：将分散的立项文档、汇报 PPT（含演讲备注）与现场图片统一编译为可跳转的主题百科，支持多轮追问并将优质分析一键沉淀为正式草稿。
-- **专网 / 局域网私有部署**：默认外部 API 优先，也可无缝切换局域网 GPU（vLLM / SGLang / Ollama）或本机 Ollama，配合强制令牌鉴权与 `127.0.0.1` 默认绑定满足内网安全基线。
+- **Engineering & Ops Knowledge Base**: Compile server inventories (`.xlsx`), SOP runbooks (`.docx`/`.pdf`), scripts, and incident postmortems with exact IP/port/version boosting.
+- **Policies, Standards & Compliance**: Mandatory human review before publishing, preserved official baselines, explicit applicability & conflict reporting—preventing silent AI edits to formal rules.
+- **Project Delivery & Postmortems**: Unify proposals, slide decks (including speaker notes), and site photos into a cross-linked Wiki; turn multi-turn Q&A conclusions into reviewable drafts in one click.
+- **Private / Intranet Deployment**: Cloud API first by default, or switch seamlessly to LAN GPU (`vLLM` / `SGLang` / `Ollama`) or local Ollama with mandatory Bearer auth and `127.0.0.1` default binding.
 
 ---
 
-## 与企业级开源知识库架构对比
+## Comparison with Enterprise Open-Source KB Architectures
 
-| 架构维度 | 重型开源 RAG 平台<br/>（如 RAGFlow / Dify） | 轻量本地 AI 助手<br/>（如 AnythingLLM） | 传统企业 Wiki<br/>（如 XWiki / Outline） | 知序 · ZHIXU |
+| Dimension | Heavyweight Open-Source RAG<br/>(RAGFlow / Dify) | Lightweight Local AI<br/>(AnythingLLM) | Traditional Enterprise Wiki<br/>(XWiki / Outline) | ZHIXU · 知序 |
 | :--- | :--- | :--- | :--- | :--- |
-| **核心定位** | 通用多租户 RAG 编排平台 | 个人/小团队本地对话与 Agent | 人工协作文档与知识门户 | **轻量级企业 AI 知识编译器与治理工作台** |
-| **部署复杂度** | 高（常需 ES / DB / 对象存储 / Redis 多容器） | 低（单桌面或单容器） | 中（需数据库与 Web 服务） | **极低（桌面端或单进程 / 单容器 Docker）** |
-| **知识产出形态** | 向量切片为主，人难直接维护 | 向量切片与聊天记录 | 人工编写页面 | **自动编译 + 人工可编辑的标准 Markdown Wiki** |
-| **防幻觉与核验** | 依赖重排与提示词约束 | 依赖基础相似度召回 | 人工编写 | **原文摘录强制回查定位 + 证据不足诚实拒答** |
-| **AI 变更治理** | 缺少页面级审批与删除拦截 | 无审核流与版本基线 | 有流程但无 AI 编译能力 | **声明式审核流 + AI 删除拦截回收站 + 行级 Diff + Git 回滚** |
-| **模型算力分工** | 偏统一模型配置 | 单一聊天/嵌入模型 | 无 | **LLLM / LLM / VM 三层独立接口按任务分流** |
-| **数据开放性** | 深度耦合内部数据库与对象存储 | 耦合内部向量库 | 耦合平台数据库 | **100% 开放本地文件（Markdown + SQLite + Git）** |
+| **Core Focus** | Multi-tenant RAG orchestration | Personal / small-team local chat | Manual collaborative docs | **Lightweight Enterprise AI Knowledge Compiler & Governance Studio** |
+| **Deployment** | Heavy (ES / DB / MinIO / Redis) | Light (Desktop / single container) | Medium (DB + web services) | **Ultra-light (Desktop app, single Node process, or 1 Docker container)** |
+| **Knowledge Artifact** | Vector chunks (hard to curate manually) | Vector chunks & chat logs | Manually authored pages | **Auto-compiled + human-editable standard Markdown Wiki** |
+| **Anti-Hallucination** | Rerank + prompt guardrails | Basic similarity retrieval | Manual writing | **Mandatory source excerpt locator verification + honest refusal** |
+| **AI Change Governance** | No page-level review / delete guard | No approval workflow / baselines | Workflow without AI compilation | **Declarative review + AI delete recycle bin + line Diff + Git rollback** |
+| **Model Compute Split** | Unified model config | Single chat/embedding model | None | **Independent LLLM / LLM / VM 3-tier routing by cognitive load** |
+| **Data Openness** | Coupled to internal DB & object store | Coupled to internal vector DB | Coupled to platform DB | **100% open local files (Markdown + SQLite + Git)** |
 
 ---
 
-## 界面预览
+## Interface Preview
 
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/01-login.png" alt="登录页" />
+      <img src="./docs/screenshots/01-login-en.png" alt="Login Page" />
       <br />
-      <strong>登录页</strong>
+      <strong>Login Page</strong>
     </td>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/03-knowledge.png" alt="三栏知识工作台" />
+      <img src="./docs/screenshots/03-knowledge-en.png" alt="3-Pane Knowledge Studio" />
       <br />
-      <strong>三栏知识工作台</strong> · 分栏编辑 / 版本差异 / 原文依据检查器
+      <strong>3-Pane Knowledge Studio</strong> · Split Editor / Line Diff / Source Inspector
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/04-admin.png" alt="系统控制中心" />
+      <img src="./docs/screenshots/04-admin-en.png" alt="Admin Control Center" />
       <br />
-      <strong>全景系统控制中心</strong> · 三类 API 路由 / 防删回收站 / 多账号管理
+      <strong>Admin Control Center</strong> · 3-Tier API Routing / Recycle Bin / Accounts
     </td>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/02-workspace.png" alt="多轮问答工作台" />
+      <img src="./docs/screenshots/02-workspace-en.png" alt="Multi-Turn Q&A Workspace" />
       <br />
-      <strong>多轮问答工作台</strong> · 上下文追问 / 命中高亮 / 一键沉淀草稿
+      <strong>Multi-Turn Q&amp;A Workspace</strong> · Context Follow-ups / Highlighting / Save as Draft
     </td>
   </tr>
 </table>
 
 ---
 
-## 技术架构与原理
+## Architecture & Core Engineering
 
 ```mermaid
 flowchart LR
-    A["多格式原件<br/>PDF · DOCX · XLSX · PPTX · 图片"] --> B["结构感知切块<br/>代码围栏保护 · IP/版本安全分句"]
-    B --> C["三类接口路由<br/>LLLM 规划 · LLM 问答 · VM 识图"]
-    C --> D["原文摘录核验<br/>回查行/页定位 · 丢弃幻觉"]
-    D --> E["声明式治理队列<br/>草稿审核 · AI 删除拦截进回收站"]
-    E --> F["本地数据底座<br/>Markdown · SQLite 持久向量 · Git"]
-    F --> G["RRF 混合检索 & 多轮问答<br/>精确参数提权 · 问答一键沉淀"]
+    A["Multi-Format Sources<br/>PDF · DOCX · XLSX · PPTX · Images"] --> B["Structure-Aware Chunker<br/>Code-Fence Safe · IP/Version Safe"]
+    B --> C["3-Tier Model Routing<br/>LLLM Plan · LLM Q&A · VM Vision"]
+    C --> D["Excerpt Verification<br/>Line/Page Locator Check · Drop Hallucinations"]
+    D --> E["Declarative Governance<br/>Review Queue · AI Delete Intercept → Recycle Bin"]
+    E --> F["Open Local Storage<br/>Markdown · SQLite Vectors · Git"]
+    F --> G["RRF Hybrid Retrieval & Q&A<br/>Exact Token Boost · One-Click Save to Draft"]
 ```
 
-### 1. 零重依赖文档解析与结构感知切块
-- **自研 OOXML 解析器**（`src/main/ooxml.ts`）：基于 Node 原生 `zlib` 与纯 TypeScript ZIP 中央目录读取器实现，无需引入数十 MB 的重型第三方表格库。Excel 按工作表输出标准 Markdown 表格（切块时自动为每个切片续接表头），PPT 按幻灯片序号提取正文并自动合并演讲者备注。
-- **结构感知语义切块引擎**（`src/main/chunker.ts`）：
-  - **围栏代码块状态机**：精确追踪 ```` ``` ```` 与 `~~~` 区域，确保脚本中的 `# 注释` 或编号行绝不被误判为章节标题；超长代码块按行安全拆分并补全围栏标记。
-  - **工程字面量安全分句**：保护 IP 地址（`192.168.1.100`）、版本号（`v2.0.1`）与小数（`3.14`）不被英文句点切碎。
-  - **微块自动合并与内容去重**：同章节路径下的过短文本碎片自动合并，保留完整层级面包屑与行/页定位。
+### 1. Zero-Bloat Document Parsing & Structure-Aware Chunking
+- **Custom OOXML Parser** (`src/main/ooxml.ts`): Built on Node native `zlib` and a pure TypeScript ZIP central directory reader—no multi-megabyte spreadsheet libraries. `.xlsx` sheets emit Markdown tables with header continuation across chunks; `.pptx` extracts slides alongside speaker notes.
+- **Structure-Aware Semantic Chunker** (`src/main/chunker.ts`):
+  - **Code-Fence State Machine**: Tracks ```` ``` ```` and `~~~` blocks so `# comments` inside scripts are never misread as headings; oversized code blocks split cleanly on line boundaries with balanced fences.
+  - **Engineering-Literal-Safe Splitting**: Preserves IP addresses (`192.168.1.100`), versions (`v2.0.1`), and decimals (`3.14`).
+  - **Micro-Chunk Coalescing & Deduplication**: Merges tiny fragments within the same section path while retaining breadcrumbs and line/page locators.
 
-### 2. RRF 多路融合检索与诚实引用问答
-- **四路融合排序**（`src/main/search.ts`、`src/main/schema.ts`）：
-  1. **中文分词 BM25**：基于 `Intl.Segmenter('zh-CN')` + 二元切词的全文检索，内存索引按 `(root, revision, scope)` 缓存；
-  2. **SQLite 持久化向量检索**：按文档内容哈希增量写入本地 `embeddings` 表，去除数量上限且避免重复计算；
-  3. **边界感知 TF-IDF 互索引**：对英文/ASCII 实体强制词边界匹配（彻底消除 `port` 误命中 `import`/`report`），自动提取并归并括号别名（如 `标准操作规程（SOP）` → `SOP`），按 TF-IDF × 标题位置加权关联切块与 Wiki；
-  4. **精确参数提权 + 自适应 Sigmoid 精排**：针对 IP、端口、版本号、带单位数值额外提权；Cross-Encoder 原始 logit 采用温度缩放 Logistic Sigmoid 校准（`1 / (1 + exp(-x / T))`），避免线性 min-max 把低相关候选误拉为满分。
-- **多轮连续追问与证据高亮**：支持携带近 3 轮对话历史进行指代消解与上下文检索，命中证据自动高亮查询词；每条回答均输出「核心结论 / 适用条件 / 冲突与缺失 / 引用来源」，证据不足时明确拒答且绝不伪造引用。
+### 2. RRF Hybrid Retrieval & Honest Citation Q&A
+- **4-Signal Fusion** (`src/main/search.ts`, `src/main/schema.ts`):
+  1. **Chinese + English BM25**: `Intl.Segmenter('zh-CN')` + bigram indexing cached per `(root, revision, scope)`.
+  2. **Persistent SQLite Vectors**: Incremental content-hash embeddings persisted in SQLite with no artificial row cap.
+  3. **Word-Boundary TF-IDF Mutual Index**: Enforces ASCII word boundaries (eliminating false matches like `port` inside `import`/`report`), merges parenthetical aliases (`Standard Operating Procedure (SOP)` → `SOP`), and weights entity links by TF-IDF × heading position.
+  4. **Exact Technical Token Boost + Adaptive Sigmoid Rerank**: Boosts exact IP/port/version/unit tokens; calibrates Cross-Encoder logits with temperature-scaled Logistic Sigmoid (`1 / (1 + exp(-x / T))`).
+- **Multi-Turn Follow-ups & Evidence Highlighting**: Carries the last 3 verified turns for coreference resolution, highlights matched terms in evidence snippets, and outputs `Conclusion / Applicability / Conflicts & Gaps / Citations`—refusing cleanly when evidence is insufficient.
 
-### 3. 容错存储、版本治理与安全边界
-- **崩溃自愈与原子写盘**（`src/main/safe-write.ts`）：写入锁文件记录进程 PID，异常崩溃遗留的死锁在毫秒级自动检测回收；Markdown 写入走「临时文件 → `fsync` → 原子重命名（Windows `EPERM/EBUSY` 退避重试）」。
-- **代码块保护体检修复**（`src/main/linter.ts`）：自动巡检无依据页面、过期原件、断链、孤立页、重复标题、Schema 缺项与过薄内容；一键修复断链时严格跳过围栏代码与行内代码中的 `[[...]]`。
-- **安全默认项**（`src/main/admin-auth.ts`、`src/server/index.ts`）：服务端默认绑定 `127.0.0.1`，未配置 Token 时自动生成强随机令牌强制鉴权；CORS 支持来源白名单；后台账号支持 `superadmin` / `reviewer` 分级，密码采用随机盐 `scrypt` + 常量时间比对。
+### 3. Crash-Safe Storage, Governance & Security Defaults
+- **Crash-Resilient Atomic Writes** (`src/main/safe-write.ts`): PID-tracked lock files recover dead locks in milliseconds; writes use `temp file → fsync → atomic rename` with Windows `EPERM/EBUSY` retry backoff.
+- **Code-Safe Health Linter** (`src/main/linter.ts`): Audits unsourced pages, stale sources, broken wikilinks, orphan pages, duplicate titles, schema violations, and thin pages; auto-fixing broken links strictly skips fenced and inline code spans.
+- **Secure Defaults** (`src/main/admin-auth.ts`, `src/server/index.ts`): Binds `127.0.0.1` by default, auto-generates a strong Bearer token verified with `timingSafeEqual`, blocks internal dotfile reads on `/api/source`, supports CORS allowlists, `superadmin` / `reviewer` roles, and salted `scrypt` password hashing.
 
 ---
 
-## 模型路由与推荐搭配
+## Model Routing
 
-知序采用**外部 API 优先**架构，同时支持局域网 GPU 服务（vLLM / SGLang / Ollama）与本机 Ollama，并把不同认知负载拆分到三类独立接口（可共享同一主网关，也可分别配置独立的 `Base URL` 与 `API Key`）：
+ZHIXU defaults to **Cloud API First** while supporting **LAN GPU** (`vLLM` / `SGLang` / `Ollama`) and **Local Ollama**. Three independent tiers can share one gateway or use separate `Base URL` & `API Key` values:
 
-| 接口层级 | 职责范围 | 云端外部 API 推荐 | 局域网 / 本机私有推荐 |
+| Tier | Responsibility | Cloud API Recommendations | LAN / Local Private Recommendations |
 | :--- | :--- | :--- | :--- |
-| **`LLLM`** | 全局 Wiki 结构规划、跨文档综合编译 | `deepseek-reasoner` / `qwen-max` / `o3-mini` | `Qwen3-32B` / `DeepSeek-R1-Distill-32B` |
-| **`LLM`** | 日常多轮问答、单文档要点提取、引用核验 | `deepseek-chat` / `gpt-4o-mini` / `qwen-plus` | `Qwen3-14B` / `qwen2.5:14b` |
-| **`VM`** | 现场照片、架构图、扫描图表多模态解析 | `qwen-vl-max` / `gpt-4o` | `qwen2.5vl:7b` / `Qwen2.5-VL-72B` |
-| **`Embedding` / `Rerank`**（可选） | 持久化语义向量与精排打分 | `text-embedding-3-small` / `BAAI/bge-m3` | `bge-m3` + `bge-reranker-v2-m3` |
+| **`LLLM`** | Global Wiki planning & cross-document synthesis | `deepseek-reasoner` / `qwen-max` / `o3-mini` | `Qwen3-32B` / `DeepSeek-R1-Distill-32B` |
+| **`LLM`** | Multi-turn Q&A, single-doc extraction, verification | `deepseek-chat` / `gpt-4o-mini` / `qwen-plus` | `Qwen3-14B` / `qwen2.5:14b` |
+| **`VM`** | Photos, architecture diagrams, scanned charts | `qwen-vl-max` / `gpt-4o` | `qwen2.5vl:7b` / `Qwen2.5-VL-72B` |
+| **`Embedding` / `Rerank`** (Optional) | Persistent semantic vectors & reranking | `text-embedding-3-small` / `BAAI/bge-m3` | `bge-m3` + `bge-reranker-v2-m3` |
 
 ---
 
-## 快速开始
+## Quick Start
 
 > [!IMPORTANT]
-> **初始默认账密**：账号 `zhixu` / 密码 `123456789`（可通过环境变量 `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD` 覆盖，首次登录后可在「系统后台 → 账号安全」修改）。
+> **Default Admin Credentials**: Username `zhixu` / Password `123456789` (override via `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD`, and change after first sign-in under **Admin Console → Accounts**).
 
-> **环境要求**：Node.js `>= 22.13`（推荐 `24.x`，原生内置 `node:sqlite`）
+> **Runtime Requirement**: Node.js `>= 22.13` (`24.x` recommended, built-in `node:sqlite`).
 
-### 桌面端本地运行
+### Run Desktop App Locally
 
 ```bash
 git clone https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base.git
@@ -174,9 +175,10 @@ npm install
 npm run dev
 ```
 
-- 快捷键：`Ctrl + K` 唤起全局命令面板；编辑模式下 `Ctrl + S` 快速保存草稿。
+- Switch between **English** and **简体中文** anytime from the login bar, workspace titlebar (`EN / 中文`), or Command Palette (`Ctrl + K`).
+- Shortcuts: `Ctrl + K` opens the Command Palette; `Ctrl + S` saves draft in the split Markdown editor.
 
-### 类型检查、构建与自动化验证
+### Typecheck, Build & Automated Verification
 
 ```bash
 npm run typecheck
@@ -184,20 +186,20 @@ npm run build
 npm test
 ```
 
-`npm test` 会运行全部 **14 项自动化验证**（结构切块、OOXML 解析、词边界互索引、Sigmoid 校准、死进程锁自愈、强制鉴权、三层路由、持久向量缓存、诚实引用、删除审批回收站及人工编辑器版本链）。
+`npm test` runs all **14 automated checks** covering chunking, OOXML parsing, word-boundary entity indexing, Sigmoid calibration, stale-PID lock recovery, mandatory auth, 3-tier routing, persistent vector cache, honest refusal, delete-approval recycle bin, and manual editor versioning.
 
-### 打包 Windows 客户端
+### Package Windows Desktop Client
 
 ```bash
-npm run package:dir   # 免安装绿色版 -> release/win-unpacked/
-npm run package       # NSIS 安装包 -> release/
+npm run package:dir   # Portable folder -> release/win-unpacked/
+npm run package       # NSIS installer  -> release/
 ```
 
 ---
 
-## 部署与 API
+## Deployment & API
 
-### Docker Compose 一键启动服务端
+### Docker Compose
 
 ```bash
 ZHIXU_API_KEY=your-api-key \
@@ -206,7 +208,7 @@ ZHIXU_ADMIN_PASSWORD=your-strong-password \
 docker compose up -d --build
 ```
 
-### Node 独立服务端
+### Standalone Node Server
 
 ```bash
 ZHIXU_ROOT=/data/knowledge-base \
@@ -216,98 +218,72 @@ npm run server
 ```
 
 <details>
-<summary><strong>展开查看：完整环境变量清单</strong></summary>
+<summary><strong>Expand: Full Environment Variable Reference</strong></summary>
 
-| 变量 | 说明 | 默认值 |
+| Variable | Description | Default |
 | :--- | :--- | :--- |
-| `ZHIXU_HOST` / `ZHIXU_PORT` | 服务端监听地址与端口 | `127.0.0.1` / `8787` |
-| `ZHIXU_ROOT` | 知识库数据根目录 | `./data` |
-| `ZHIXU_MODE` | 运行模式：`cloud`（外部 API 优先）/ `lan_gpu` / `local` | `cloud` |
-| `ZHIXU_MODEL_BASE_URL` | 主模型网关地址（OpenAI 兼容） | `https://api.deepseek.com/v1` |
-| `ZHIXU_API_KEY` | 默认共享 API Key | 空 |
-| `ZHIXU_LLLM_MODEL` | LLLM 重推理模型（可选独立 `ZHIXU_LLLM_BASE_URL` / `ZHIXU_LLLM_API_KEY`） | `deepseek-reasoner` |
-| `ZHIXU_LLM_MODEL` | LLM 标准问答模型（可选独立 `ZHIXU_LLM_BASE_URL` / `ZHIXU_LLM_API_KEY`） | `deepseek-chat` |
-| `ZHIXU_VISION_MODEL` | VM 视觉多模态模型（可选独立 `ZHIXU_VM_BASE_URL` / `ZHIXU_VM_API_KEY`） | `qwen-vl-max` |
-| `ZHIXU_EMBEDDING_MODEL` | 持久化向量 Embedding 模型 | `text-embedding-3-small` |
-| `ZHIXU_RERANK_BASE_URL` / `ZHIXU_RERANK_MODEL` | 可选 Cross-Encoder 精排服务 | 空 |
-| `ZHIXU_SERVER_TOKEN` | 服务端 Bearer 令牌（留空自动生成高强度随机令牌） | 自动生成 |
-| `ZHIXU_CORS_ORIGIN` | 允许跨域来源白名单（逗号分隔） | 本机环回 |
-| `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD` | 初始超级管理员账密 | `zhixu` / `123456789` |
+| `ZHIXU_HOST` / `ZHIXU_PORT` | Server bind host & port | `127.0.0.1` / `8787` |
+| `ZHIXU_ROOT` | Knowledge base root directory | `./data` |
+| `ZHIXU_MODE` | Mode: `cloud` / `lan_gpu` / `local` | `cloud` |
+| `ZHIXU_MODEL_BASE_URL` | Primary OpenAI-compatible gateway URL | `https://api.deepseek.com/v1` |
+| `ZHIXU_API_KEY` | Default shared API key | empty |
+| `ZHIXU_LLLM_MODEL` | LLLM reasoning model (optional `ZHIXU_LLLM_BASE_URL` / `ZHIXU_LLLM_API_KEY`) | `deepseek-reasoner` |
+| `ZHIXU_LLM_MODEL` | LLM Q&A model (optional `ZHIXU_LLM_BASE_URL` / `ZHIXU_LLM_API_KEY`) | `deepseek-chat` |
+| `ZHIXU_VISION_MODEL` | VM vision model (optional `ZHIXU_VM_BASE_URL` / `ZHIXU_VM_API_KEY`) | `qwen-vl-max` |
+| `ZHIXU_EMBEDDING_MODEL` | Persistent vector embedding model | `text-embedding-3-small` |
+| `ZHIXU_RERANK_BASE_URL` / `ZHIXU_RERANK_MODEL` | Optional Cross-Encoder rerank endpoint | empty |
+| `ZHIXU_SERVER_TOKEN` | Server Bearer token (auto-generated if empty) | auto-generated |
+| `ZHIXU_CORS_ORIGIN` | Comma-separated CORS allowlist | loopback only |
+| `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD` | Initial superadmin credentials | `zhixu` / `123456789` |
 
 </details>
 
 <details>
-<summary><strong>展开查看：主要 HTTP API 接口</strong></summary>
+<summary><strong>Expand: Core HTTP API Endpoints</strong></summary>
 
-所有受保护接口需携带 `Authorization: Bearer <TOKEN>`（服务端令牌或 `/api/auth/login` 返回的管理员会话令牌）：
+Protected endpoints require `Authorization: Bearer <TOKEN>` (server token or admin session token from `/api/auth/login`):
 
-| 方法与路径 | 说明 |
+| Method & Path | Description |
 | :--- | :--- |
-| `GET /api/v1/health` | 健康检查与鉴权状态 |
-| `POST /api/auth/login` | 管理员登录换取会话令牌 |
-| `GET /api/snapshot` | 获取工作区完整快照 |
-| `POST /api/upload` | 上传原始资料（支持 Base64 JSON） |
-| `POST /api/organize` | 触发增量扫描、切块与 Wiki 编译 |
-| `POST /api/pages/save` | 人工新建或编辑 Wiki 页面（带版本快照与 Git 留痕） |
-| `POST /api/workflow/transition` | 审核流转与删除审批（发布 / 退回 / 回收站 / 恢复） |
-| `POST /api/v1/search` | RRF 多路混合检索 |
-| `POST /api/v1/ask` | 多轮上下文溯源问答 |
-| `GET /api/lint` / `POST /api/lint/fix` | 确定性知识体检与代码块安全断链修复 |
-
-</details>
-
-<details>
-<summary><strong>展开查看：源码目录结构</strong></summary>
-
-```text
-.
-├── assets/                          # 透明底应用图标 (zhixu-icon.png / icon.ico)
-├── docs/screenshots/                # Demo 实景界面快照
-├── src/
-│   ├── main/
-│   │   ├── index.ts                 # Electron 主进程与 IPC 路由
-│   │   ├── store.ts                 # SQLite 索引、持久化向量表、Git 与版本快照
-│   │   ├── wiki-engine.ts           # 两阶段知识提取、编译与原文摘录核验
-│   │   ├── chunker.ts               # 结构感知语义切块引擎
-│   │   ├── ooxml.ts                 # 零依赖 .xlsx / .pptx OOXML 解析器
-│   │   ├── schema.ts                # 六域分类与边界感知 TF-IDF 互索引
-│   │   ├── search.ts                # RRF 混合检索、多轮追问与诚实引用问答
-│   │   ├── model.ts                 # LLLM / LLM / VM 三类接口与 Sigmoid 校准
-│   │   ├── workflow.ts              # 声明式审核与防删状态机
-│   │   ├── linter.ts                # 确定性知识体检与断链修复
-│   │   ├── safe-write.ts            # 死进程自愈锁、原子写入与代码保护链接修复
-│   │   └── admin-auth.ts            # 管理员认证、会话与多账号管理
-│   ├── server/index.ts              # 独立 HTTP / SSE 服务端
-│   ├── preload/index.ts             # Electron 安全预加载桥接
-│   ├── shared/types.ts              # 前后端共享 TypeScript 类型定义
-│   └── renderer/                    # React 19 桌面端商业工作台
-├── tests/
-│   ├── verify_zhixu_core_upgrades.mjs
-│   └── verify_zhixu_v2.mjs
-├── Dockerfile
-├── docker-compose.yml
-└── package.json
-```
+| `GET /api/v1/health` | Health & authentication status |
+| `POST /api/auth/login` | Admin login returning a session token |
+| `GET /api/snapshot` | Full workspace snapshot |
+| `POST /api/upload` | Upload raw source file (Base64 JSON) |
+| `POST /api/organize` | Trigger incremental scan, chunking & Wiki compilation |
+| `POST /api/pages/save` | Manually create/edit Wiki page with version snapshot & Git commit |
+| `POST /api/workflow/transition` | Review transition & delete approval (publish / reject / recycle / restore) |
+| `POST /api/v1/search` | RRF multi-signal hybrid search |
+| `POST /api/v1/ask` | Multi-turn context-aware cited Q&A |
+| `GET /api/lint` / `POST /api/lint/fix` | Deterministic health check & code-safe broken-link fix |
 
 </details>
 
 ---
 
-## 演进路线
+## Roadmap
 
-- [x] 多格式原件解析（含零依赖 `.xlsx` / `.pptx`）与代码围栏安全切块
-- [x] RRF 混合检索、SQLite 持久化向量缓存、词边界 TF-IDF 互索引与 Sigmoid 精排
-- [x] 内置分栏 Markdown 编辑器、多轮连续追问、问答一键沉淀草稿与中英双语界面
-- [x] 声明式审核流、AI 删除审批拦截、回收站与 Git 版本链
-- [ ] 页面级 RBAC 访问隔离与组织角色映射
-- [ ] 扫描版 PDF 本地 OCR 与复杂多栏版面还原
-- [ ] 检索召回率与引用忠实度自动化评估基准集
+- [x] Multi-format parsing (including zero-dependency `.xlsx` / `.pptx`) & code-fence-safe chunking
+- [x] RRF hybrid search, persistent SQLite vector cache, word-boundary TF-IDF mutual index & Sigmoid reranking
+- [x] Built-in split Markdown editor, multi-turn Q&A, one-click save-to-draft & English/Chinese bilingual UI
+- [x] Declarative review workflow, AI delete guard recycle bin & Git version chain
+- [ ] Page-level RBAC access isolation & organizational role mapping
+- [ ] Local OCR for scanned PDFs & complex multi-column layout reconstruction
+- [ ] Automated retrieval recall & citation faithfulness benchmark suite
 
 ---
 
-## 开源许可与代码签名证书
+## License & Code Signing Certificate
 
-- **开源协议**：本项目基于 **[Apache License 2.0](./LICENSE)** 开源（可商用、支持二次开发，含专利授权；分发修改版请保留 [LICENSE](./LICENSE) 与 [NOTICE](./NOTICE) 声明）。
-- **第三方许可**：依赖组件开源协议清单见 [THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md)。
-- **安全策略**：默认安全基线与漏洞披露流程见 [SECURITY.md](./SECURITY.md)。
-- **Windows 代码签名证书**：仓库提供公开校验签名证书 [`certs/zhixu-codesign.cer`](./certs/zhixu-codesign.cer)（RSA 4096 / SHA-256，指纹 `252C0ECD64B70B122EF0FEF369120D624B1175D2`），支持内网分发校验与企业信任导入；签名脚本与商业 CA 替换方式见 [`certs/README.md`](./certs/README.md)。
+- **Open-Source License**: Licensed under the **[Apache License, Version 2.0](./LICENSE)** (commercial-friendly, explicit patent grant; preserve [LICENSE](./LICENSE) and [NOTICE](./NOTICE) when redistributing).
+- **Third-Party Notices**: See [THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md).
+- **Security Policy**: See [SECURITY.md](./SECURITY.md).
+- **Contributing**: See [CONTRIBUTING.md](./CONTRIBUTING.md) and [CHANGELOG.md](./CHANGELOG.md).
+- **Windows Code Signing Certificate**: Public verification certificate included at [`certs/zhixu-codesign.cer`](./certs/zhixu-codesign.cer) (RSA 4096 / SHA-256, Thumbprint `252C0ECD64B70B122EF0FEF369120D624B1175D2`). Verification, enterprise trust import, and commercial CA signing instructions are in [`certs/README.md`](./certs/README.md).
+
+---
+
+## Star History
+
+<a href="https://star-history.com/#JoeJiang-927117/ZHIXUAgentic-Knowledge-Base&Date">
+  <img src="https://api.star-history.com/svg?repos=JoeJiang-927117/ZHIXUAgentic-Knowledge-Base&type=Date" alt="Star History Chart" width="640" />
+</a>

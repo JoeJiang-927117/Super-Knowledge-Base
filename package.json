@@ -27,7 +27,6 @@
     "files": [
       "out/**/*",
       "assets/zhixu-icon.png",
-      "assets/zhixu-banner.png",
       "package.json"
     ],
     "directories": {

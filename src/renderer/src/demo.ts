@@ -69,44 +69,92 @@ export function createDemoApi(): WorkspaceApi {
       }
     }
   }
-  const sources = {
-    flow: {
-      file: '政策规范/河湖生态流量保障实施方案.md', locator: '第三章 · 生态流量保障',
-      excerpt: '以保障河湖基本生态用水为目标，明确控制断面、目标水位与监测要求，建立预警和调度机制。'
-    },
-    river: {
-      file: '业务资料/河湖长制工作手册.docx', locator: '第二节 · 巡河与问题处置',
-      excerpt: '巡河发现的问题应记录位置、时间与现场情况，按职责分派、限期整改并留存复核材料。'
-    },
-    wetland: {
-      file: '项目资料/湿地修复案例集.pdf', locator: '第 12 页 · 近自然修复',
-      excerpt: '修复措施应优先保护原有水文过程，采用本地植物群落，减少硬质工程对生境的扰动。'
+  const isEn = (() => {
+    try {
+      return window.localStorage.getItem('zhixu-locale') === 'en'
+    } catch {
+      return false
     }
-  }
-  const initialPages: WikiPage[] = [
-    {
-      slug: 'index', title: '知序知识导览', summary: '从生态保护到修复实践，连接制度、技术与案例。',
-      content: '# 知序知识导览\n\n这里沉淀河湖治理、湿地修复与生态价值实现的业务知识。\n\n## 推荐入口\n\n- [河湖生态流量保障](ecological-flow)\n- [河湖长巡河工作规程](river-chief)\n- [湿地近自然修复](wetland-restoration)\n\n所有回答都应能回到原始依据，并明确适用条件与待核查信息。',
-      sources: [], links: ['ecological-flow', 'river-chief', 'wetland-restoration'], updatedAt: iso(15), pageType: 'index', status: 'published', evidenceLevel: 'official_doc', applicability: '知识库导览', modelVersion: 'qwen3:14b', reviewedBy: '知识管理员', reviewedAt: iso(20), hasPublishedVersion: true, storageDomain: 'foundation', accessLevel: 'internal', versionLabel: 'V1.2', schemaEntities: ['知序知识库', '生态系统']
-    },
-    {
-      slug: 'ecological-flow', title: '河湖生态流量保障', summary: '控制断面、目标水位、监测预警与生态调度的业务要点。',
-      content: '## 保障目标\n\n保障河湖基本生态用水，维持河道连通性和必要的生态水文过程。\n\n## 实施要点\n\n1. 明确控制断面与保障目标。\n2. 建立日常监测、阈值预警和信息报送机制。\n3. 统筹生活、生产与生态用水，按预案开展生态调度。\n\n> 具体目标值应以批复文件和属地管理要求为准，不能由通用知识页替代。',
-      sources: [sources.flow], links: ['river-chief'], updatedAt: iso(38), pageType: 'regulation', status: 'published', evidenceLevel: 'official_doc', applicability: '纳入生态流量保障范围的河湖', modelVersion: 'qwen3:14b', reviewedBy: '知识管理员', reviewedAt: iso(35), hasPublishedVersion: true, storageDomain: 'domain_knowledge', accessLevel: 'internal', versionLabel: 'V2.1', schemaEntities: ['生态流量', '控制断面', '生态调度']
-    },
-    {
-      slug: 'river-chief', title: '河湖长巡河工作规程', summary: '从现场记录到任务分派、整改复核的闭环处置流程。',
-      content: '## 巡河记录\n\n记录时间、河段、问题位置、现场描述和影像资料，确保问题可以定位与复核。\n\n## 闭环处置\n\n- 按职责分派问题并明确办理时限。\n- 整改完成后上传前后对比材料。\n- 复核未通过的事项退回继续办理。\n\n关联知识：[河湖生态流量保障](ecological-flow)。',
-      sources: [sources.river], links: ['ecological-flow'], updatedAt: iso(95), pageType: 'protocol', status: 'published', evidenceLevel: 'operational_doc', applicability: '日常巡河与问题交办', modelVersion: 'qwen3:14b', reviewedBy: '业务审核员', reviewedAt: iso(90), hasPublishedVersion: true, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V1.4', schemaEntities: ['河湖长制', '巡河', '整改闭环']
-    },
-    {
-      slug: 'wetland-restoration', title: '湿地近自然修复', summary: '水文过程优先、乡土植物配置与低扰动修复的案例经验。',
-      content: '## 修复原则\n\n先诊断水文条件和退化原因，再确定保护、自然恢复或辅助修复措施。\n\n## 案例经验\n\n优先保留原有地形和水系，选用适地乡土植物，控制硬质铺装及过度景观化。\n\n## 待审核说明\n\n本页由案例资料自动整理，技术指标须结合项目设计文件核验后使用。',
-      sources: [sources.wetland], links: ['ecological-flow'], updatedAt: iso(8), pageType: 'case', status: 'moderating', evidenceLevel: 'field_record', applicability: '退化湿地方案比选；非设计替代文件', modelVersion: 'qwen3:14b', reviewedBy: null, reviewedAt: null, hasPublishedVersion: false, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V0.3', workflowNote: '等待业务初审', schemaEntities: ['湿地修复', '水文过程', '乡土植物']
-    }
-  ]
+  })()
+
+  const sources = isEn
+    ? {
+        gateway: {
+          file: 'specs/API-Gateway-Rate-Limit-Policy-v2.md', locator: 'Section 3 · Token Bucket & Circuit Breaker',
+          excerpt: 'Public API routes enforce 1200 req/min per tenant with a burst cap of 200. Upstream 5xx spikes above 5% for 30s trigger circuit opening.'
+        },
+        runbook: {
+          file: 'ops/Production-Incident-Runbook.docx', locator: 'Section 2 · P1 Triage & Rollback',
+          excerpt: 'For P1 latency regressions, verify gateway error rate and DB pool saturation first, then execute canary rollback within 10 minutes.'
+        },
+        backup: {
+          file: 'infra/PostgreSQL-Backup-DR-Guide.pdf', locator: 'Page 14 · Point-in-Time Recovery',
+          excerpt: 'Continuous WAL archiving targets RPO <= 60s and RTO <= 15m; quarterly restore drills validate checksums in an isolated staging cluster.'
+        }
+      }
+    : {
+        gateway: {
+          file: '规范文档/API网关限流与熔断规范-v2.md', locator: '第三章 · 令牌桶与熔断策略',
+          excerpt: '公网租户接口默认限流 1200 次/分钟（突发上限 200），上游 5xx 错误率连续 30 秒超过 5% 自动触发熔断降级。'
+        },
+        runbook: {
+          file: '运维手册/生产集群故障应急处置规程.docx', locator: '第二节 · P1 定位与回滚',
+          excerpt: '发生 P1 延迟抖动时优先核查网关错误率与数据库连接池水位，10 分钟内未收敛立即执行灰度回滚并保留现场日志。'
+        },
+        backup: {
+          file: '架构资料/PostgreSQL备份与容灾演练报告.pdf', locator: '第 14 页 · 时间点恢复',
+          excerpt: 'WAL 连续归档确保 RPO <= 60 秒、RTO <= 15 分钟；每季度在隔离预发环境执行全量恢复与校验和演练。'
+        }
+      }
+
+  const initialPages: WikiPage[] = isEn
+    ? [
+        {
+          slug: 'index', title: 'ZHIXU Knowledge Index', summary: 'Enterprise engineering standards, incident runbooks, and DR procedures.',
+          content: '# ZHIXU Knowledge Index\n\nStructured, auditable engineering knowledge compiled from immutable local source files.\n\n## Core Topics\n\n- [API Gateway Rate-Limit Policy](api-gateway-ratelimit)\n- [Production Incident Runbook](k8s-incident-runbook)\n- [PostgreSQL Backup & DR SOP](postgres-backup-dr)\n\nEvery answer traces back to verified source excerpts with explicit applicability and gaps.',
+          sources: [], links: ['api-gateway-ratelimit', 'k8s-incident-runbook', 'postgres-backup-dr'], updatedAt: iso(15), pageType: 'index', status: 'published', evidenceLevel: 'official_doc', applicability: 'Workspace overview', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(20), hasPublishedVersion: true, storageDomain: 'foundation', accessLevel: 'internal', versionLabel: 'V1.2', schemaEntities: ['ZHIXU', 'Engineering Standards']
+        },
+        {
+          slug: 'api-gateway-ratelimit', title: 'API Gateway Rate-Limit Policy', summary: 'Tenant quotas, burst caps, and upstream 5xx circuit-breaker thresholds.',
+          content: '## Rate-Limit Quotas\n\nPublic tenant routes enforce **1,200 req/min** sustained rate with a **200** burst cap via token bucket.\n\n## Circuit Breaker\n\n1. Monitor upstream 5xx error ratio across rolling 30-second windows.\n2. Open circuit when error rate exceeds **5%**; serve cached fallback or `503 Retry-After`.\n3. Probe half-open recovery with 10% traffic after 60 seconds.\n\n> Production overrides require security approval and changelog audit.',
+          sources: [sources.gateway], links: ['k8s-incident-runbook'], updatedAt: iso(38), pageType: 'regulation', status: 'published', evidenceLevel: 'official_doc', applicability: 'All production edge gateways', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(35), hasPublishedVersion: true, storageDomain: 'domain_knowledge', accessLevel: 'internal', versionLabel: 'V2.1', schemaEntities: ['API Gateway', 'Rate Limit', 'Circuit Breaker']
+        },
+        {
+          slug: 'k8s-incident-runbook', title: 'Production Incident Runbook', summary: 'P1 triage checklist, canary rollback window, and postmortem closure.',
+          content: '## P1 Triage Steps\n\n1. Check gateway 5xx rate and p99 latency on the primary dashboard.\n2. Inspect PostgreSQL connection pool saturation and slow-query locks.\n3. Trigger canary rollback within **10 minutes** if mitigation does not converge.\n\n## Related Standards\n\nSee [API Gateway Rate-Limit Policy](api-gateway-ratelimit) for automatic breaker behavior.',
+          sources: [sources.runbook], links: ['api-gateway-ratelimit'], updatedAt: iso(95), pageType: 'protocol', status: 'published', evidenceLevel: 'operational_doc', applicability: 'On-call SRE & backend teams', modelVersion: 'deepseek-chat', reviewedBy: 'reviewer01', reviewedAt: iso(90), hasPublishedVersion: true, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V1.4', schemaEntities: ['P1 Incident', 'Canary Rollback', 'SRE']
+        },
+        {
+          slug: 'postgres-backup-dr', title: 'PostgreSQL Backup & DR SOP', summary: 'WAL archiving targets (RPO <= 60s, RTO <= 15m) and quarterly restore drills.',
+          content: '## Recovery Objectives\n\n- **RPO**: <= 60 seconds via continuous WAL archiving.\n- **RTO**: <= 15 minutes using warm standby promotion.\n\n## Quarterly Validation\n\nRun automated checksum verification in an isolated staging cluster before signing off quarterly compliance.\n\n## Review Note\n\nAuto-compiled from DR drill report; verify cluster storage quotas before publishing.',
+          sources: [sources.backup], links: ['k8s-incident-runbook'], updatedAt: iso(8), pageType: 'case', status: 'moderating', evidenceLevel: 'field_record', applicability: 'Primary relational databases', modelVersion: 'deepseek-reasoner', reviewedBy: null, reviewedAt: null, hasPublishedVersion: false, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V0.3', workflowNote: 'Pending SRE moderation', schemaEntities: ['PostgreSQL', 'WAL Archiving', 'Disaster Recovery']
+        }
+      ]
+    : [
+        {
+          slug: 'index', title: '知序知识导览', summary: '汇集研发规范、运维应急规程与容灾实践的企业知识入口。',
+          content: '# 知序知识导览\n\n这里沉淀研发架构规范、生产应急处置与数据库容灾演练知识。\n\n## 推荐入口\n\n- [API 网关限流与熔断规范](api-gateway-ratelimit)\n- [生产集群故障应急处置规程](k8s-incident-runbook)\n- [PostgreSQL 备份与容灾方案](postgres-backup-dr)\n\n所有回答都可追溯至原始依据，并明确适用条件与待核查缺口。',
+          sources: [], links: ['api-gateway-ratelimit', 'k8s-incident-runbook', 'postgres-backup-dr'], updatedAt: iso(15), pageType: 'index', status: 'published', evidenceLevel: 'official_doc', applicability: '知识库导览', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(20), hasPublishedVersion: true, storageDomain: 'foundation', accessLevel: 'internal', versionLabel: 'V1.2', schemaEntities: ['知序知识库', '研发规范']
+        },
+        {
+          slug: 'api-gateway-ratelimit', title: 'API 网关限流与熔断规范', summary: '租户限流配额、突发上限与上游 5xx 熔断降级阈值规范。',
+          content: '## 限流配额\n\n公网租户接口默认按令牌桶执行 **1200 次/分钟** 稳态限流，突发上限 **200**。\n\n## 熔断策略\n\n1. 按 30 秒滑动窗口监控上游 5xx 错误率。\n2. 错误率超过 **5%** 自动触发熔断，返回降级缓存或 `503 Retry-After`。\n3. 60 秒后进入半开状态，放行 10% 探针流量验证恢复。\n\n> 生产环境配额调整须经安全评审并留痕。',
+          sources: [sources.gateway], links: ['k8s-incident-runbook'], updatedAt: iso(38), pageType: 'regulation', status: 'published', evidenceLevel: 'official_doc', applicability: '生产边缘网关', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(35), hasPublishedVersion: true, storageDomain: 'domain_knowledge', accessLevel: 'internal', versionLabel: 'V2.1', schemaEntities: ['API 网关', '令牌桶限流', '熔断降级']
+        },
+        {
+          slug: 'k8s-incident-runbook', title: '生产集群故障应急处置规程', summary: 'P1 故障排查顺序、10 分钟灰度回滚红线与复盘闭环流程。',
+          content: '## P1 排查顺序\n\n1. 优先查看主看板网关 5xx 错误率与 p99 延迟变化。\n2. 核查 PostgreSQL 连接池水位与慢查询锁等待。\n3. 若 **10 分钟** 内未收敛，立即执行灰度回滚并保留现场日志。\n\n关联规范：[API 网关限流与熔断规范](api-gateway-ratelimit)。',
+          sources: [sources.runbook], links: ['api-gateway-ratelimit'], updatedAt: iso(95), pageType: 'protocol', status: 'published', evidenceLevel: 'operational_doc', applicability: '值班 SRE 与后端团队', modelVersion: 'deepseek-chat', reviewedBy: 'reviewer01', reviewedAt: iso(90), hasPublishedVersion: true, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V1.4', schemaEntities: ['P1 故障', '灰度回滚', 'SRE']
+        },
+        {
+          slug: 'postgres-backup-dr', title: 'PostgreSQL 备份与容灾方案', summary: 'WAL 连续归档指标（RPO <= 60s、RTO <= 15m）与季度演练要求。',
+          content: '## 容灾目标\n\n- **RPO**：借助 WAL 连续归档控制在 60 秒以内。\n- **RTO**：通过热备切换控制在 15 分钟以内。\n\n## 季度恢复演练\n\n每季度在隔离预发环境自动执行全量恢复与校验和比对，归档演练记录。\n\n## 待审核说明\n\n本页由容灾演练报告自动整理，请核对最新存储配额后审批发布。',
+          sources: [sources.backup], links: ['k8s-incident-runbook'], updatedAt: iso(8), pageType: 'case', status: 'moderating', evidenceLevel: 'field_record', applicability: '核心关系型数据库', modelVersion: 'deepseek-reasoner', reviewedBy: null, reviewedAt: null, hasPublishedVersion: false, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V0.3', workflowNote: '等待 SRE 初审', schemaEntities: ['PostgreSQL', 'WAL 归档', '容灾恢复']
+        }
+      ]
+
   let snapshot: WorkspaceSnapshot = {
-    root: '演示知识库 · 知序主题', modelProvider, models: ['deepseek-chat', 'deepseek-reasoner', 'qwen-vl-max'], modelOnline: true,
+    root: isEn ? 'demo-enterprise-kb' : '演示知识库 · 企业研发', modelProvider, models: ['deepseek-chat', 'deepseek-reasoner', 'qwen-vl-max'], modelOnline: true,
     deploymentMode: 'cloud', remoteConnected: false, fileCount: 3, pendingCount: 0, draftCount: 1, pendingDeleteCount: 0, deletedCount: 0, publishedCount: 2,
     chunkCount: 86, entityCount: 12, mutualLinkCount: 18, cachedEmbeddingCount: 86,
     adminAuth: {
@@ -116,18 +164,18 @@ export function createDemoApi(): WorkspaceApi {
       serverAuthEnforced: true
     },
     sourceFiles: [
-      { path: sources.flow.file, size: 386_240, mtime: now - 40 * 60_000, indexed: true, mediaKind: 'document' },
-      { path: sources.river.file, size: 1_260_480, mtime: now - 96 * 60_000, indexed: true, mediaKind: 'document' },
-      { path: sources.wetland.file, size: 4_285_600, mtime: now - 9 * 60_000, indexed: true, mediaKind: 'document' }
+      { path: sources.gateway.file, size: 386_240, mtime: now - 40 * 60_000, indexed: true, mediaKind: 'document' },
+      { path: sources.runbook.file, size: 1_260_480, mtime: now - 96 * 60_000, indexed: true, mediaKind: 'document' },
+      { path: sources.backup.file, size: 4_285_600, mtime: now - 9 * 60_000, indexed: true, mediaKind: 'document' }
     ],
     pages: initialPages,
     runs: [{
-      id: 'demo-run-1', createdAt: iso(110), summary: '整理知序主题资料\n生成 3 个知识页面', model: 'qwen3:14b', filesChanged: 3, changesCount: 3, undone: false, gitCommit: '8e3f7b29a164',
+      id: 'demo-run-1', createdAt: iso(110), summary: isEn ? 'Compiled enterprise engineering docs\nGenerated 3 wiki pages' : '整理企业研发资料\n生成 3 个知识页面', model: 'deepseek-reasoner', filesChanged: 3, changesCount: 3, undone: false, gitCommit: '8e3f7b29a164',
       changes: initialPages.slice(1).map(page => ({ slug: page.slug, title: page.title, action: 'create' as const }))
     }],
     modelCalls: [
-      { id: 'call-1', createdAt: iso(37), taskType: '知识整理', provider: 'Ollama', model: 'qwen3:14b', durationMs: 2840, status: 'ok', detail: '保留引用与适用范围' },
-      { id: 'call-2', createdAt: iso(108), taskType: '实体关联', provider: 'Ollama', model: 'BAAI/bge-m3', durationMs: 468, status: 'ok', detail: '建立 18 条双向关联' }
+      { id: 'call-1', createdAt: iso(37), taskType: isEn ? 'Wiki Compile' : '知识整理', provider: 'OpenAI-API', model: 'deepseek-reasoner', durationMs: 2840, status: 'ok', detail: isEn ? 'Verified excerpts & scope' : '保留引用与适用范围' },
+      { id: 'call-2', createdAt: iso(108), taskType: isEn ? 'Entity Index' : '实体关联', provider: 'OpenAI-API', model: 'text-embedding-3-small', durationMs: 468, status: 'ok', detail: isEn ? 'Built 18 mutual links' : '建立 18 条双向关联' }
     ], feedbacks: []
   }
   const listeners = new Set<(event: ProgressEvent) => void>()
@@ -145,9 +193,9 @@ export function createDemoApi(): WorkspaceApi {
     snapshot.publishedCount = contentPages.filter(page => page.status === 'published').length
   }
   const keywords: Record<string, string> = {
-    'ecological-flow': '生态 流量 水位 补水 调度 监测 预警 断面 河湖 用水',
-    'river-chief': '河湖长 巡河 巡查 问题 整改 复核 分派 闭环 河段',
-    'wetland-restoration': '湿地 修复 生境 水文 植物 近自然 案例 退化'
+    'api-gateway-ratelimit': 'api gateway rate limit circuit breaker 5xx 限流 熔断 网关 令牌桶',
+    'k8s-incident-runbook': 'incident p1 rollback canary sre kubernetes 故障 回滚 应急 排查',
+    'postgres-backup-dr': 'postgres postgresql wal rpo rto backup dr 备份 容灾 数据库 恢复'
   }
   const queryScore = (page: WikiPage, query: string) => {
     const haystack = `${page.title} ${page.summary} ${page.content} ${keywords[page.slug] ?? ''}`.toLowerCase()
@@ -255,7 +303,7 @@ export function createDemoApi(): WorkspaceApi {
       if (run && !run.undone) {
         run.undone = true
         const createdSlugs = run.changes.filter(change => change.action === 'create').map(change => change.slug)
-        snapshot.pages = snapshot.pages.filter(page => !createdSlugs.includes(page.slug) || page.slug === 'wetland-restoration' || page.slug === 'ecological-flow' || page.slug === 'river-chief')
+        snapshot.pages = snapshot.pages.filter(page => !createdSlugs.includes(page.slug) || page.slug === 'postgres-backup-dr' || page.slug === 'api-gateway-ratelimit' || page.slug === 'k8s-incident-runbook')
         refreshCounts()
       }
       return clone(snapshot)
@@ -326,11 +374,17 @@ export function createDemoApi(): WorkspaceApi {
       return { filesChanged, ghostLinksStripped: filesChanged, canonicalizedLinks: 0, report: lint() }
     },
     getSchemaOverview: async (): Promise<SchemaOverview> => {
-      const entities: SchemaEntityRecord[] = [
-        { id: 'entity-flow', name: '生态流量', spgType: 'ConceptType', storageDomain: 'domain_knowledge', description: '维持河湖生态系统所需的水量与水文过程', chunkCount: 12, wikiSlugs: ['ecological-flow', 'river-chief'] },
-        { id: 'entity-river', name: '河湖长制', spgType: 'StandardType', storageDomain: 'cases', description: '河湖管理保护与问题闭环处置制度', chunkCount: 9, wikiSlugs: ['river-chief'] },
-        { id: 'entity-wetland', name: '湿地修复', spgType: 'ConceptType', storageDomain: 'cases', description: '以水文恢复和生境改善为核心的修复实践', chunkCount: 16, wikiSlugs: ['wetland-restoration'] }
-      ]
+      const entities: SchemaEntityRecord[] = isEn
+        ? [
+            { id: 'entity-gateway', name: 'API Gateway', spgType: 'ConceptType', storageDomain: 'domain_knowledge', description: 'Edge traffic throttling and upstream circuit breaker controls', chunkCount: 12, wikiSlugs: ['api-gateway-ratelimit', 'k8s-incident-runbook'] },
+            { id: 'entity-sre', name: 'P1 Incident', spgType: 'StandardType', storageDomain: 'cases', description: 'Production incident triage and canary rollback procedure', chunkCount: 9, wikiSlugs: ['k8s-incident-runbook'] },
+            { id: 'entity-pg', name: 'PostgreSQL DR', spgType: 'ConceptType', storageDomain: 'cases', description: 'Continuous WAL archiving and quarterly recovery validation', chunkCount: 16, wikiSlugs: ['postgres-backup-dr'] }
+          ]
+        : [
+            { id: 'entity-gateway', name: 'API 网关', spgType: 'ConceptType', storageDomain: 'domain_knowledge', description: '边缘限流配额与上游熔断降级控制', chunkCount: 12, wikiSlugs: ['api-gateway-ratelimit', 'k8s-incident-runbook'] },
+            { id: 'entity-sre', name: 'P1 故障', spgType: 'StandardType', storageDomain: 'cases', description: '生产集群故障排查顺序与灰度回滚闭环', chunkCount: 9, wikiSlugs: ['k8s-incident-runbook'] },
+            { id: 'entity-pg', name: 'PostgreSQL 容灾', spgType: 'ConceptType', storageDomain: 'cases', description: 'WAL 连续归档与季度恢复校验演练', chunkCount: 16, wikiSlugs: ['postgres-backup-dr'] }
+          ]
       return { domainCounts: { foundation: 1, domain_knowledge: snapshot.pages.filter(page => page.storageDomain === 'domain_knowledge').length, cases: 2, concrete_media: 3, permissions: 1, versions: snapshot.pages.length * 2 }, chunkCount: snapshot.chunkCount, entityCount: snapshot.entityCount, mutualLinkCount: snapshot.mutualLinkCount, entities }
     },
     searchKnowledge: async (query, options) => { await pause(420); return clone(search(query, options)) },

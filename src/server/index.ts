@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto'
+import { randomBytes, timingSafeEqual } from 'node:crypto'
 import { createReadStream, promises as fs } from 'node:fs'
 import http from 'node:http'
 import path from 'node:path'
@@ -216,8 +216,12 @@ function authenticateRequest(
   if (!serverToken) {
     return { ok: true, adminUser: null, viaServerToken: false, token }
   }
-  if (token && token === serverToken) {
-    return { ok: true, adminUser: null, viaServerToken: true, token }
+  if (token) {
+    const a = Buffer.from(token, 'utf8')
+    const b = Buffer.from(serverToken, 'utf8')
+    if (a.length === b.length && timingSafeEqual(a, b)) {
+      return { ok: true, adminUser: null, viaServerToken: true, token }
+    }
   }
   return { ok: false, adminUser: null, viaServerToken: false, token }
 }
@@ -240,7 +244,10 @@ async function handleSource(request: http.IncomingMessage, response: http.Server
   const file = url.searchParams.get('file') ?? ''
   const absolute = path.resolve(store.root, ...file.split('/'))
   const relative = path.relative(store.root, absolute)
-  if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) throw new Error('无效的资料路径')
+  const segments = relative.split(/[\\/]/).filter(Boolean)
+  if (!relative || relative.startsWith('..') || path.isAbsolute(relative) || segments.some(seg => seg.startsWith('.'))) {
+    throw new Error('无效的资料路径')
+  }
   const info = await fs.stat(absolute)
   if (!info.isFile()) throw new Error('资料不是文件')
   const type = contentType(absolute)

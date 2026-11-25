@@ -256,7 +256,7 @@ export type ModelProvider = 'ollama' | 'openai'
 /**
  * Three simultaneous runtime/deployment profiles (External API / Cloud first):
  * - cloud:   External API / Cloud server (default priority)
- * - lan_gpu: Dedicated LAN GPU server (vLLM / Ollama / BGE / Reranker / optional remote LSKB server)
+ * - lan_gpu: Dedicated LAN GPU server (vLLM / Ollama / BGE / Reranker / optional remote ZHIXU server)
  * - local:   Local PC (Ollama on-demand)
  */
 export type DeploymentMode = 'cloud' | 'lan_gpu' | 'local'

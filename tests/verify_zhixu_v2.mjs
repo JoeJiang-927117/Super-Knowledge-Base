@@ -5,7 +5,7 @@ import http from 'node:http'
 import os from 'node:os'
 import path from 'node:path'
 
-const tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'lskb-v2-test-'))
+const tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'zhixu-v2-test-'))
 const serverEntry = path.resolve(import.meta.dirname, '../out/main/server.js')
 
 await fs.writeFile(

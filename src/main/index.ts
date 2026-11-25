@@ -135,9 +135,6 @@ async function tryStartLocalOllama(baseUrl: string): Promise<void> {
       // Ignore script parse error.
     }
   }
-  if (!modelsDir && existsSync('E:\\manifests')) {
-    modelsDir = 'E:\\'
-  }
 
   try {
     const child = spawn(ollamaExe, ['serve'], {
