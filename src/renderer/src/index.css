@@ -252,6 +252,49 @@ svg { width: 15px; height: 15px; flex: 0 0 auto; stroke-width: 1.75; }
   58%      { background: #38bdf8; transform: scaleY(1); }
 }
 
+.boot-chunk-bar.compact {
+  width: 100%;
+  padding: 4px 5px;
+  gap: 3px;
+}
+.boot-chunk-bar.is-determinate .chunk-cell {
+  animation: none;
+  transition: background 0.22s ease, transform 0.22s ease;
+}
+.boot-chunk-bar.is-determinate .chunk-cell.is-filled {
+  background: #2563eb;
+}
+.boot-chunk-bar.is-determinate .chunk-cell.is-head {
+  background: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.55);
+  animation: chunkHeadPulse 0.9s ease-in-out infinite;
+}
+
+/* Universal reusable 3-layer isometric loader across buttons, progress docks & inline loading */
+.zhixu-iso-inline {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+.zhixu-iso-inline.iso-xs { width: 18px; height: 18px; }
+.zhixu-iso-inline.iso-sm { width: 28px; height: 28px; }
+.zhixu-iso-inline.iso-md { width: 42px; height: 42px; }
+.zhixu-iso-inline.is-interactive { cursor: pointer; }
+.zhixu-iso-mini-svg { width: 100%; height: 100%; overflow: visible; }
+.zhixu-iso-inline.is-popped .iso-layer-1 { transform: translateY(10px) !important; }
+.zhixu-iso-inline.is-popped .iso-layer-3 { transform: translateY(-16px) !important; }
+
+.login-form-pane.is-welcome-mode {
+  justify-content: center;
+  gap: 28px;
+}
+
+@keyframes chunkHeadPulse {
+  0%, 100% { opacity: 1; transform: scaleY(1.1); }
+  50%      { opacity: 0.65; transform: scaleY(0.92); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .iso-layer-1, .iso-layer-2, .iso-layer-3, .boot-shadow, .boot-voxels .voxel, .boot-chunk-bar .chunk-cell {
     animation: none;

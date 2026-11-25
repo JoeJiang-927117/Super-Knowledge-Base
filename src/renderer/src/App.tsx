@@ -1,6 +1,6 @@
 import {
   ArrowRight, ArrowUp, BookmarkPlus, BookOpen, Check, CheckCheck, ChevronRight, CircleAlert, Clock3,
-  FileText, FolderOpen, History, Languages, Layers, LayoutDashboard, LoaderCircle, Minus, Moon,
+  FileText, FolderOpen, History, Languages, Layers, LayoutDashboard, Minus, Moon,
   PanelLeftClose, PanelLeftOpen, Paperclip, Plus, Search, Settings2, Shield, ShieldCheck,
   Sparkles, Square, Sun, Upload, X
 } from 'lucide-react'
@@ -14,7 +14,7 @@ import logo from './assets/zhixu-icon.png'
 import wallpaperSky from './assets/wallpaper-sky.jpg'
 import wallpaperSunset from './assets/wallpaper-sunset.jpg'
 import AdminConsole from './components/AdminConsole'
-import BootLoader from './components/BootLoader'
+import BootLoader, { ZhixuChunkProgress, ZhixuIsoLoader } from './components/BootLoader'
 import CommandPalette from './components/CommandPalette'
 import LoginPage from './components/LoginPage'
 import SettingsDialog, { fillDraftFromMode } from './components/SettingsDialog'
@@ -406,12 +406,11 @@ export default function App() {
     }
   }
 
-  async function adminSetup(username: string, password: string) {
+  async function adminEnterLocal() {
     setError('')
     try {
-      if (!api.adminSetup) throw new Error('Setup not supported')
-      setSnapshot(await api.adminSetup(username, password))
-      setNotice(locale === 'en' ? `Initialized superadmin ${username}` : `已初始化超级管理员 ${username}`)
+      if (!api.adminEnterLocal) throw new Error('Local entry not supported')
+      setSnapshot(await api.adminEnterLocal())
     } catch (reason) {
       showError(reason)
     }
@@ -634,12 +633,11 @@ export default function App() {
     return (
       <LoginPage
         theme={theme}
-        needsSetup={Boolean(snapshot.adminAuth.needsSetup)}
-        minPasswordLength={snapshot.adminAuth.minPasswordLength ?? 12}
+        passwordRequired={Boolean(snapshot.adminAuth.passwordRequired)}
         error={error}
         onClearError={() => setError('')}
         onToggleTheme={next => setTheme(next)}
-        onSetup={adminSetup}
+        onEnterLocal={adminEnterLocal}
         onLogin={adminLogin}
         windowControls={api.windowControls}
       />
@@ -746,7 +744,7 @@ export default function App() {
 
         <div className="sidebar-footer">
           <button className="btn-primary btn-block btn-sm" onClick={() => fileInput.current?.click()} disabled={importing}>
-            {importing ? <LoaderCircle className="spin" /> : <Upload />}
+            {importing ? <ZhixuIsoLoader size="xs" /> : <Upload />}
             {importing ? tx('导入中…', 'Importing…') : tx('导入资料', 'Import Files')}
           </button>
           <button className="model-footer-row" onClick={openSettings} title={tx('配置 LLLM / LLM / VM', 'Configure LLLM / LLM / VM')}>
@@ -834,14 +832,18 @@ export default function App() {
           </div>
         </header>
 
-        {busy && (
+        {(busy || importing) && (
           <div className="progress-bar-dock">
             <div className="progress-row">
-              <LoaderCircle className="spin" />
-              <span>{progress?.message ?? tx('正在整理', 'Compiling')}</span>
-              <small className="mono">{progress && progress.total > 1 ? `${progress.current} / ${progress.total}` : ''}</small>
+              <ZhixuIsoLoader size="sm" interactive />
+              <span>{importing ? tx('正在传输并导入资料…', 'Transferring & importing files…') : (progress?.message ?? tx('正在整理', 'Compiling'))}</span>
+              <small className="mono">{!importing && progress && progress.total > 1 ? `${progress.current} / ${progress.total}` : ''}</small>
             </div>
-            <progress max={progress?.total ?? 1} value={progress?.current || undefined} />
+            <ZhixuChunkProgress
+              current={importing ? undefined : progress?.current}
+              total={importing ? undefined : progress?.total}
+              cells={24}
+            />
           </div>
         )}
 
@@ -962,7 +964,7 @@ export default function App() {
 
                       {qaLoading && (
                         <div className="inline-loading stream-loading">
-                          <LoaderCircle className="spin" />
+                          <ZhixuIsoLoader size="sm" interactive />
                           <span>{tx('正在结合上下文检索并生成回答…', 'Retrieving context and generating answer…')}</span>
                         </div>
                       )}
@@ -970,7 +972,7 @@ export default function App() {
                     </div>
                   ) : qaLoading ? (
                     <div className="inline-loading stream-loading">
-                      <LoaderCircle className="spin" />
+                      <ZhixuIsoLoader size="sm" interactive />
                       <span>{tx('正在检索并生成回答…', 'Searching and generating answer…')}</span>
                     </div>
                   ) : (
@@ -1081,7 +1083,7 @@ export default function App() {
                           <Search /> {tx('检索', 'Search')}
                         </button>
                         <button className="btn-primary btn-sm" onClick={() => void runAsk()} disabled={!question.trim() || qaLoading}>
-                          {qaLoading ? <LoaderCircle className="spin" /> : <ArrowUp />} {tx('提问', 'Ask')}
+                          {qaLoading ? <ZhixuIsoLoader size="xs" /> : <ArrowUp />} {tx('提问', 'Ask')}
                         </button>
                       </div>
                     </div>

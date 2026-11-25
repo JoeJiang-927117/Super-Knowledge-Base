@@ -71,9 +71,9 @@ export function createDemoApi(): WorkspaceApi {
   }
   const isEn = (() => {
     try {
-      return window.localStorage.getItem('zhixu-locale') === 'en'
+      return window.localStorage.getItem('zhixu-locale') !== 'zh'
     } catch {
-      return false
+      return true
     }
   })()
 
@@ -159,6 +159,7 @@ export function createDemoApi(): WorkspaceApi {
     chunkCount: 86, entityCount: 12, mutualLinkCount: 18, cachedEmbeddingCount: 86,
     adminAuth: {
       authenticated: false,
+      passwordRequired: false,
       user: null,
       users: [],
       serverAuthEnforced: true
@@ -436,14 +437,19 @@ export function createDemoApi(): WorkspaceApi {
       const anchor = document.createElement('a'); anchor.href = url; anchor.download = `${file.split('/').pop() ?? 'source'}.txt`; anchor.click()
       window.setTimeout(() => URL.revokeObjectURL(url), 1000)
     },
-    adminLogin: async (username, password) => {
-      if (username !== 'zhixu' || password !== '123456789') throw new Error('管理员账号或密码错误')
+    adminEnterLocal: async () => {
       const user = { username: 'zhixu', role: 'superadmin' as const, createdAt: iso(1440), lastLoginAt: new Date().toISOString() }
-      snapshot.adminAuth = { authenticated: true, user, users: [user], serverAuthEnforced: true }
+      snapshot.adminAuth = { authenticated: true, passwordRequired: false, user, users: [user], serverAuthEnforced: true }
+      return clone(snapshot)
+    },
+    adminLogin: async (username, password) => {
+      if (username !== 'zhixu' || password.length < 12) throw new Error('Invalid credentials')
+      const user = { username: 'zhixu', role: 'superadmin' as const, createdAt: iso(1440), lastLoginAt: new Date().toISOString() }
+      snapshot.adminAuth = { authenticated: true, passwordRequired: true, user, users: [user], serverAuthEnforced: true }
       return clone(snapshot)
     },
     adminLogout: async () => {
-      snapshot.adminAuth = { authenticated: false, user: null, users: [], serverAuthEnforced: true }
+      snapshot.adminAuth = { authenticated: false, passwordRequired: false, user: null, users: [], serverAuthEnforced: true }
       return clone(snapshot)
     },
     adminChangePassword: async () => clone(snapshot),

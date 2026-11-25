@@ -15,17 +15,17 @@ const STORAGE_KEY = 'zhixu-locale'
 const zhDateFormatter = new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' })
 const enDateFormatter = new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' })
 
-export function formatLocalizedDate(input: string | number | Date, locale: Locale = 'zh'): string {
+export function formatLocalizedDate(input: string | number | Date, locale: Locale = 'en'): string {
   const date = input instanceof Date ? input : new Date(input)
   return (locale === 'en' ? enDateFormatter : zhDateFormatter).format(date)
 }
 
 const I18nContext = createContext<I18nContextValue>({
-  locale: 'zh',
+  locale: 'en',
   setLocale: () => {},
   toggleLocale: () => {},
-  tx: zh => zh,
-  formatDate: input => formatLocalizedDate(input, 'zh')
+  tx: (_zh, en) => en,
+  formatDate: input => formatLocalizedDate(input, 'en')
 })
 
 function readInitialLocale(): Locale {
@@ -33,7 +33,7 @@ function readInitialLocale(): Locale {
     const saved = window.localStorage.getItem(STORAGE_KEY)
     if (saved === 'en' || saved === 'zh') return saved
   } catch {}
-  return 'zh'
+  return 'en'
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {

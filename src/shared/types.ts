@@ -350,6 +350,7 @@ export type AdminUserRecord = {
 
 export type AdminAuthState = {
   authenticated: boolean
+  passwordRequired?: boolean
   needsSetup?: boolean
   minPasswordLength?: number
   user: AdminUserRecord | null
@@ -468,6 +469,7 @@ export type WorkspaceApi = {
   setModel: (settings: ModelProviderSettings) => Promise<WorkspaceSnapshot>
   refreshModels: () => Promise<WorkspaceSnapshot>
   openSource: (file: string) => Promise<void>
+  adminEnterLocal?: () => Promise<WorkspaceSnapshot>
   adminSetup?: (username: string, password: string) => Promise<WorkspaceSnapshot>
   adminLogin: (username: string, password: string) => Promise<WorkspaceSnapshot>
   adminLogout: () => Promise<WorkspaceSnapshot>

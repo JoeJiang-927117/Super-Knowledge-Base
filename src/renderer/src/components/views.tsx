@@ -1,6 +1,6 @@
 import {
   ArrowRight, ArrowUpRight, Check, CircleAlert, Clock3, Edit3, FileDiff, FileText, GitCommitHorizontal,
-  History, Link2, LoaderCircle, Network, RefreshCw, RotateCcw, Save, ShieldAlert, ShieldCheck, Sparkles, X
+  History, Link2, Network, RefreshCw, RotateCcw, Save, ShieldAlert, ShieldCheck, Sparkles, X
 } from 'lucide-react'
 import { useEffect, useState, type KeyboardEvent } from 'react'
 import type {
@@ -9,6 +9,7 @@ import type {
 } from '../../../shared/types'
 import { useI18n } from '../i18n'
 import { actionName, evidenceLevelLabel, lintCategoryLabel, severityLabel, storageDomainLabel, workflowStatusLabel } from '../labels'
+import { ZhixuIsoLoader } from './BootLoader'
 import { MarkdownView } from './MarkdownView'
 
 type PageViewProps = {
@@ -131,7 +132,7 @@ export function PageView({
           <div className="head-actions">
             <button className="btn-secondary btn-sm" onClick={() => setEditing(false)} disabled={saving}><X /> {tx('取消', 'Cancel')}</button>
             <button className="btn-secondary btn-sm" onClick={() => void saveEdit(false)} disabled={saving || !draftTitle.trim() || !draftContent.trim()}>
-              {saving ? <LoaderCircle className="spin" /> : <Save />} {tx('保存草稿', 'Save Draft')}
+              {saving ? <ZhixuIsoLoader size="xs" /> : <Save />} {tx('保存草稿', 'Save Draft')}
             </button>
             <button className="btn-primary btn-sm" onClick={() => void saveEdit(true)} disabled={saving || !draftTitle.trim() || !draftContent.trim()}>
               <Check /> {tx('保存并发布', 'Save & Publish')}
@@ -268,7 +269,7 @@ export function PageView({
             </div>
           )}
 
-          {loadingDiff && <div className="inline-loading"><LoaderCircle className="spin" /> {tx('读取差异…', 'Loading diff…')}</div>}
+          {loadingDiff && <div className="inline-loading"><ZhixuIsoLoader size="sm" interactive /> {tx('读取差异…', 'Loading diff…')}</div>}
           {showDiff && diffData && (
             <div className="diff-panel">
               <div className="diff-panel-head">
@@ -366,7 +367,7 @@ export function PageView({
 
           {inspectorTab === 'versions' && (
             loadingVersions ? (
-              <div className="inline-loading"><LoaderCircle className="spin" /> {tx('加载版本…', 'Loading versions…')}</div>
+              <div className="inline-loading"><ZhixuIsoLoader size="sm" interactive /> {tx('加载版本…', 'Loading versions…')}</div>
             ) : versions.length ? (
               <ul className="version-list">
                 {versions.map(version => (
@@ -419,13 +420,13 @@ export function HealthView({
         <h1>{tx('知识体检', 'Health Check')}</h1>
         <div className="head-actions">
           <button className="btn-secondary btn-sm" onClick={onFixLint} disabled={fixing || loading}>
-            {fixing ? <LoaderCircle className="spin" /> : <Sparkles />} {tx('修复断链', 'Fix Broken Links')}
+            {fixing ? <ZhixuIsoLoader size="xs" /> : <Sparkles />} {tx('修复断链', 'Fix Broken Links')}
           </button>
           {report && report.draftCount > 0 && (
             <button className="btn-secondary btn-sm" onClick={onPublishAll}><Check /> {tx('全部发布', 'Publish All')}</button>
           )}
           <button className="btn-primary btn-sm" onClick={onRefresh} disabled={loading}>
-            {loading ? <LoaderCircle className="spin" /> : <RefreshCw />} {tx('重新体检', 'Run Check')}
+            {loading ? <ZhixuIsoLoader size="xs" /> : <RefreshCw />} {tx('重新体检', 'Run Check')}
           </button>
         </div>
       </header>

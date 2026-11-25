@@ -1,18 +1,18 @@
-import { CircleAlert, Eye, EyeOff, KeyRound, LoaderCircle, Minus, Moon, Square, Sun, X } from 'lucide-react'
+import { ArrowRight, CircleAlert, Eye, EyeOff, KeyRound, Minus, Moon, Square, Sun, X } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import logo from '../assets/zhixu-icon.png'
 import wallpaperSky from '../assets/wallpaper-sky.jpg'
 import wallpaperSunset from '../assets/wallpaper-sunset.jpg'
 import { useI18n } from '../i18n'
+import { ZhixuIsoLoader } from './BootLoader'
 
 type Props = {
   theme: 'light' | 'dark'
-  needsSetup?: boolean
-  minPasswordLength?: number
+  passwordRequired?: boolean
   error: string
   onClearError: () => void
   onToggleTheme: (next: 'light' | 'dark') => void
-  onSetup?: (username: string, password: string) => Promise<void>
+  onEnterLocal?: () => Promise<void>
   onLogin: (username: string, password: string) => Promise<void>
   windowControls?: {
     minimize: () => Promise<void>
@@ -23,20 +23,17 @@ type Props = {
 
 export default function LoginPage({
   theme,
-  needsSetup = false,
-  minPasswordLength = 12,
+  passwordRequired = false,
   error,
   onClearError,
   onToggleTheme,
-  onSetup,
+  onEnterLocal,
   onLogin,
   windowControls
 }: Props) {
   const { locale, setLocale, tx } = useI18n()
   const [username, setUsername] = useState('zhixu')
   const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [localError, setLocalError] = useState('')
   const [showPwd, setShowPwd] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [scene, setScene] = useState<'sky' | 'sunset'>(theme === 'dark' ? 'sunset' : 'sky')
@@ -48,34 +45,29 @@ export default function LoginPage({
     onToggleTheme(next === 'sunset' ? 'dark' : 'light')
   }
 
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault()
-    if (!username.trim() || !password || submitting) return
+  async function handleEnterLocal() {
+    if (submitting || !onEnterLocal) return
     onClearError()
-    setLocalError('')
-    if (needsSetup) {
-      if (password.length < minPasswordLength) {
-        setLocalError(
-          locale === 'en'
-            ? `Password must be at least ${minPasswordLength} characters.`
-            : `初始密码长度至少 ${minPasswordLength} 位`
-        )
-        return
-      }
-      if (password !== confirmPassword) {
-        setLocalError(tx('两次输入的密码不一致', 'Passwords do not match'))
-        return
-      }
-    }
     setSubmitting(true)
     try {
-      if (needsSetup && onSetup) {
-        await onSetup(username.trim(), password)
-      } else {
-        await onLogin(username.trim(), password)
-      }
+      await onEnterLocal()
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    if (!passwordRequired) {
+      await handleEnterLocal()
+      return
+    }
+    if (!username.trim() || !password || submitting) return
+    onClearError()
+    setSubmitting(true)
+    try {
+      await onLogin(username.trim(), password)
       setPassword('')
-      setConfirmPassword('')
     } finally {
       setSubmitting(false)
     }
@@ -83,7 +75,6 @@ export default function LoginPage({
 
   return (
     <div className={`login-screen scene-${scene}`}>
-      {/* Full-window soft atmospheric wallpaper backdrop */}
       <div
         className="login-backdrop"
         style={{ backgroundImage: `url(${activeWallpaper})` }}
@@ -91,7 +82,6 @@ export default function LoginPage({
       />
       <div className="login-backdrop-scrim" aria-hidden="true" />
 
-      {/* Top draggable titlebar with native controls */}
       <header className="login-topbar">
         <div className="login-topbar-brand">
           <img src={logo} alt={tx('知序', 'ZHIXU')} />
@@ -101,17 +91,17 @@ export default function LoginPage({
           <div className="scene-switch" role="group" aria-label={tx('语言切换', 'Language')}>
             <button
               type="button"
-              className={locale === 'zh' ? 'active' : ''}
-              onClick={() => setLocale('zh')}
-            >
-              中文
-            </button>
-            <button
-              type="button"
               className={locale === 'en' ? 'active' : ''}
               onClick={() => setLocale('en')}
             >
               EN
+            </button>
+            <button
+              type="button"
+              className={locale === 'zh' ? 'active' : ''}
+              onClick={() => setLocale('zh')}
+            >
+              中文
             </button>
           </div>
           <div className="scene-switch" role="group" aria-label={tx('壁纸切换', 'Theme wallpaper')}>
@@ -140,10 +130,8 @@ export default function LoginPage({
         </div>
       </header>
 
-      {/* Center Split Commercial Showcase Card */}
       <main className="login-stage">
         <div className="login-showcase">
-          {/* Left Portrait Photography Showcase (native 9:16 crispness) */}
           <div className="login-visual">
             <img src={activeWallpaper} alt="" />
             <div className="login-visual-overlay" />
@@ -172,96 +160,80 @@ export default function LoginPage({
             </div>
           </div>
 
-          {/* Right Clean Glass Login Form */}
-          <form className="login-form-pane" onSubmit={event => void handleSubmit(event)}>
+          <form
+            className={`login-form-pane ${!passwordRequired ? 'is-welcome-mode' : ''}`}
+            onSubmit={event => void handleSubmit(event)}
+          >
             <div className="login-form-head">
               <img src={logo} alt={tx('知序', 'ZHIXU')} />
-              <h1>{needsSetup ? tx('初始化管理员', 'Initialize Superadmin') : tx('登录知序', 'Sign in to ZHIXU')}</h1>
+              <h1>{passwordRequired ? tx('登录知序', 'Sign in to ZHIXU') : tx('知序 ZHIXU', 'ZHIXU')}</h1>
             </div>
 
-            {(localError || error) && (
+            {error && (
               <div className="login-error" role="alert">
                 <CircleAlert />
-                <span>{localError || error}</span>
+                <span>{error}</span>
               </div>
             )}
 
-            <div className="login-fields">
-              <div className="field-row">
-                <label htmlFor="login-username">{tx('账号', 'Username')}</label>
-                <input
-                  id="login-username"
-                  className="login-input"
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  placeholder={tx('输入账号', 'Enter username')}
-                  autoComplete="username"
-                  autoFocus
-                />
-              </div>
-
-              <div className="field-row">
-                <label htmlFor="login-password">
-                  {needsSetup
-                    ? locale === 'en'
-                      ? `New Password (min ${minPasswordLength} chars)`
-                      : `设置初始密码（至少 ${minPasswordLength} 位）`
-                    : tx('密码', 'Password')}
-                </label>
-                <div className="pwd-wrap">
-                  <input
-                    id="login-password"
-                    className="login-input"
-                    type={showPwd ? 'text' : 'password'}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder={
-                      needsSetup
-                        ? locale === 'en'
-                          ? `At least ${minPasswordLength} chars (letters + digits)`
-                          : `至少 ${minPasswordLength} 位（字母+数字/符号）`
-                        : tx('输入密码', 'Enter password')
-                    }
-                    autoComplete={needsSetup ? 'new-password' : 'current-password'}
-                  />
-                  <button
-                    type="button"
-                    className="pwd-toggle"
-                    onClick={() => setShowPwd(prev => !prev)}
-                    aria-label={showPwd ? tx('隐藏密码', 'Hide password') : tx('显示密码', 'Show password')}
-                  >
-                    {showPwd ? <EyeOff /> : <Eye />}
-                  </button>
-                </div>
-              </div>
-
-              {needsSetup && (
+            {passwordRequired && (
+              <div className="login-fields">
                 <div className="field-row">
-                  <label htmlFor="login-confirm-password">{tx('确认密码', 'Confirm Password')}</label>
+                  <label htmlFor="login-username">{tx('账号', 'Username')}</label>
                   <input
-                    id="login-confirm-password"
+                    id="login-username"
                     className="login-input"
-                    type={showPwd ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={e => setConfirmPassword(e.target.value)}
-                    placeholder={tx('再次输入初始密码', 'Re-enter password')}
-                    autoComplete="new-password"
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    placeholder={tx('输入账号', 'Enter username')}
+                    autoComplete="username"
+                    autoFocus
                   />
                 </div>
-              )}
-            </div>
+
+                <div className="field-row">
+                  <label htmlFor="login-password">{tx('密码', 'Password')}</label>
+                  <div className="pwd-wrap">
+                    <input
+                      id="login-password"
+                      className="login-input"
+                      type={showPwd ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder={tx('输入密码', 'Enter password')}
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      className="pwd-toggle"
+                      onClick={() => setShowPwd(prev => !prev)}
+                      aria-label={showPwd ? tx('隐藏密码', 'Hide password') : tx('显示密码', 'Show password')}
+                    >
+                      {showPwd ? <EyeOff /> : <Eye />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <button
               className="btn-primary login-submit"
               type="submit"
-              disabled={submitting || !username.trim() || !password || (needsSetup && !confirmPassword)}
+              disabled={submitting || (passwordRequired && (!username.trim() || !password))}
+              autoFocus={!passwordRequired}
             >
-              {submitting ? <LoaderCircle className="spin" /> : <KeyRound />}
+              {submitting ? (
+                <ZhixuIsoLoader size="xs" />
+              ) : passwordRequired ? (
+                <KeyRound />
+              ) : (
+                <ArrowRight />
+              )}
               {submitting
-                ? tx('正在验证…', 'Verifying…')
-                : needsSetup
-                  ? tx('创建管理员并进入', 'Create Admin & Sign In')
-                  : tx('登录工作台', 'Sign In')}
+                ? tx('正在进入…', 'Entering…')
+                : passwordRequired
+                  ? tx('登录工作台', 'Sign In')
+                  : tx('进入 ZHIXU', 'Enter ZHIXU')}
             </button>
           </form>
         </div>

@@ -143,6 +143,7 @@ export class AdminAuthManager {
   private users: StoredAdminUser[] = []
   private sessions = new Map<string, SessionEntry>()
   private desktopActiveUser: string | null = null
+  private localPasswordlessActive = false
   private failureBuckets = new Map<string, FailureBucket>()
   private failureLogs: LoginFailureLog[] = []
 
@@ -380,11 +381,39 @@ export class AdminAuthManager {
     return this.issueSession(found)
   }
 
+  passwordRequired(): boolean {
+    return this.users.length > 0
+  }
+
+  enterLocalPasswordless(): { token: string; user: AdminUserRecord } {
+    if (this.passwordRequired()) {
+      throw new AuthHttpError(403, '已启用账密保护，请输入管理员账号与密码登录')
+    }
+    const localUser: AdminUserRecord = {
+      username: 'zhixu',
+      role: 'superadmin',
+      createdAt: new Date().toISOString(),
+      lastLoginAt: new Date().toISOString()
+    }
+    this.localPasswordlessActive = true
+    this.desktopActiveUser = localUser.username
+    const token = `zhixu_loc_${randomBytes(24).toString('hex')}`
+    const now = Date.now()
+    this.sessions.set(token, {
+      token,
+      username: localUser.username,
+      createdAt: now,
+      expiresAt: now + this.sessionTtlMs
+    })
+    return { token, user: localUser }
+  }
+
   logout(token?: string): void {
     if (token) {
       this.sessions.delete(token)
     } else {
       this.desktopActiveUser = null
+      this.localPasswordlessActive = false
     }
   }
 
@@ -397,18 +426,37 @@ export class AdminAuthManager {
       return null
     }
     const user = this.users.find(u => u.username === session.username)
-    return user ? this.toPublicUser(user) : null
+    if (user) return this.toPublicUser(user)
+    if (!this.passwordRequired() && token.startsWith('zhixu_loc_')) {
+      return {
+        username: session.username,
+        role: 'superadmin',
+        createdAt: new Date(session.createdAt).toISOString(),
+        lastLoginAt: new Date(session.createdAt).toISOString()
+      }
+    }
+    return null
   }
 
   getDesktopUser(): AdminUserRecord | null {
     if (!this.desktopActiveUser) return null
     const user = this.users.find(u => u.username === this.desktopActiveUser)
-    return user ? this.toPublicUser(user) : null
+    if (user) return this.toPublicUser(user)
+    if (this.localPasswordlessActive && !this.passwordRequired()) {
+      return {
+        username: this.desktopActiveUser,
+        role: 'superadmin',
+        createdAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString()
+      }
+    }
+    return null
   }
 
   getState(activeUser: AdminUserRecord | null, serverAuthEnforced: boolean): AdminAuthState {
     return {
       authenticated: Boolean(activeUser),
+      passwordRequired: this.passwordRequired(),
       needsSetup: this.needsSetup(),
       minPasswordLength: MIN_PASSWORD_LENGTH,
       user: activeUser,

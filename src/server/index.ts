@@ -318,13 +318,25 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
     return
   }
 
-  // Public auth status endpoint (for initial setup screen)
+  // Public auth status endpoint (for welcome / login screen)
   if (url.pathname === '/api/auth/status' && request.method === 'GET') {
     sendJson(request, response, 200, {
+      passwordRequired: adminAuth?.passwordRequired() ?? false,
       needsSetup: adminAuth?.needsSetup() ?? false,
       minPasswordLength: MIN_PASSWORD_LENGTH,
       authEnabled: Boolean(serverToken)
     })
+    return
+  }
+
+  // Loopback-only passwordless workspace entry when no admin password has been set
+  if (url.pathname === '/api/auth/enter-local' && request.method === 'POST') {
+    if (!adminAuth) throw new Error('管理员认证服务尚未初始化')
+    if (!isLoopbackHost(host)) {
+      throw new ForbiddenError('非本机监听模式禁止免密进入，请使用管理员账号密码登录')
+    }
+    const { token, user } = adminAuth.enterLocalPasswordless()
+    sendJson(request, response, 200, { token, user, snapshot: await snapshot(user) })
     return
   }
 

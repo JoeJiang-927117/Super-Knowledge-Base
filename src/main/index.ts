@@ -743,6 +743,11 @@ app.whenReady().then(async () => {
   })
 
   // ===== Admin Management IPC Handlers =====
+  ipcMain.handle('admin:enter-local', async () => {
+    if (!adminAuth) throw new Error('管理员认证服务未就绪')
+    adminAuth.enterLocalPasswordless()
+    return await snapshot()
+  })
   ipcMain.handle('admin:setup', async (_event, username: string, password: string) => {
     if (!adminAuth) throw new Error('管理员认证服务未就绪')
     await adminAuth.setupInitialAdmin(username, password)

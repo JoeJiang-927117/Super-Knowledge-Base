@@ -79,9 +79,9 @@ export function getWorkspaceApi(): WorkspaceApi {
       try {
         return await request<WorkspaceSnapshot>('/api/snapshot')
       } catch {
-        const status = await request<{ needsSetup: boolean; minPasswordLength: number; authEnabled: boolean }>(
+        const status = await request<{ passwordRequired?: boolean; needsSetup: boolean; minPasswordLength: number; authEnabled: boolean }>(
           '/api/auth/status'
-        ).catch(() => ({ needsSetup: false, minPasswordLength: 12, authEnabled: true }))
+        ).catch(() => ({ passwordRequired: false, needsSetup: false, minPasswordLength: 12, authEnabled: true }))
         return {
           root: null,
           modelProvider: {
@@ -117,6 +117,7 @@ export function getWorkspaceApi(): WorkspaceApi {
           cachedEmbeddingCount: 0,
           adminAuth: {
             authenticated: false,
+            passwordRequired: status.passwordRequired ?? false,
             needsSetup: status.needsSetup,
             minPasswordLength: status.minPasswordLength,
             user: null,
@@ -191,6 +192,13 @@ export function getWorkspaceApi(): WorkspaceApi {
       anchor.download = file.split('/').pop() ?? file
       anchor.rel = 'noopener'
       anchor.click()
+    },
+    adminEnterLocal: async () => {
+      const res = await request<{ token: string; snapshot: WorkspaceSnapshot }>('/api/auth/enter-local', {
+        method: 'POST'
+      })
+      saveWebToken(res.token)
+      return res.snapshot
     },
     adminSetup: async (username: string, password: string) => {
       const res = await request<{ token: string; snapshot: WorkspaceSnapshot }>('/api/auth/setup', {
