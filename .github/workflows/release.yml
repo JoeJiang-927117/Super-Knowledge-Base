@@ -1,0 +1,96 @@
+name: Release Windows Portable
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v0.2.1)'
+        required: true
+        default: 'v0.2.1'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck & verify tests
+        run: |
+          npm run typecheck
+          npm test
+
+      - name: Package Windows desktop binary
+        run: npm run package:dir
+
+      - name: Create portable ZIP and SHA256SUMS
+        shell: pwsh
+        run: |
+          $tag = "${{ github.event.inputs.tag }}"
+          if (-not $tag) { $tag = "${{ github.ref_name }}" }
+          "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+          $zipName = "ZHIXU-$tag-windows-x64-portable.zip"
+          $zipPath = Join-Path (Get-Location) "release\$zipName"
+          Remove-Item -Force -ErrorAction SilentlyContinue $zipPath
+          tar.exe -a -c -f $zipPath -C "release\win-unpacked" .
+          if ($LASTEXITCODE -ne 0) { throw "Failed to create portable zip" }
+
+          $zipHash = (Get-FileHash $zipPath -Algorithm SHA256).Hash.ToLower()
+          $cerHash = (Get-FileHash "certs\zhixu-codesign.cer" -Algorithm SHA256).Hash.ToLower()
+          @(
+            "$zipHash  $zipName"
+            "$cerHash  zhixu-codesign.cer"
+          ) | Set-Content -Encoding UTF8 "release\SHA256SUMS.txt"
+
+          "ZIP_NAME=$zipName" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Get-Content "release\SHA256SUMS.txt"
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = $env:RELEASE_TAG
+          $zipPath = "release\$($env:ZIP_NAME)"
+          $notes = @"
+          ## ZHIXU (知序) $tag — Windows Portable Release & Interactive Polish
+
+          Built reproducibly from source via GitHub Actions (\`windows-latest\`, Node 24).
+
+          ### What's New
+          - **One-Click Windows Portable ZIP (\`$($env:ZIP_NAME)\`)**: Extract and double-click \`知序 ZHIXU.exe\` — zero build, zero Docker, zero Elasticsearch.
+          - **Passwordless Local Entry (\`Enter ZHIXU\`)**: Local desktop and loopback (\`127.0.0.1\`) launches open directly into a clean welcome screen (optional password lock remains available in Admin Settings, and non-loopback \`0.0.0.0\` / Docker deployments enforce a mandatory \`>= 12\`-char password + RBAC).
+          - **English Default UI**: Starts in \`English\` by default with one-click switching to \`简体中文\`.
+          - **Unified 3-Layer Isometric Chunk Loader**: Interactive 3-layer isometric stacking loader across app startup, file imports, knowledge compilation, Q&A, diffs, versions, and health checks.
+
+          ### Integrity
+          - Verify your download against \`SHA256SUMS.txt\`.
+          "@
+          Set-Content -Encoding UTF8 "release\notes.md" $notes
+
+          gh release view $tag > $null 2>&1
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload $tag $zipPath "release\SHA256SUMS.txt" "certs\zhixu-codesign.cer" --clobber
+            gh release edit $tag --notes-file "release\notes.md" --latest
+          } else {
+            gh release create $tag $zipPath "release\SHA256SUMS.txt" "certs\zhixu-codesign.cer" `
+              --title "ZHIXU $tag — Windows Portable App, Passwordless Local Entry & Isometric Loader" `
+              --notes-file "release\notes.md" `
+              --latest
+          }
