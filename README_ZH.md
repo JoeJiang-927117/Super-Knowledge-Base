@@ -4,10 +4,16 @@
 
 <h1>知序 · ZHIXU</h1>
 
-<p><strong>本地优先的开源 AI 知识编译器与可审计 Markdown Wiki 工作台（Markdown + SQLite + Git）</strong></p>
+<p><strong>把散落的 PDF、Word、Excel、PPT 和 Markdown 丢进一个文件夹，自动编译为可审计的本地 Markdown 百科 + Git 版本链 + 严格溯源问答——无需 Docker、无需 ES、零云端依赖。</strong></p>
 
 <p>
   <a href="./README.md">English</a> | <strong>简体中文</strong>
+</p>
+
+<p>
+  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest">
+    <img alt="下载 Windows 绿色便携版" src="https://img.shields.io/badge/下载_Windows_绿色便携版-v0.2.1_(开箱即用)-2563EB?style=for-the-badge&logo=windows&logoColor=white" />
+  </a>
 </p>
 
 <p>
@@ -24,7 +30,7 @@
 <p>
   <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases"><img alt="Release" src="https://img.shields.io/badge/Release-v0.2.0-059669?style=flat-square" /></a>
+  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest"><img alt="Release" src="https://img.shields.io/badge/Release-v0.2.1-059669?style=flat-square" /></a>
   <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-English%20%2F%20中文-0EA5E9?style=flat-square" />
   <img alt="TypeScript 7" src="https://img.shields.io/badge/TypeScript-7.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
   <img alt="Electron" src="https://img.shields.io/badge/Electron-Desktop-0F172A?style=flat-square&logo=electron&logoColor=38BDF8" />
@@ -56,6 +62,16 @@
 2. **两阶段知识编译与摘录核验**：通过结构感知切块、零重依赖 OOXML 解析与两阶段模型编译，将异构资料自动沉淀为结构化 Markdown Wiki、六大知识域分类与 TF-IDF 实体互索引；所有引用摘录自动回查原文行/页定位，无法核验的幻觉内容直接剔除。
 3. **企业级变更治理闭环**：AI 新增与更新全部先进入声明式审核流（`草稿 → 初审 → 终审 → 发布 → 归档`），AI 删除建议强制拦截进入「待删审批 → 回收站」；内置分栏 Markdown 编辑器支持人工随时修订与新建，每次变更均可对比已发布基线的行级 Diff，并依托 SQLite 版本快照与 `isomorphic-git` 实现任意版本回滚与一键撤销整理。
 4. **开放数据主权与低成本交付**：知识正文即标准 Markdown，索引与持久化向量存于本地 SQLite，版本审计存于标准 `.git` 仓库。支持中英双语界面一键切换，单机可跑桌面客户端，内网/服务器通过单个 Node 进程或单容器 Docker 即可一键交付团队使用。
+
+### 为什么选知序（横向对比）
+
+| 核心能力 | 知序 ZHIXU | RAGFlow / Dify | AnythingLLM | Obsidian / XWiki |
+| --- | --- | --- | --- | --- |
+| **部署复杂度** | 单桌面应用或单 Node 进程（`SQLite + Git`） | 多容器编排（`ES + MinIO + Redis + MySQL`） | 单容器 / 桌面端 | 本地 / Java + 数据库 |
+| **杂乱目录自动编译为结构化 Wiki** | 原生两阶段编译 + 原文行/页摘录回查 | 仅切片检索（无 Wiki 治理） | 侧重对话问答（无 Wiki 编译） | 需纯人工维护 |
+| **原始文件严格只读不动** | SHA-256 追踪，绝不改写原件 | 切片入库 | 切片入库 | 直接编辑 |
+| **变更治理与 AI 删除拦截** | `草稿 → 审核 → 发布` + `待删回收站` + Git 回滚 | 较弱 | 无 | XWiki 有 / Obsidian 无 |
+| **本地 Ollama / 离线大模型** | 原生三层模型路由（`LLLM / LLM / VM`） | 支持 | 支持 | 依赖第三方插件 |
 
 ### 典型企业落地场景
 

@@ -4,10 +4,16 @@
 
 <h1>ZHIXU · 知序</h1>
 
-<p><strong>Local-First AI Knowledge Compiler &amp; Auditable Markdown Wiki Studio (Markdown + SQLite + Git)</strong></p>
+<p><strong>Drop a messy folder of PDFs, Word, Excel, PPT &amp; Markdown. Get an auditable local Markdown Wiki + Git history + grounded Q&amp;A — zero Docker, zero Elasticsearch, zero cloud.</strong></p>
 
 <p>
   <strong>English</strong> | <a href="./README_ZH.md">简体中文</a>
+</p>
+
+<p>
+  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest">
+    <img alt="Download Windows Portable" src="https://img.shields.io/badge/Download_Windows_Portable-v0.2.1_(No_Build_Required)-2563EB?style=for-the-badge&logo=windows&logoColor=white" />
+  </a>
 </p>
 
 <p>
@@ -24,7 +30,7 @@
 <p>
   <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases"><img alt="Release" src="https://img.shields.io/badge/Release-v0.2.0-059669?style=flat-square" /></a>
+  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest"><img alt="Release" src="https://img.shields.io/badge/Release-v0.2.1-059669?style=flat-square" /></a>
   <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-English%20%2F%20中文-0EA5E9?style=flat-square" />
   <img alt="TypeScript 7" src="https://img.shields.io/badge/TypeScript-7.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
   <img alt="Electron" src="https://img.shields.io/badge/Electron-Desktop-0F172A?style=flat-square&logo=electron&logoColor=38BDF8" />
@@ -56,6 +62,16 @@ In engineering, operations, compliance, and project delivery, critical knowledge
 2. **Two-Stage Knowledge Compilation & Excerpt Verification**: Structure-aware chunking, zero-bloat OOXML parsing, and two-stage compilation turn heterogeneous sources into a structured Markdown Wiki across six knowledge domains with TF-IDF mutual entity indexing. Cited excerpts are verified back against original line/page locators; unverifiable hallucinations are dropped.
 3. **Enterprise Change Governance**: AI creations and updates enter a declarative review workflow (`Draft → Moderating → Validating → Published → Archived`). AI delete proposals are intercepted into `Pending Delete → Recycle Bin`. A built-in split Markdown editor allows human editing with baseline line-level diffs, SQLite version snapshots, and `isomorphic-git` rollback.
 4. **Open Data Sovereignty & Bilingual Experience**: Knowledge lives as plain Markdown, indexes and persistent vectors live in local SQLite, and revision history lives in standard `.git`. Supports one-click **English / Chinese (`EN / 中文`)** UI switching and deploys as a desktop app, single Node process, or single Docker container.
+
+### Why ZHIXU vs Alternatives
+
+| Capability | ZHIXU (知序) | RAGFlow / Dify | AnythingLLM | Obsidian / XWiki |
+| --- | --- | --- | --- | --- |
+| **Runtime Footprint** | Single Desktop App or 1 Node process (`SQLite + Git`) | Multi-container (`ES + MinIO + Redis + MySQL`) | Single container / Desktop | Local / Java + DB |
+| **Auto-Compiles Messy Folders → Structured Wiki** | Built-in 2-stage compiler + excerpt verification | Chunk RAG only (no Wiki governance) | Chat over files (no Wiki compilation) | Manual writing |
+| **Source Files Strictly Untouched (Read-Only)** | SHA-256 tracked, zero mutation | Indexed copies | Indexed copies | Direct editing |
+| **Change Governance & AI Delete Guard** | `Draft → Review → Published` + `Pending Delete` + Git Rollback | Limited | None | XWiki yes / Obsidian no |
+| **Offline Local LLM / Ollama Support** | Native (`LLLM / LLM / VM` 3-tier routing) | Supported | Supported | Via plugins |
 
 ### Typical Enterprise Scenarios
 

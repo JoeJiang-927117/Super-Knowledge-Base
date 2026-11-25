@@ -1,5 +1,13 @@
 # Changelog / 更新日志
 
+## v0.2.1 (2026-11-25)
+
+### Experience & Interactive Polish
+- **Passwordless Local Entry (`Enter ZHIXU`)**: Local desktop and loopback (`127.0.0.1`) launches now open directly into a clean welcome screen with one-click entry—zero forced password setup for personal use, while still keeping optional password protection in Admin Settings and enforcing strict `ZHIXU_ADMIN_PASSWORD` (`>= 12` chars) on non-loopback (`0.0.0.0` / Docker) deployments.
+- **English Default UI**: Default interface language is now `English` with instant one-click switching to `简体中文`.
+- **Unified 3-Layer Isometric Chunk Loader**: Introduced an interactive 3-layer isometric stacking loader (`BootLoader`, `ZhixuIsoLoader`, `ZhixuChunkProgress`) across app startup, file imports, knowledge compilation, Q&A generation, diff/version loading, and health checks.
+- **Signed Windows Portable Release**: Published `ZHIXU-v0.2.1-windows-x64-portable.zip` (self-signed Authenticode binary) with `SHA256SUMS.txt` directly on GitHub Releases for zero-build desktop evaluation.
+
 ## v0.2.0 (2026-11-25)
 
 ### Security & Governance Hardening
