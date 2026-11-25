@@ -68,20 +68,32 @@ const ZH_STOPWORDS = new Set([
   '什么', '怎么', '多少', '哪些', '如何', '为什么', '吗', '呢', '吧', '啊', '与', '及', '或',
   '被', '把', '让', '对', '为', '以', '之', '其', '于', '而', '但', '并', '且', '从', '中'
 ])
+const EN_STOPWORDS = new Set([
+  'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+  'of', 'to', 'in', 'on', 'at', 'for', 'by', 'with', 'from', 'as', 'into', 'about',
+  'and', 'or', 'not', 'but', 'if', 'then', 'than', 'that', 'this', 'these', 'those',
+  'what', 'which', 'who', 'whom', 'when', 'where', 'why', 'how', 'do', 'does', 'did',
+  'can', 'could', 'should', 'would', 'will', 'shall', 'may', 'might', 'must',
+  'it', 'its', 'we', 'our', 'you', 'your', 'they', 'their', 'all', 'any', 'some', 'no'
+])
+
+function isStopword(token: string): boolean {
+  return ZH_STOPWORDS.has(token) || EN_STOPWORDS.has(token)
+}
 
 function chineseTokenizer(text: string): string[] {
   if (!text) return []
   const tokens: string[] = []
   const seen = new Set<string>()
   const push = (token: string) => {
-    if (!token || ZH_STOPWORDS.has(token) || seen.has(token)) return
+    if (!token || isStopword(token) || seen.has(token)) return
     seen.add(token)
     tokens.push(token)
   }
 
   for (const { segment, isWordLike } of segmenter.segment(String(text).toLowerCase())) {
     if (!isWordLike) continue
-    if (ZH_STOPWORDS.has(segment)) continue
+    if (isStopword(segment)) continue
     push(segment)
     if (CJK_REGEX.test(segment) && segment.length >= 3) {
       for (let i = 0; i + 1 < segment.length; i += 1) {

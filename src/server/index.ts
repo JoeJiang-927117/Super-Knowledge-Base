@@ -13,10 +13,11 @@ import type {
   WorkflowAction,
   WorkspaceSnapshot
 } from '../shared/types'
-import { AdminAuthManager, defaultAdminFilePath } from '../main/admin-auth'
+import { AdminAuthManager, AuthHttpError, defaultAdminFilePath, isLoopbackHost, MIN_PASSWORD_LENGTH } from '../main/admin-auth'
 import { isSupportedFile, listWorkspaceFiles, MAX_FILE_SIZE } from '../main/documents'
 import { fixWikiLint, runWikiLint } from '../main/linter'
 import { createTierModelClient, defaultModelSettings, normalizeModelSettings, publicModelSettings } from '../main/model'
+import { assertPermission, ForbiddenError, permissionForWorkflowAction } from '../main/rbac'
 import { askKnowledgeBase, searchKnowledge } from '../main/search'
 import { WikiStore } from '../main/store'
 import { organizeWorkspace } from '../main/wiki-engine'
@@ -71,8 +72,20 @@ async function openStore(directory: string): Promise<void> {
   store?.close()
   store = new WikiStore(directory)
   await store.initialize()
-  adminAuth = new AdminAuthManager(defaultAdminFilePath(path.join(directory, '.localwiki')))
-  await adminAuth.initialize()
+  const sessionTtlMs = process.env.ZHIXU_SESSION_TTL_MS ? Number(process.env.ZHIXU_SESSION_TTL_MS) : undefined
+  const maxFailedAttempts = process.env.ZHIXU_LOGIN_MAX_ATTEMPTS ? Number(process.env.ZHIXU_LOGIN_MAX_ATTEMPTS) : undefined
+  const lockoutMs = process.env.ZHIXU_LOGIN_LOCKOUT_MS ? Number(process.env.ZHIXU_LOGIN_LOCKOUT_MS) : undefined
+  const progressiveDelayBaseMs = process.env.ZHIXU_LOGIN_DELAY_MS ? Number(process.env.ZHIXU_LOGIN_DELAY_MS) : undefined
+  adminAuth = new AdminAuthManager(defaultAdminFilePath(path.join(directory, '.localwiki')), {
+    sessionTtlMs: sessionTtlMs && sessionTtlMs > 0 ? sessionTtlMs : undefined,
+    maxFailedAttempts: maxFailedAttempts && maxFailedAttempts > 0 ? maxFailedAttempts : undefined,
+    lockoutMs: lockoutMs && lockoutMs > 0 ? lockoutMs : undefined,
+    progressiveDelayBaseMs: progressiveDelayBaseMs !== undefined && !Number.isNaN(progressiveDelayBaseMs) ? progressiveDelayBaseMs : undefined
+  })
+  await adminAuth.initialize({
+    bindHost: host,
+    requireSeedPasswordOnNetwork: true
+  })
 }
 
 async function refreshModels(): Promise<void> {
@@ -192,9 +205,34 @@ function sendJson(request: http.IncomingMessage, response: http.ServerResponse, 
   response.end(body)
 }
 
-function sendError(request: http.IncomingMessage, response: http.ServerResponse, error: unknown, status = 400): void {
+function clientIpFromRequest(request: http.IncomingMessage): string {
+  const remote = request.socket.remoteAddress ?? 'unknown'
+  if (process.env.ZHIXU_TRUST_PROXY === 'true') {
+    const xff = request.headers['x-forwarded-for']
+    const first = Array.isArray(xff) ? xff[0] : xff?.split(',')[0]
+    if (first?.trim()) return first.trim()
+  }
+  return remote
+}
+
+function sendError(request: http.IncomingMessage, response: http.ServerResponse, error: unknown, defaultStatus = 400): void {
   const message = error instanceof Error ? error.message : String(error)
-  sendJson(request, response, status, { error: message })
+  let status = defaultStatus
+  const extraHeaders: Record<string, string> = {}
+  if (error instanceof ForbiddenError) {
+    status = error.statusCode
+  } else if (error instanceof AuthHttpError) {
+    status = error.statusCode
+    if (error.retryAfterSec) extraHeaders['retry-after'] = String(error.retryAfterSec)
+  }
+  const body = JSON.stringify({ error: message })
+  response.writeHead(status, {
+    'content-type': 'application/json; charset=utf-8',
+    'cache-control': 'no-store',
+    ...corsHeaders(request),
+    ...extraHeaders
+  })
+  response.end(body)
 }
 
 function extractRequestToken(request: http.IncomingMessage, url: URL): string {
@@ -274,18 +312,43 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
       ok: true,
       mode: modelSettings.mode ?? 'cloud',
       modelOnline,
+      authEnabled: Boolean(serverToken),
+      needsSetup: adminAuth?.needsSetup() ?? false
+    })
+    return
+  }
+
+  // Public auth status endpoint (for initial setup screen)
+  if (url.pathname === '/api/auth/status' && request.method === 'GET') {
+    sendJson(request, response, 200, {
+      needsSetup: adminAuth?.needsSetup() ?? false,
+      minPasswordLength: MIN_PASSWORD_LENGTH,
       authEnabled: Boolean(serverToken)
     })
     return
   }
 
-  // Public admin login endpoint (issues session Bearer token)
+  // Initial superadmin setup (only permitted when zero accounts exist on loopback)
+  if (url.pathname === '/api/auth/setup' && request.method === 'POST') {
+    if (!adminAuth) throw new Error('管理员认证服务尚未初始化')
+    if (!isLoopbackHost(host)) {
+      throw new ForbiddenError('非本机监听模式禁止通过 HTTP 初始化管理员，请使用 ZHIXU_ADMIN_PASSWORD 环境变量启动')
+    }
+    const body = await readBody(request, 64 * 1024)
+    const username = typeof body.username === 'string' ? body.username : 'zhixu'
+    const password = typeof body.password === 'string' ? body.password : ''
+    const { token, user } = await adminAuth.setupInitialAdmin(username, password)
+    sendJson(request, response, 200, { token, user, snapshot: await snapshot(user) })
+    return
+  }
+
+  // Public admin login endpoint (rate-limited, issues session Bearer token)
   if (url.pathname === '/api/auth/login' && request.method === 'POST') {
     if (!adminAuth) throw new Error('管理员认证服务尚未初始化')
     const body = await readBody(request, 64 * 1024)
     const username = typeof body.username === 'string' ? body.username : ''
     const password = typeof body.password === 'string' ? body.password : ''
-    const { token, user } = await adminAuth.login(username, password)
+    const { token, user } = await adminAuth.login(username, password, clientIpFromRequest(request))
     sendJson(request, response, 200, { token, user, snapshot: await snapshot(user) })
     return
   }
@@ -295,7 +358,13 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
     sendJson(request, response, 401, { error: '未授权访问：请先通过管理员账号登录或携带有效的服务器访问令牌' })
     return
   }
-  const actorName = auth.adminUser?.username ?? '服务器管理员'
+  const effectiveRole: AdminRole | null = auth.adminUser
+    ? auth.adminUser.role
+    : auth.viaServerToken || !serverToken
+      ? 'superadmin'
+      : null
+  // Authoritative server-side actor identity; never trust client-supplied reviewer/author fields.
+  const actorName = auth.adminUser?.username ?? 'server-token'
 
   if (url.pathname === '/api/auth/logout' && request.method === 'POST') {
     adminAuth?.logout(auth.token)
@@ -360,11 +429,12 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
   }
 
   if (url.pathname === '/api/upload' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'manage_sources', '上传资料')
     if (!store) throw new Error('尚未打开知识库')
     const body = await readBody(request)
     const fileName = typeof body.fileName === 'string' ? path.basename(body.fileName.trim()) : ''
     const contentBase64 = typeof body.contentBase64 === 'string' ? body.contentBase64 : ''
-    if (!fileName || !isSupportedFile(fileName)) throw new Error('不支持的文件格式')
+    if (!fileName || fileName.startsWith('.') || !isSupportedFile(fileName)) throw new Error('不支持的文件格式')
     const buffer = Buffer.from(contentBase64, 'base64')
     if (buffer.length > MAX_FILE_SIZE) throw new Error('文件超过 20 MB 上限')
     const dest = path.resolve(store.root, fileName)
@@ -376,12 +446,16 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
   }
 
   if (url.pathname === '/api/remove-source' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'manage_sources', '删除原始资料')
     if (!store) throw new Error('尚未打开知识库')
     const body = await readBody(request)
     const file = typeof body.file === 'string' ? body.file : ''
     const absolute = path.resolve(store.root, ...file.split('/'))
     const relative = path.relative(store.root, absolute)
-    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) throw new Error('无效的资料路径')
+    const segments = relative.split(/[\\/]/).filter(Boolean)
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative) || segments.some(seg => seg.startsWith('.'))) {
+      throw new Error('无效的资料路径')
+    }
     await fs.rm(absolute, { force: true })
     store.deleteFileChunks(file)
     sendJson(request, response, 200, await snapshot(auth.adminUser))
@@ -389,18 +463,21 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
   }
 
   if (url.pathname === '/api/models' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'manage_models', '刷新模型列表')
     await refreshModels()
     sendJson(request, response, 200, await snapshot(auth.adminUser))
     return
   }
 
   if (url.pathname === '/api/model' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'manage_models', '修改模型配置')
     const body = await readBody(request)
     sendJson(request, response, 200, await applyModelSettings(body as Partial<ModelProviderSettings>, auth.adminUser))
     return
   }
 
   if (url.pathname === '/api/organize' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'manage_organize', '触发知识库整理')
     if (!store) throw new Error('尚未打开知识库')
     if (activeController) throw new Error('已有整理任务正在进行')
     if (!modelOnline) await refreshModels()
@@ -427,12 +504,14 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
   }
 
   if (url.pathname === '/api/cancel' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'manage_organize', '取消整理')
     activeController?.abort()
     sendJson(request, response, 200, { ok: true })
     return
   }
 
   if (url.pathname === '/api/undo' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'manage_organize', '撤销整理记录')
     if (!store) throw new Error('尚未打开知识库')
     if (activeController) throw new Error('请先完成或取消当前整理')
     const body = await readBody(request)
@@ -443,15 +522,17 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
   }
 
   if (url.pathname === '/api/publish' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'review', '发布页面')
     if (!store) throw new Error('尚未打开知识库')
     const body = await readBody(request)
     if (typeof body.slug !== 'string') throw new Error('缺少页面 slug')
-    await store.publishPage(body.slug, typeof body.reviewer === 'string' ? body.reviewer : actorName)
+    await store.publishPage(body.slug, actorName)
     sendJson(request, response, 200, await snapshot(auth.adminUser))
     return
   }
 
   if (url.pathname === '/api/publish-all' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'manage_organize', '批量发布全部草稿')
     if (!store) throw new Error('尚未打开知识库')
     await store.publishAllDrafts(actorName)
     sendJson(request, response, 200, await snapshot(auth.adminUser))
@@ -462,10 +543,12 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
     if (!store) throw new Error('尚未打开知识库')
     const body = await readBody(request)
     if (typeof body.slug !== 'string' || typeof body.action !== 'string') throw new Error('缺少 slug 或 action')
+    const action = body.action as WorkflowAction
+    assertPermission(effectiveRole, permissionForWorkflowAction(action), `工作流操作:${action}`)
     await store.transitionWorkflow(
       body.slug,
-      body.action as WorkflowAction,
-      typeof body.reviewer === 'string' ? body.reviewer : actorName,
+      action,
+      actorName,
       typeof body.note === 'string' ? body.note : ''
     )
     sendJson(request, response, 200, await snapshot(auth.adminUser))
@@ -473,12 +556,15 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
   }
 
   if (url.pathname === '/api/pages/save' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'edit_draft', '保存知识页面')
     if (!store) throw new Error('尚未打开知识库')
     if (activeController) throw new Error('请先完成或取消当前整理')
     const body = await readBody(request)
     if (typeof body.title !== 'string' || typeof body.content !== 'string') {
       throw new Error('缺少页面标题或正文')
     }
+    const publishImmediately = Boolean(body.publishImmediately)
+    if (publishImmediately) assertPermission(effectiveRole, 'review', '保存并发布页面')
     const saved = await store.saveManualPage(
       {
         slug: typeof body.slug === 'string' ? body.slug : undefined,
@@ -489,16 +575,17 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
         pageType: typeof body.pageType === 'string' ? (body.pageType as import('../shared/types').WikiPageType) : undefined,
         storageDomain: typeof body.storageDomain === 'string' ? (body.storageDomain as StorageDomain) : undefined,
         sources: Array.isArray(body.sources) ? (body.sources as import('../shared/types').SourceReference[]) : undefined,
-        publishImmediately: Boolean(body.publishImmediately),
+        publishImmediately,
         note: typeof body.note === 'string' ? body.note : undefined
       },
-      typeof body.author === 'string' ? body.author : actorName
+      actorName
     )
     sendJson(request, response, 200, { slug: saved.slug, snapshot: await snapshot(auth.adminUser) })
     return
   }
 
   if (url.pathname === '/api/pages/purge' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'manage_versions_high_risk', '彻底清理回收站页面')
     if (!store) throw new Error('尚未打开知识库')
     const body = await readBody(request)
     if (typeof body.slug !== 'string') throw new Error('缺少页面 slug')
@@ -515,6 +602,7 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
   }
 
   if (url.pathname === '/api/versions/rollback' && request.method === 'POST') {
+    assertPermission(effectiveRole, 'manage_versions_high_risk', '回滚历史版本')
     if (!store) throw new Error('尚未打开知识库')
     const body = await readBody(request)
     if (typeof body.slug !== 'string' || typeof body.versionLabel !== 'string') {
@@ -539,6 +627,7 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
   }
 
   if ((url.pathname === '/api/lint/fix' || url.pathname === '/api/v1/lint/fix') && request.method === 'POST') {
+    assertPermission(effectiveRole, 'manage_organize', '自动修复断链')
     if (!store) throw new Error('尚未打开知识库')
     sendJson(request, response, 200, await fixWikiLint(store))
     return
@@ -702,7 +791,9 @@ async function main(): Promise<void> {
     console.log(`[知序 ZHIXU Server] 模式：${modelSettings.mode} | LLM：${modelSettings.llmModel} | LLLM：${modelSettings.lllmModel} | VM：${modelSettings.visionModel}`)
     if (!configuredToken && serverToken) {
       console.log(`[知序 ZHIXU Server] 未设置 ZHIXU_SERVER_TOKEN，已自动启用强制鉴权。临时访问令牌：${serverToken}`)
-      console.log(`[知序 ZHIXU Server] 亦可使用后台管理员账号登录（初始账号 zhixu）获取会话令牌`)
+      if (adminAuth?.needsSetup()) {
+        console.log(`[知序 ZHIXU Server] 首次启动尚未设置管理员密码，请通过本机登录页完成超级管理员初始化`)
+      }
     } else {
       console.log(`[知序 ZHIXU Server] 强制鉴权：${serverToken ? '已开启' : '仅本地显式关闭'}`)
     }

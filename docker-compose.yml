@@ -1,4 +1,5 @@
-# 知序 ZHIXU — 可动部署完整版 (External API First · LLLM/LLM/VM · Admin Auth)
+# 知序 ZHIXU — Docker Compose Deployment
+# Required before `docker compose up -d`: set a strong ZHIXU_ADMIN_PASSWORD (>= 12 chars) in .env
 services:
   zhixu-server:
     build: .
@@ -9,6 +10,7 @@ services:
     environment:
       ZHIXU_HOST: "0.0.0.0"
       ZHIXU_PORT: "8787"
+      # In-container knowledge base root path (mounted from ZHIXU_HOST_DATA_DIR below)
       ZHIXU_ROOT: "/data/knowledge-base"
       ZHIXU_MODE: "${ZHIXU_MODE:-cloud}"
       ZHIXU_PROVIDER: "${ZHIXU_PROVIDER:-openai}"
@@ -30,8 +32,10 @@ services:
       ZHIXU_SERVER_TOKEN: "${ZHIXU_SERVER_TOKEN:-}"
       ZHIXU_CORS_ORIGIN: "${ZHIXU_CORS_ORIGIN:-}"
       ZHIXU_ADMIN_USER: "${ZHIXU_ADMIN_USER:-zhixu}"
-      ZHIXU_ADMIN_PASSWORD: "${ZHIXU_ADMIN_PASSWORD:-123456789}"
+      # Mandatory strong password (>= 12 chars). Server refuses to start on 0.0.0.0 if unset or weak.
+      ZHIXU_ADMIN_PASSWORD: "${ZHIXU_ADMIN_PASSWORD:?Set ZHIXU_ADMIN_PASSWORD (>= 12 chars) in .env before starting Docker}"
     volumes:
-      - "${ZHIXU_DATA_DIR:-./data}:/data/knowledge-base"
+      # Host bind-mount directory (ZHIXU_HOST_DATA_DIR; falls back to ./data) -> container ZHIXU_ROOT
+      - "${ZHIXU_HOST_DATA_DIR:-${ZHIXU_DATA_DIR:-./data}}:/data/knowledge-base"
     extra_hosts:
       - "host.docker.internal:host-gateway"

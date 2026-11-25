@@ -345,10 +345,10 @@ export default function AdminConsole({
                 <input id="old-pwd" className="text-input" type="password" value={oldPwd} onChange={e => setOldPwd(e.target.value)} />
               </div>
               <div className="field-row">
-                <label htmlFor="new-pwd">{tx('新密码（至少 6 位）', 'New Password (min 6 chars)')}</label>
+                <label htmlFor="new-pwd">{tx('新密码（至少 12 位）', 'New Password (min 12 chars)')}</label>
                 <input id="new-pwd" className="text-input" type="password" value={newPwd} onChange={e => setNewPwd(e.target.value)} />
               </div>
-              <button className="btn-primary btn-sm" type="submit" disabled={submitting || !oldPwd || newPwd.length < 6}>
+              <button className="btn-primary btn-sm" type="submit" disabled={submitting || !oldPwd || newPwd.length < 12}>
                 {tx('更新密码', 'Update Password')}
               </button>
             </form>
@@ -362,7 +362,7 @@ export default function AdminConsole({
                 </div>
                 <div className="field-row">
                   <label htmlFor="create-pwd">{tx('初始密码', 'Initial Password')}</label>
-                  <input id="create-pwd" className="text-input" type="password" value={newUserPwd} onChange={e => setNewUserPwd(e.target.value)} placeholder={tx('至少 6 位', 'Min 6 characters')} />
+                  <input id="create-pwd" className="text-input" type="password" value={newUserPwd} onChange={e => setNewUserPwd(e.target.value)} placeholder={tx('至少 12 位（字母+数字/符号）', 'Min 12 chars (letters + digits)')} />
                 </div>
                 <div className="field-row">
                   <label htmlFor="create-role">{tx('角色', 'Role')}</label>
@@ -371,7 +371,7 @@ export default function AdminConsole({
                     <option value="superadmin">{tx('超级管理员', 'Superadmin')}</option>
                   </select>
                 </div>
-                <button className="btn-primary btn-sm" type="submit" disabled={submitting || !newUsername.trim() || newUserPwd.length < 6}>
+                <button className="btn-primary btn-sm" type="submit" disabled={submitting || !newUsername.trim() || newUserPwd.length < 12}>
                   {tx('创建账号', 'Create Account')}
                 </button>
               </form>

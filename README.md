@@ -4,7 +4,7 @@
 
 <h1>ZHIXU · 知序</h1>
 
-<p><strong>Lightweight Enterprise-Grade Open-Source AI Knowledge Base Architecture: Auditable, Verifiable, and Reversible Local-First Knowledge Compiler &amp; Desktop Studio</strong></p>
+<p><strong>Local-First AI Knowledge Compiler &amp; Auditable Markdown Wiki Studio (Markdown + SQLite + Git)</strong></p>
 
 <p>
   <strong>English</strong> | <a href="./README_ZH.md">简体中文</a>
@@ -13,25 +13,23 @@
 <p>
   <a href="#overview">Overview</a> ·
   <a href="#interface-preview">Preview</a> ·
-  <a href="#comparison-with-enterprise-open-source-kb-architectures">Comparison</a> ·
-  <a href="#architecture--core-engineering">Architecture</a> ·
+  <a href="#architecture--security">Architecture &amp; RBAC</a> ·
+  <a href="#measured-benchmarks--known-limitations">Benchmarks &amp; Limits</a> ·
   <a href="#model-routing">Model Routing</a> ·
   <a href="#quick-start">Quick Start</a> ·
   <a href="#deployment--api">Deployment &amp; API</a> ·
-  <a href="#license--code-signing-certificate">License &amp; Cert</a>
+  <a href="#license--self-signed-windows-certificate">License &amp; Cert</a>
 </p>
 
 <p>
   <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases"><img alt="Release" src="https://img.shields.io/badge/Release-v0.1.0-059669?style=flat-square" /></a>
-  <img alt="Tests" src="https://img.shields.io/badge/Checks-14%20Passed-059669?style=flat-square" />
+  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases"><img alt="Release" src="https://img.shields.io/badge/Release-v0.2.0-059669?style=flat-square" /></a>
   <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-English%20%2F%20中文-0EA5E9?style=flat-square" />
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
+  <img alt="TypeScript 7" src="https://img.shields.io/badge/TypeScript-7.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
   <img alt="Electron" src="https://img.shields.io/badge/Electron-Desktop-0F172A?style=flat-square&logo=electron&logoColor=38BDF8" />
   <img alt="React 19" src="https://img.shields.io/badge/React-19-1D4ED8?style=flat-square&logo=react&logoColor=white" />
   <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24+-15803D?style=flat-square&logo=node.js&logoColor=white" />
   <img alt="SQLite + Git" src="https://img.shields.io/badge/Storage-Markdown%20%2B%20SQLite%20%2B%20Git-4F46E5?style=flat-square" />
-  <img alt="Default Login" src="https://img.shields.io/badge/Default%20Login-zhixu%20%2F%20123456789-0F172A?style=flat-square" />
 </p>
 
 <br />
@@ -112,37 +110,66 @@ In engineering, operations, compliance, and project delivery, critical knowledge
 
 ---
 
-## Architecture & Core Engineering
+## Architecture & Security
 
 ```mermaid
 flowchart LR
     A["Multi-Format Sources<br/>PDF · DOCX · XLSX · PPTX · Images"] --> B["Structure-Aware Chunker<br/>Code-Fence Safe · IP/Version Safe"]
     B --> C["3-Tier Model Routing<br/>LLLM Plan · LLM Q&A · VM Vision"]
-    C --> D["Excerpt Verification<br/>Line/Page Locator Check · Drop Hallucinations"]
-    D --> E["Declarative Governance<br/>Review Queue · AI Delete Intercept → Recycle Bin"]
+    C --> D["Excerpt Verification<br/>Line/Page Locator Check · Drop Unverified"]
+    D --> E["Declarative Governance & RBAC<br/>Review Queue · AI Delete Intercept → Recycle Bin"]
     E --> F["Open Local Storage<br/>Markdown · SQLite Vectors · Git"]
     F --> G["RRF Hybrid Retrieval & Q&A<br/>Exact Token Boost · One-Click Save to Draft"]
 ```
 
-### 1. Zero-Bloat Document Parsing & Structure-Aware Chunking
-- **Custom OOXML Parser** (`src/main/ooxml.ts`): Built on Node native `zlib` and a pure TypeScript ZIP central directory reader—no multi-megabyte spreadsheet libraries. `.xlsx` sheets emit Markdown tables with header continuation across chunks; `.pptx` extracts slides alongside speaker notes.
-- **Structure-Aware Semantic Chunker** (`src/main/chunker.ts`):
-  - **Code-Fence State Machine**: Tracks ```` ``` ```` and `~~~` blocks so `# comments` inside scripts are never misread as headings; oversized code blocks split cleanly on line boundaries with balanced fences.
-  - **Engineering-Literal-Safe Splitting**: Preserves IP addresses (`192.168.1.100`), versions (`v2.0.1`), and decimals (`3.14`).
-  - **Micro-Chunk Coalescing & Deduplication**: Merges tiny fragments within the same section path while retaining breadcrumbs and line/page locators.
+### 1. Document Parsing & Structure-Aware Chunking
+- **Zero-Bloat OOXML Parser** (`src/main/ooxml.ts`): Built on Node native `zlib` and a pure TypeScript ZIP central directory reader. `.xlsx` sheets emit Markdown tables with header continuation across chunks; `.pptx` extracts slides alongside speaker notes.
+- **Structure-Aware Semantic Chunker** (`src/main/chunker.ts`): Fenced code-block state machine (```` ``` ```` and `~~~`), IP/version/decimal-safe sentence splitting, micro-chunk coalescing, and line/page locator tracking.
 
-### 2. RRF Hybrid Retrieval & Honest Citation Q&A
+### 2. RRF Hybrid Retrieval & Excerpt Verification
 - **4-Signal Fusion** (`src/main/search.ts`, `src/main/schema.ts`):
-  1. **Chinese + English BM25**: `Intl.Segmenter('zh-CN')` + bigram indexing cached per `(root, revision, scope)`.
-  2. **Persistent SQLite Vectors**: Incremental content-hash embeddings persisted in SQLite with no artificial row cap.
-  3. **Word-Boundary TF-IDF Mutual Index**: Enforces ASCII word boundaries (eliminating false matches like `port` inside `import`/`report`), merges parenthetical aliases (`Standard Operating Procedure (SOP)` → `SOP`), and weights entity links by TF-IDF × heading position.
-  4. **Exact Technical Token Boost + Adaptive Sigmoid Rerank**: Boosts exact IP/port/version/unit tokens; calibrates Cross-Encoder logits with temperature-scaled Logistic Sigmoid (`1 / (1 + exp(-x / T))`).
-- **Multi-Turn Follow-ups & Evidence Highlighting**: Carries the last 3 verified turns for coreference resolution, highlights matched terms in evidence snippets, and outputs `Conclusion / Applicability / Conflicts & Gaps / Citations`—refusing cleanly when evidence is insufficient.
+  1. **Bilingual BM25**: `Intl.Segmenter('zh-CN')` + bigram indexing + Chinese/English stopword filtering, cached per `(root, revision, scope)`.
+  2. **Persistent SQLite Vectors**: Incremental content-hash embeddings persisted in SQLite.
+  3. **Word-Boundary TF-IDF Mutual Index**: Enforces ASCII word boundaries and merges parenthetical aliases.
+  4. **Exact Technical Token Boost + Adaptive Sigmoid Rerank**: Boosts exact IP/port/version/unit tokens and calibrates Cross-Encoder logits via temperature-scaled Logistic Sigmoid (`1 / (1 + exp(-x / T))`).
 
-### 3. Crash-Safe Storage, Governance & Security Defaults
-- **Crash-Resilient Atomic Writes** (`src/main/safe-write.ts`): PID-tracked lock files recover dead locks in milliseconds; writes use `temp file → fsync → atomic rename` with Windows `EPERM/EBUSY` retry backoff.
-- **Code-Safe Health Linter** (`src/main/linter.ts`): Audits unsourced pages, stale sources, broken wikilinks, orphan pages, duplicate titles, schema violations, and thin pages; auto-fixing broken links strictly skips fenced and inline code spans.
-- **Secure Defaults** (`src/main/admin-auth.ts`, `src/server/index.ts`): Binds `127.0.0.1` by default, auto-generates a strong Bearer token verified with `timingSafeEqual`, blocks internal dotfile reads on `/api/source`, supports CORS allowlists, `superadmin` / `reviewer` roles, and salted `scrypt` password hashing.
+### 3. Security Hardening & Server-Side RBAC
+- **No Universal Default Password** (`src/main/admin-auth.ts`):
+  - Minimum password length is **12 characters** (with weak-password rejection and salted `scrypt` + `timingSafeEqual`).
+  - First run on desktop/loopback requires interactive superadmin initialization (`/api/auth/setup`).
+  - Non-loopback binds (e.g. `0.0.0.0` in Docker) **refuse to start** unless a strong `ZHIXU_ADMIN_PASSWORD` (`>= 12` chars) is supplied or non-weak accounts already exist.
+  - Per-IP and per-account login rate limiting with progressive delay, 15-minute lockout (`HTTP 429` + `Retry-After`), and structured failure logs.
+- **Strict Server-Side RBAC & Authoritative Session Identity** (`src/main/rbac.ts`, `src/server/index.ts`):
+  - Operator identity (`reviewedBy` / `createdBy`) is always derived from the verified server session; client-supplied `reviewer` or `author` fields are ignored.
+  - Protected `/api/source` and `/api/remove-source` reject path traversal (`..`) and dot-prefixed internal paths (`.localwiki/`, `.git/`).
+
+| Role | Permitted Operations | Restricted (`403 Forbidden`) |
+| :--- | :--- | :--- |
+| **`reviewer`** | Search, Q&A, feedback, read pages/diffs/versions/lint, save/edit drafts, submit moderation/validation, publish, reject delete | Model API config, upload/remove sources, compile/cancel/undo, lint auto-fix, publish-all, version rollback, recycle bin confirm/restore, permanent purge, account CRUD |
+| **`superadmin`** | All `reviewer` operations + full administrative & high-risk lifecycle operations | None |
+
+---
+
+## Measured Benchmarks & Known Limitations
+
+Run the reproducible end-to-end benchmark locally via `npm run build && npm run eval` (`tests/eval_benchmark.mjs`, compiled production HTTP server `out/main/server.js`, deterministic lexical + exact-token path without external LLM variance):
+
+| Metric | Measured Result | Scope / Conditions |
+| :--- | :--- | :--- |
+| **Fixed Corpus** | 7 Markdown specs + 1 `.xlsx` | 15 answerable technical/policy queries + 5 unanswerable out-of-scope queries |
+| **Recall@1 / @3 / @5** | **100.0% / 100.0% / 100.0%** | End-to-end `POST /api/v1/search` |
+| **MRR** | **1.000** | Answerable technical/policy set |
+| **Citation Excerpt Match** | **100.0% (7 / 7)** | Every published citation verified against immutable raw source text |
+| **Unanswerable Refusal** | **100.0% (5 / 5)** | Out-of-scope queries return empty or sub-threshold (`< 0.25`) |
+| **HTTP Search Latency (p50 / p95)** | **15.4 ms / 16.3 ms** | Local loopback Node 24 (`out/main/server.js`) |
+| **Process RSS (Eval Runner)** | **63.8 MB** | Single-node SQLite + in-memory Orama cache |
+| **Backup/Restore & Session Expiry** | **PASS** | Cold directory copy + restart searchable; expired session returns `401` |
+
+### Known Limitations
+- **Evaluation Scope**: Automated CI tests verify deterministic retrieval, excerpt locator integrity, auth/RBAC boundaries, and mock-routed synthesis; end-to-end answer quality with live models still depends on your chosen `LLLM` / `LLM` / `Embedding` / `Rerank` provider.
+- **Scanned PDFs**: Text-layer PDFs parse natively via `pdfjs-dist`; image-only scanned PDFs without embedded text require external OCR (planned on roadmap).
+- **Single-Node Storage**: SQLite + local filesystem + Git targets single-team / department deployments rather than multi-region horizontally sharded SaaS clusters.
+- **Windows Certificate**: The repository certificate in `certs/zhixu-codesign.cer` is **self-signed** (not issued by a public commercial CA); see below.
 
 ---
 
@@ -162,7 +189,7 @@ ZHIXU defaults to **Cloud API First** while supporting **LAN GPU** (`vLLM` / `SG
 ## Quick Start
 
 > [!IMPORTANT]
-> **Default Admin Credentials**: Username `zhixu` / Password `123456789` (override via `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD`, and change after first sign-in under **Admin Console → Accounts**).
+> **First-Run Security Policy**: There is **no universal default password**. On first desktop/loopback launch, ZHIXU prompts you to create a `superadmin` password (`>= 12` characters). On network/Docker binds (`0.0.0.0`), startup refuses unless a strong `ZHIXU_ADMIN_PASSWORD` is provided.
 
 > **Runtime Requirement**: Node.js `>= 22.13` (`24.x` recommended, built-in `node:sqlite`).
 
@@ -178,15 +205,14 @@ npm run dev
 - Switch between **English** and **简体中文** anytime from the login bar, workspace titlebar (`EN / 中文`), or Command Palette (`Ctrl + K`).
 - Shortcuts: `Ctrl + K` opens the Command Palette; `Ctrl + S` saves draft in the split Markdown editor.
 
-### Typecheck, Build & Automated Verification
+### Typecheck, Build, Security Tests & Benchmark
 
 ```bash
 npm run typecheck
 npm run build
-npm test
+npm test          # Runs core unit tests + server RBAC/auth/rate-limit tests + eval benchmark
+npm run eval      # Runs fixed-corpus retrieval/citation/refusal/restore benchmark standalone
 ```
-
-`npm test` runs all **14 automated checks** covering chunking, OOXML parsing, word-boundary entity indexing, Sigmoid calibration, stale-PID lock recovery, mandatory auth, 3-tier routing, persistent vector cache, honest refusal, delete-approval recycle bin, and manual editor versioning.
 
 ### Package Windows Desktop Client
 
@@ -201,10 +227,11 @@ npm run package       # NSIS installer  -> release/
 
 ### Docker Compose
 
+Copy `.env.example` to `.env`, set `ZHIXU_ADMIN_PASSWORD` (`>= 12` chars) and `ZHIXU_API_KEY`, then start:
+
 ```bash
-ZHIXU_API_KEY=your-api-key \
-ZHIXU_SERVER_TOKEN=your-strong-token \
-ZHIXU_ADMIN_PASSWORD=your-strong-password \
+cp .env.example .env
+# Edit .env: set ZHIXU_ADMIN_PASSWORD (>= 12 chars) and ZHIXU_API_KEY
 docker compose up -d --build
 ```
 
@@ -214,6 +241,7 @@ docker compose up -d --build
 ZHIXU_ROOT=/data/knowledge-base \
 ZHIXU_API_KEY=your-api-key \
 ZHIXU_SERVER_TOKEN=your-strong-token \
+ZHIXU_ADMIN_PASSWORD=YourStrongPassword#2026 \
 npm run server
 ```
 
@@ -223,7 +251,8 @@ npm run server
 | Variable | Description | Default |
 | :--- | :--- | :--- |
 | `ZHIXU_HOST` / `ZHIXU_PORT` | Server bind host & port | `127.0.0.1` / `8787` |
-| `ZHIXU_ROOT` | Knowledge base root directory | `./data` |
+| `ZHIXU_ROOT` | Knowledge base root path inside the Node process / Docker container | `./data` (`/data/knowledge-base` in Docker) |
+| `ZHIXU_HOST_DATA_DIR` | Host directory bind-mounted into Docker container `ZHIXU_ROOT` (`ZHIXU_DATA_DIR` supported as legacy alias) | `./data` |
 | `ZHIXU_MODE` | Mode: `cloud` / `lan_gpu` / `local` | `cloud` |
 | `ZHIXU_MODEL_BASE_URL` | Primary OpenAI-compatible gateway URL | `https://api.deepseek.com/v1` |
 | `ZHIXU_API_KEY` | Default shared API key | empty |
@@ -234,7 +263,7 @@ npm run server
 | `ZHIXU_RERANK_BASE_URL` / `ZHIXU_RERANK_MODEL` | Optional Cross-Encoder rerank endpoint | empty |
 | `ZHIXU_SERVER_TOKEN` | Server Bearer token (auto-generated if empty) | auto-generated |
 | `ZHIXU_CORS_ORIGIN` | Comma-separated CORS allowlist | loopback only |
-| `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD` | Initial superadmin credentials | `zhixu` / `123456789` |
+| `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD` | Initial superadmin username & strong password (`>= 12` chars, mandatory on non-loopback binds) | `zhixu` / interactive setup on loopback |
 
 </details>
 
@@ -272,13 +301,13 @@ Protected endpoints require `Authorization: Bearer <TOKEN>` (server token or adm
 
 ---
 
-## License & Code Signing Certificate
+## License & Self-signed Windows Certificate
 
 - **Open-Source License**: Licensed under the **[Apache License, Version 2.0](./LICENSE)** (commercial-friendly, explicit patent grant; preserve [LICENSE](./LICENSE) and [NOTICE](./NOTICE) when redistributing).
 - **Third-Party Notices**: See [THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md).
 - **Security Policy**: See [SECURITY.md](./SECURITY.md).
 - **Contributing**: See [CONTRIBUTING.md](./CONTRIBUTING.md) and [CHANGELOG.md](./CHANGELOG.md).
-- **Windows Code Signing Certificate**: Public verification certificate included at [`certs/zhixu-codesign.cer`](./certs/zhixu-codesign.cer) (RSA 4096 / SHA-256, Thumbprint `252C0ECD64B70B122EF0FEF369120D624B1175D2`). Verification, enterprise trust import, and commercial CA signing instructions are in [`certs/README.md`](./certs/README.md).
+- **Self-signed Windows Certificate**: [`certs/zhixu-codesign.cer`](./certs/zhixu-codesign.cer) is a **self-signed** RSA-4096 / SHA-256 certificate (Thumbprint `252C0ECD64B70B122EF0FEF369120D624B1175D2`) intended for internal/intranet integrity verification—it is **not** issued by a public commercial CA. For public Windows distribution without SmartScreen warnings, sign with a commercial OV/EV certificate via `CSC_LINK` / `CSC_KEY_PASSWORD` (see [`certs/README.md`](./certs/README.md)).
 
 ---
 

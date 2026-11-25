@@ -21,6 +21,7 @@ import { AdminAuthManager, defaultAdminFilePath } from './admin-auth'
 import { EXCLUDED_DIRS, isSupportedFile, listWorkspaceFiles, MAX_DEPTH, MAX_FILE_SIZE } from './documents'
 import { fixWikiLint, runWikiLint } from './linter'
 import { createTierModelClient, defaultModelSettings, normalizeModelSettings, publicModelSettings } from './model'
+import { assertPermission, permissionForWorkflowAction } from './rbac'
 import { askKnowledgeBase, searchKnowledge } from './search'
 import { WikiStore } from './store'
 import { organizeWorkspace } from './wiki-engine'
@@ -498,6 +499,7 @@ app.whenReady().then(async () => {
     return importPathsToWorkspace(paths)
   })
   ipcMain.handle('workspace:remove-source', async (_event, file: string) => {
+    assertPermission(adminAuth?.getDesktopUser()?.role, 'manage_sources', '删除原始资料')
     if (getRemoteServerConfig()) {
       await remoteRequest('/api/remove-source', { method: 'POST', body: JSON.stringify({ file }) })
       return await snapshot()
@@ -506,7 +508,10 @@ app.whenReady().then(async () => {
     if (activeController) throw new Error('请先完成或取消当前整理')
     const absolute = path.resolve(store.root, ...file.split('/'))
     const relative = path.relative(store.root, absolute)
-    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) throw new Error('无效的资料路径')
+    const segments = relative.split(/[\\/]/).filter(Boolean)
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative) || segments.some(seg => seg.startsWith('.'))) {
+      throw new Error('无效的资料路径')
+    }
     await fs.rm(absolute, { force: true })
     store.deleteFileChunks(file)
     return await snapshot()
@@ -592,10 +597,11 @@ app.whenReady().then(async () => {
   ipcMain.handle(
     'workspace:transition-workflow',
     async (_event, slug: string, action: WorkflowAction, note?: string) => {
+      assertPermission(adminAuth?.getDesktopUser()?.role, permissionForWorkflowAction(action), `工作流操作:${action}`)
       if (getRemoteServerConfig()) {
         await remoteRequest('/api/workflow/transition', {
           method: 'POST',
-          body: JSON.stringify({ slug, action, note, reviewer: currentReviewer() })
+          body: JSON.stringify({ slug, action, note })
         })
         return await snapshot()
       }
@@ -606,6 +612,7 @@ app.whenReady().then(async () => {
     }
   )
   ipcMain.handle('workspace:purge-deleted', async (_event, slug: string) => {
+    assertPermission(adminAuth?.getDesktopUser()?.role, 'manage_versions_high_risk', '彻底清理回收站页面')
     if (getRemoteServerConfig()) {
       await remoteRequest('/api/pages/purge', { method: 'POST', body: JSON.stringify({ slug }) })
       return await snapshot()
@@ -623,6 +630,7 @@ app.whenReady().then(async () => {
     return store.listPageVersions(slug)
   })
   ipcMain.handle('workspace:rollback-version', async (_event, slug: string, versionLabel: string) => {
+    assertPermission(adminAuth?.getDesktopUser()?.role, 'manage_versions_high_risk', '回滚历史版本')
     if (getRemoteServerConfig()) {
       await remoteRequest('/api/versions/rollback', {
         method: 'POST',
@@ -711,6 +719,7 @@ app.whenReady().then(async () => {
     }
   )
   ipcMain.handle('workspace:set-model', async (_event, input: Partial<ModelProviderSettings>) => {
+    assertPermission(adminAuth?.getDesktopUser()?.role, 'manage_models', '修改模型配置')
     if (!input || typeof input !== 'object') throw new Error('模型设置格式无效')
     return applyModelSettings(input)
   })
@@ -734,9 +743,14 @@ app.whenReady().then(async () => {
   })
 
   // ===== Admin Management IPC Handlers =====
+  ipcMain.handle('admin:setup', async (_event, username: string, password: string) => {
+    if (!adminAuth) throw new Error('管理员认证服务未就绪')
+    await adminAuth.setupInitialAdmin(username, password)
+    return await snapshot()
+  })
   ipcMain.handle('admin:login', async (_event, username: string, password: string) => {
     if (!adminAuth) throw new Error('管理员认证服务未就绪')
-    await adminAuth.login(username, password)
+    await adminAuth.login(username, password, 'desktop')
     return await snapshot()
   })
   ipcMain.handle('admin:logout', async () => {

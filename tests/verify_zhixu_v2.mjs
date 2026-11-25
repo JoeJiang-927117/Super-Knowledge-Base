@@ -171,12 +171,46 @@ const mockApi = http.createServer(async (req, res) => {
 await new Promise(resolve => mockApi.listen(0, '127.0.0.1', resolve))
 const mockPort = mockApi.address().port
 
-// Boot server WITHOUT ZHIXU_SERVER_TOKEN to verify P0 mandatory auth by default!
+// Boot server on loopback WITHOUT ZHIXU_ADMIN_PASSWORD or ZHIXU_SERVER_TOKEN
+// to verify: (1) non-loopback refusal, (2) loopback first-run setup, (3) rate-limiting, (4) strict RBAC & anti-spoofing!
+const nonLoopbackRoot = await fs.mkdtemp(path.join(os.tmpdir(), 'zhixu-net-guard-'))
+try {
+  // 0a. Non-loopback without ZHIXU_ADMIN_PASSWORD MUST refuse to start
+  const refusedNoPwd = await new Promise(resolve => {
+    const p = spawn(process.execPath, [serverEntry], {
+      env: { ...process.env, ZHIXU_ROOT: nonLoopbackRoot, ZHIXU_HOST: '0.0.0.0', ZHIXU_PORT: '18891', ZHIXU_ADMIN_PASSWORD: '' },
+      stdio: ['ignore', 'pipe', 'pipe']
+    })
+    let out = ''
+    p.stdout.on('data', d => (out += d.toString()))
+    p.stderr.on('data', d => (out += d.toString()))
+    p.on('exit', code => resolve({ code, out }))
+  })
+  assert.notEqual(refusedNoPwd.code, 0, 'Non-loopback startup without ZHIXU_ADMIN_PASSWORD must refuse')
+
+  // 0b. Non-loopback with weak legacy password 123456789 MUST refuse to start
+  const refusedWeak = await new Promise(resolve => {
+    const p = spawn(process.execPath, [serverEntry], {
+      env: { ...process.env, ZHIXU_ROOT: nonLoopbackRoot, ZHIXU_HOST: '0.0.0.0', ZHIXU_PORT: '18892', ZHIXU_ADMIN_PASSWORD: '123456789' },
+      stdio: ['ignore', 'pipe', 'pipe']
+    })
+    let out = ''
+    p.stdout.on('data', d => (out += d.toString()))
+    p.stderr.on('data', d => (out += d.toString()))
+    p.on('exit', code => resolve({ code, out }))
+  })
+  assert.notEqual(refusedWeak.code, 0, 'Non-loopback startup with weak password 123456789 must refuse')
+  console.log('✓ Security: Non-loopback startup refuses missing or weak default password')
+} finally {
+  await fs.rm(nonLoopbackRoot, { recursive: true, force: true }).catch(() => undefined)
+}
+
 const serverPort = 18887
 const serverProc = spawn(process.execPath, [serverEntry], {
   env: {
     ...process.env,
     ZHIXU_ROOT: tmpRoot,
+    ZHIXU_HOST: '127.0.0.1',
     ZHIXU_PORT: String(serverPort),
     ZHIXU_MODE: 'cloud',
     ZHIXU_PROVIDER: 'openai',
@@ -186,7 +220,11 @@ const serverProc = spawn(process.execPath, [serverEntry], {
     ZHIXU_LLM_MODEL: 'mock-llm',
     ZHIXU_VISION_MODEL: 'mock-vm',
     ZHIXU_EMBEDDING_MODEL: 'mock-embed',
-    ZHIXU_SERVER_TOKEN: '' // intentionally empty to prove P0 fix still blocks unauthenticated requests!
+    ZHIXU_SERVER_TOKEN: '', // intentionally empty to prove P0 fix still blocks unauthenticated requests!
+    ZHIXU_ADMIN_PASSWORD: '', // intentionally empty to test interactive first-run setup!
+    ZHIXU_LOGIN_MAX_ATTEMPTS: '4',
+    ZHIXU_LOGIN_LOCKOUT_MS: '60000',
+    ZHIXU_LOGIN_DELAY_MS: '20'
   },
   stdio: ['ignore', 'pipe', 'pipe']
 })
@@ -224,40 +262,147 @@ try {
   const health = await waitReady()
   assert.equal(health.ok, true)
   assert.equal(health.authEnabled, true, 'P0: Server must enforce auth even without ZHIXU_SERVER_TOKEN')
+  assert.equal(health.needsSetup, true, 'First boot without ZHIXU_ADMIN_PASSWORD must require initial setup')
 
   // P0 check: Unauthenticated snapshot must fail with 401
   const unauth = await fetch(`http://127.0.0.1:${serverPort}/api/snapshot`)
   assert.equal(unauth.status, 401, 'P0: Unauthenticated request must return 401')
   console.log('✓ P0: Default server auth enforcement verified (401 without token)')
 
-  // Admin auth check: Wrong password fails, default zhixu / 123456789 succeeds
-  const badLogin = await fetch(`http://127.0.0.1:${serverPort}/api/auth/login`, {
+  // First-run setup check: weak/short password rejected, >= 12 char strong password succeeds, re-setup blocked (409)
+  const weakSetup = await fetch(`http://127.0.0.1:${serverPort}/api/auth/setup`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ username: 'zhixu', password: 'wrong' })
-  })
-  assert.notEqual(badLogin.status, 200)
-
-  const loginRes = await api('/api/auth/login', {
-    method: 'POST',
     body: JSON.stringify({ username: 'zhixu', password: '123456789' })
   })
-  sessionToken = loginRes.token
-  assert.equal(loginRes.user.username, 'zhixu')
-  assert.equal(loginRes.user.role, 'superadmin')
+  assert.equal(weakSetup.status, 400, 'Setup must reject < 12 char / legacy default password')
 
-  // Create & delete a reviewer account
+  const STRONG_ADMIN_PWD = 'ZhixuAdmin#2026!'
+  const STRONG_REVIEWER_PWD = 'ReviewerPass#2026!'
+  const setupRes = await api('/api/auth/setup', {
+    method: 'POST',
+    body: JSON.stringify({ username: 'zhixu', password: STRONG_ADMIN_PWD })
+  })
+  sessionToken = setupRes.token
+  assert.equal(setupRes.user.username, 'zhixu')
+  assert.equal(setupRes.user.role, 'superadmin')
+
+  const repeatSetup = await fetch(`http://127.0.0.1:${serverPort}/api/auth/setup`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ username: 'attacker', password: 'AttackerPass#2026!' })
+  })
+  assert.equal(repeatSetup.status, 409, 'Repeat setup after initialization must be rejected with 409')
+
+  // Login rate-limiting & lockout check (429 + Retry-After)
+  let got429 = false
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const bad = await fetch(`http://127.0.0.1:${serverPort}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ username: 'rate_target', password: 'WrongPassword#99' })
+    })
+    if (bad.status === 429) {
+      assert.ok(Number(bad.headers.get('retry-after')) >= 1, '429 lockout must include Retry-After header')
+      got429 = true
+      break
+    }
+    assert.equal(bad.status, 401)
+  }
+  assert.equal(got429, true, 'Brute-force login attempts must trigger 429 lockout')
+  console.log('✓ Security: First-run setup (>=12 chars) + login rate-limit/lockout (429) verified')
+
+  // Dotfile read protection check
+  const dotRes = await fetch(`http://127.0.0.1:${serverPort}/api/source?file=.localwiki/admin-users.json`, {
+    headers: { authorization: `Bearer ${sessionToken}` }
+  })
+  assert.equal(dotRes.status, 400, 'Dotfile reads via /api/source must be blocked')
+
+  // Create reviewer01 (verify short password rejected, >= 12 char succeeds)
+  const shortUserRes = await fetch(`http://127.0.0.1:${serverPort}/api/auth/users`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${sessionToken}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ username: 'reviewer01', password: 'short123', role: 'reviewer' })
+  })
+  assert.equal(shortUserRes.status, 400, 'Creating user with < 12 char password must fail')
+
   let snap = await api('/api/auth/users', {
     method: 'POST',
-    body: JSON.stringify({ username: 'reviewer01', password: 'PassWord123', role: 'reviewer' })
+    body: JSON.stringify({ username: 'reviewer01', password: STRONG_REVIEWER_PWD, role: 'reviewer' })
   })
   assert.equal(snap.adminAuth.users.length, 2)
+
+  // Log in as reviewer01 and verify strict RBAC enforcement (403 on high-risk endpoints)
+  const revLoginRes = await fetch(`http://127.0.0.1:${serverPort}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ username: 'reviewer01', password: STRONG_REVIEWER_PWD })
+  })
+  assert.equal(revLoginRes.status, 200)
+  const revLogin = await revLoginRes.json()
+  const revToken = revLogin.token
+  assert.equal(revLogin.user.role, 'reviewer')
+
+  const forbiddenChecks = [
+    ['/api/model', { model: 'evil-model' }],
+    ['/api/upload', { fileName: 'test.md', contentBase64: Buffer.from('hi').toString('base64') }],
+    ['/api/remove-source', { file: '生态流量保障规程.md' }],
+    ['/api/organize', {}],
+    ['/api/versions/rollback', { slug: 'eco-flow', versionLabel: 'V1.0' }],
+    ['/api/workflow/transition', { slug: 'eco-flow', action: 'confirm_delete' }],
+    ['/api/pages/purge', { slug: 'eco-flow' }],
+    ['/api/auth/users', { username: 'shadow', password: 'ShadowPass#2026!', role: 'superadmin' }]
+  ]
+  for (const [ep, payload] of forbiddenChecks) {
+    const r = await fetch(`http://127.0.0.1:${serverPort}${ep}`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${revToken}`, 'content-type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    assert.equal(r.status, 403, `RBAC: reviewer must receive 403 on ${ep}, got ${r.status}`)
+  }
+
+  // Verify anti-spoofing: reviewer01 attempts to forge author/reviewer as "FAKE_CEO"
+  const spoofSave = await fetch(`http://127.0.0.1:${serverPort}/api/pages/save`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${revToken}`, 'content-type': 'application/json' },
+    body: JSON.stringify({
+      title: 'RBAC 审核员测试页',
+      summary: '防伪造操作人测试',
+      content: '## 内容\n测试服务端会话身份权威性。',
+      publishImmediately: true,
+      author: 'FAKE_CEO',
+      reviewer: 'FAKE_CEO'
+    })
+  })
+  assert.equal(spoofSave.status, 200, 'RBAC: reviewer should be allowed to save & publish')
+  const spoofData = await spoofSave.json()
+  const spoofPage = spoofData.snapshot.pages.find(p => p.slug === spoofData.slug)
+  assert.equal(spoofPage.reviewedBy, 'reviewer01', 'Server MUST record authenticated session user, never spoofed client author/reviewer')
+
+  // Clean up test page & reviewer01 as superadmin
+  await api('/api/workflow/transition', {
+    method: 'POST',
+    body: JSON.stringify({ slug: spoofData.slug, action: 'confirm_delete' })
+  })
+  await api('/api/pages/purge', { method: 'POST', body: JSON.stringify({ slug: spoofData.slug }) })
+
+  // Verify reviewer logout invalidates session token immediately (401)
+  await fetch(`http://127.0.0.1:${serverPort}/api/auth/logout`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${revToken}` }
+  })
+  const afterLogout = await fetch(`http://127.0.0.1:${serverPort}/api/snapshot`, {
+    headers: { authorization: `Bearer ${revToken}` }
+  })
+  assert.equal(afterLogout.status, 401, 'Logged-out session token must return 401')
+
   snap = await api('/api/auth/users/delete', {
     method: 'POST',
     body: JSON.stringify({ username: 'reviewer01' })
   })
   assert.equal(snap.adminAuth.users.length, 1)
-  console.log('✓ Admin auth system (zhixu / 123456789 + user CRUD) verified')
+  console.log('✓ RBAC & Anti-Spoofing verified (reviewer 403 on 8 high-risk ops, spoofed actor ignored, dotfile blocked)')
 
   // Organize round 1 — verify LLLM, LLM, VM three-tier routing
   const org1 = await api('/api/organize', { method: 'POST' })

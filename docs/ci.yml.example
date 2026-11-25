@@ -28,5 +28,5 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Run 14 automated verification checks
+      - name: Run unit, security/RBAC, and fixed-corpus eval benchmark tests
         run: npm test

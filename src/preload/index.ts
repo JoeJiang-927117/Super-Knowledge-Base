@@ -34,6 +34,7 @@ const api: WorkspaceApi = {
   setModel: model => ipcRenderer.invoke('workspace:set-model', model),
   refreshModels: () => ipcRenderer.invoke('workspace:refresh-models'),
   openSource: file => ipcRenderer.invoke('workspace:open-source', file),
+  adminSetup: (username: string, password: string) => ipcRenderer.invoke('admin:setup', username, password),
   adminLogin: (username: string, password: string) => ipcRenderer.invoke('admin:login', username, password),
   adminLogout: () => ipcRenderer.invoke('admin:logout'),
   adminChangePassword: (oldPassword: string, newPassword: string) =>

@@ -75,7 +75,62 @@ export function getWorkspaceApi(): WorkspaceApi {
   }
 
   return {
-    getSnapshot: () => request('/api/snapshot'),
+    getSnapshot: async () => {
+      try {
+        return await request<WorkspaceSnapshot>('/api/snapshot')
+      } catch {
+        const status = await request<{ needsSetup: boolean; minPasswordLength: number; authEnabled: boolean }>(
+          '/api/auth/status'
+        ).catch(() => ({ needsSetup: false, minPasswordLength: 12, authEnabled: true }))
+        return {
+          root: null,
+          modelProvider: {
+            mode: 'cloud',
+            provider: 'openai',
+            baseUrl: '',
+            model: '',
+            apiKeySet: false,
+            lllmApiKeySet: false,
+            llmApiKeySet: false,
+            vmApiKeySet: false,
+            rerankApiKeySet: false,
+            remoteServerTokenSet: false,
+            profiles: {
+              cloud: { provider: 'openai', baseUrl: '', model: '', apiKeySet: false, lllmApiKeySet: false, llmApiKeySet: false, vmApiKeySet: false, rerankApiKeySet: false, remoteServerTokenSet: false },
+              lan_gpu: { provider: 'openai', baseUrl: '', model: '', apiKeySet: false, lllmApiKeySet: false, llmApiKeySet: false, vmApiKeySet: false, rerankApiKeySet: false, remoteServerTokenSet: false },
+              local: { provider: 'ollama', baseUrl: '', model: '', apiKeySet: false, lllmApiKeySet: false, llmApiKeySet: false, vmApiKeySet: false, rerankApiKeySet: false, remoteServerTokenSet: false }
+            }
+          },
+          models: [],
+          modelOnline: false,
+          deploymentMode: 'cloud',
+          remoteConnected: true,
+          fileCount: 0,
+          pendingCount: 0,
+          draftCount: 0,
+          pendingDeleteCount: 0,
+          deletedCount: 0,
+          publishedCount: 0,
+          chunkCount: 0,
+          entityCount: 0,
+          mutualLinkCount: 0,
+          cachedEmbeddingCount: 0,
+          adminAuth: {
+            authenticated: false,
+            needsSetup: status.needsSetup,
+            minPasswordLength: status.minPasswordLength,
+            user: null,
+            users: [],
+            serverAuthEnforced: status.authEnabled
+          },
+          sourceFiles: [],
+          pages: [],
+          runs: [],
+          modelCalls: [],
+          feedbacks: []
+        } satisfies WorkspaceSnapshot
+      }
+    },
     selectWorkspace: () => request<WorkspaceSnapshot | null>('/api/workspace', { method: 'POST' }).catch(() => null),
     importDroppedFiles: async (files: File[]): Promise<ImportFilesResult> => {
       const imported: string[] = []
@@ -136,6 +191,14 @@ export function getWorkspaceApi(): WorkspaceApi {
       anchor.download = file.split('/').pop() ?? file
       anchor.rel = 'noopener'
       anchor.click()
+    },
+    adminSetup: async (username: string, password: string) => {
+      const res = await request<{ token: string; snapshot: WorkspaceSnapshot }>('/api/auth/setup', {
+        method: 'POST',
+        body: JSON.stringify({ username, password })
+      })
+      saveWebToken(res.token)
+      return res.snapshot
     },
     adminLogin: async (username: string, password: string) => {
       const res = await request<{ token: string; snapshot: WorkspaceSnapshot }>('/api/auth/login', {

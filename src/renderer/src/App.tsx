@@ -392,6 +392,17 @@ export default function App() {
     }
   }
 
+  async function adminSetup(username: string, password: string) {
+    setError('')
+    try {
+      if (!api.adminSetup) throw new Error('Setup not supported')
+      setSnapshot(await api.adminSetup(username, password))
+      setNotice(locale === 'en' ? `Initialized superadmin ${username}` : `已初始化超级管理员 ${username}`)
+    } catch (reason) {
+      showError(reason)
+    }
+  }
+
   async function adminLogin(username: string, password: string) {
     setError('')
     try {
@@ -614,9 +625,12 @@ export default function App() {
     return (
       <LoginPage
         theme={theme}
+        needsSetup={Boolean(snapshot.adminAuth.needsSetup)}
+        minPasswordLength={snapshot.adminAuth.minPasswordLength ?? 12}
         error={error}
         onClearError={() => setError('')}
         onToggleTheme={next => setTheme(next)}
+        onSetup={adminSetup}
         onLogin={adminLogin}
         windowControls={api.windowControls}
       />

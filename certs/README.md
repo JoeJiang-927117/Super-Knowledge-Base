@@ -1,4 +1,4 @@
-# Code Signing Certificate / 代码签名证书
+# Self-signed Windows Certificate / Windows 自签名证书
 
 [English](#english) | [简体中文](#简体中文)
 
@@ -8,7 +8,7 @@
 
 ## English
 
-This directory contains the **public code-signing certificate** (`zhixu-codesign.cer`) for verifying self-signed Windows builds of **知序 · ZHIXU** in internal / enterprise deployments.
+> **Important Notice**: `zhixu-codesign.cer` is a **self-signed** certificate generated for internal / intranet integrity verification. It is **not** issued by a publicly trusted commercial CA and will not bypass Windows SmartScreen on untrusted public machines. For public distribution, sign with a commercial OV/EV certificate via `CSC_LINK` and `CSC_KEY_PASSWORD`.
 
 > **Security Note**: Private keys (`.pfx` / `.p12` / `.key`) are strictly excluded via `.gitignore` and are never committed to this repository.
 
@@ -52,7 +52,7 @@ Import-Certificate -FilePath ".\certs\zhixu-codesign.cer" -CertStoreLocation Cer
 
 ## 简体中文
 
-本目录包含 **知序 · ZHIXU** 的**公开代码签名证书**（`zhixu-codesign.cer`），用于校验自签名 Windows 客户端的发布者身份与文件完整性（适用于内网与企业自部署分发）。
+> **重要说明**：`zhixu-codesign.cer` 为**自签名证书**，仅用于内网构建完整性校验与企业内部信任分发，**并非公共商业 CA 颁发证书**，不能在公网终端消除 Windows SmartScreen 提示。面向公网正式分发请使用商业 OV/EV 证书。
 
 > **安全说明**：签名私钥（`.pfx` / `.p12` / `.key`）已通过 `.gitignore` 严格隔离，绝不提交至代码仓库。
 

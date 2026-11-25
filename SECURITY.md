@@ -4,10 +4,13 @@
 
 - **Local Loopback Binding**: The HTTP server binds `127.0.0.1` by default (`ZHIXU_HOST`).
 - **Mandatory Bearer Authentication**: Protected HTTP endpoints require a Bearer token (`ZHIXU_SERVER_TOKEN` or admin session token); when unset, a 256-bit cryptographically random token is generated at startup.
-- **Credential Hygiene**: Default admin account is `zhixu` / `123456789` for initial setup only. Change it immediately in **Admin Console → Accounts** or override via `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD`.
+- **No Default Password**: First-run interactive setup requires a `>= 12`-character strong password; non-loopback binds (`0.0.0.0`) refuse to start if `ZHIXU_ADMIN_PASSWORD` is unset or weak.
+- **Login Rate Limiting**: Per-IP and per-account sliding-window rate limiting with progressive delay, 15-minute lockout (`HTTP 429` + `Retry-After`), and structured failure logs.
+- **Server-Side RBAC & Authoritative Session Identity**: `reviewer` vs `superadmin` permissions enforced on every endpoint (`src/main/rbac.ts`); client-supplied `reviewer` / `author` fields are ignored.
 - **Password Storage**: Salted `scrypt` hashes with constant-time `timingSafeEqual` verification.
+- **Path Safety**: `/api/source` and `/api/remove-source` reject path traversal (`..`) and dot-prefixed internal paths (`.localwiki/`, `.git/`).
 - **AI Destructive Action Guard**: AI suggestions to delete pages are intercepted into `pending_delete` approval and Recycle Bin rather than hard-deleted.
-- **Code Signing**: Official Windows releases can be verified against the public certificate in [`certs/zhixu-codesign.cer`](./certs/zhixu-codesign.cer) (see [`certs/README.md`](./certs/README.md)).
+- **Self-signed Windows Certificate**: Internal/self-signed builds can be verified against [`certs/zhixu-codesign.cer`](./certs/zhixu-codesign.cer) (not a public commercial CA; see [`certs/README.md`](./certs/README.md)).
 
 ## Reporting a Vulnerability / 漏洞报告
 

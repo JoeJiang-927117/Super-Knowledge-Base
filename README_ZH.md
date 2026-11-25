@@ -4,7 +4,7 @@
 
 <h1>知序 · ZHIXU</h1>
 
-<p><strong>面向企业级场景的轻量开源 AI 知识库架构：可审阅、可溯源、可回滚的本地知识编译器与桌面工作台</strong></p>
+<p><strong>本地优先的开源 AI 知识编译器与可审计 Markdown Wiki 工作台（Markdown + SQLite + Git）</strong></p>
 
 <p>
   <a href="./README.md">English</a> | <strong>简体中文</strong>
@@ -13,25 +13,23 @@
 <p>
   <a href="#项目简介">项目简介</a> ·
   <a href="#界面预览">界面预览</a> ·
-  <a href="#与企业级开源知识库架构对比">架构对比</a> ·
-  <a href="#技术架构与原理">技术原理</a> ·
+  <a href="#架构与安全权限">架构与安全</a> ·
+  <a href="#实测基准与已知限制">基准与限制</a> ·
   <a href="#模型路由与推荐搭配">模型搭配</a> ·
   <a href="#快速开始">快速开始</a> ·
   <a href="#部署与-api">部署与 API</a> ·
-  <a href="#开源许可与代码签名证书">许可与证书</a>
+  <a href="#开源许可与-windows-自签名证书">许可与证书</a>
 </p>
 
 <p>
   <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases"><img alt="Release" src="https://img.shields.io/badge/Release-v0.1.0-059669?style=flat-square" /></a>
-  <img alt="Tests" src="https://img.shields.io/badge/Checks-14%20Passed-059669?style=flat-square" />
+  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases"><img alt="Release" src="https://img.shields.io/badge/Release-v0.2.0-059669?style=flat-square" /></a>
   <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-English%20%2F%20中文-0EA5E9?style=flat-square" />
-  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-5.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
+  <img alt="TypeScript 7" src="https://img.shields.io/badge/TypeScript-7.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
   <img alt="Electron" src="https://img.shields.io/badge/Electron-Desktop-0F172A?style=flat-square&logo=electron&logoColor=38BDF8" />
   <img alt="React 19" src="https://img.shields.io/badge/React-19-1D4ED8?style=flat-square&logo=react&logoColor=white" />
   <img alt="Node.js 24" src="https://img.shields.io/badge/Node.js-24+-15803D?style=flat-square&logo=node.js&logoColor=white" />
   <img alt="SQLite + Git" src="https://img.shields.io/badge/Storage-Markdown%20%2B%20SQLite%20%2B%20Git-4F46E5?style=flat-square" />
-  <img alt="Default Login" src="https://img.shields.io/badge/初始账密-zhixu%20%2F%20123456789-0F172A?style=flat-square" />
 </p>
 
 <br />
@@ -112,37 +110,62 @@
 
 ---
 
-## 技术架构与原理
+## 架构与安全权限
 
 ```mermaid
 flowchart LR
     A["多格式原件<br/>PDF · DOCX · XLSX · PPTX · 图片"] --> B["结构感知切块<br/>代码围栏保护 · IP/版本安全分句"]
     B --> C["三类接口路由<br/>LLLM 规划 · LLM 问答 · VM 识图"]
-    C --> D["原文摘录核验<br/>回查行/页定位 · 丢弃幻觉"]
-    D --> E["声明式治理队列<br/>草稿审核 · AI 删除拦截进回收站"]
+    C --> D["原文摘录核验<br/>回查行/页定位 · 丢弃未核验项"]
+    D --> E["声明式治理与 RBAC<br/>草稿审核 · AI 删除拦截进回收站"]
     E --> F["本地数据底座<br/>Markdown · SQLite 持久向量 · Git"]
     F --> G["RRF 混合检索 & 多轮问答<br/>精确参数提权 · 问答一键沉淀"]
 ```
 
-### 1. 零重依赖文档解析与结构感知切块
-- **自研 OOXML 解析器**（`src/main/ooxml.ts`）：基于 Node 原生 `zlib` 与纯 TypeScript ZIP 中央目录读取器实现，无需引入数十 MB 的重型第三方表格库。Excel 按工作表输出标准 Markdown 表格（切块时自动为每个切片续接表头），PPT 按幻灯片序号提取正文并自动合并演讲者备注。
-- **结构感知语义切块引擎**（`src/main/chunker.ts`）：
-  - **围栏代码块状态机**：精确追踪 ```` ``` ```` 与 `~~~` 区域，确保脚本中的 `# 注释` 或编号行绝不被误判为章节标题；超长代码块按行安全拆分并补全围栏标记。
-  - **工程字面量安全分句**：保护 IP 地址（`192.168.1.100`）、版本号（`v2.0.1`）与小数（`3.14`）不被英文句点切碎。
-  - **微块自动合并与内容去重**：同章节路径下的过短文本碎片自动合并，保留完整层级面包屑与行/页定位。
+### 1. 文档解析与结构感知切块
+- **零重依赖 OOXML 解析器**（`src/main/ooxml.ts`）：基于 Node 原生 `zlib` 与纯 TypeScript ZIP 中央目录读取器实现，Excel 跨切片自动续接表头，PPT 自动合并演讲者备注。
+- **结构感知切块引擎**（`src/main/chunker.ts`）：围栏代码块状态机（```` ``` ```` / `~~~`）、IP/版本号/小数安全分句、微块合并与行/页定位。
 
-### 2. RRF 多路融合检索与诚实引用问答
-- **四路融合排序**（`src/main/search.ts`、`src/main/schema.ts`）：
-  1. **中文分词 BM25**：基于 `Intl.Segmenter('zh-CN')` + 二元切词的全文检索，内存索引按 `(root, revision, scope)` 缓存；
-  2. **SQLite 持久化向量检索**：按文档内容哈希增量写入本地 `embeddings` 表，去除数量上限且避免重复计算；
-  3. **边界感知 TF-IDF 互索引**：对英文/ASCII 实体强制词边界匹配（彻底消除 `port` 误命中 `import`/`report`），自动提取并归并括号别名（如 `标准操作规程（SOP）` → `SOP`），按 TF-IDF × 标题位置加权关联切块与 Wiki；
-  4. **精确参数提权 + 自适应 Sigmoid 精排**：针对 IP、端口、版本号、带单位数值额外提权；Cross-Encoder 原始 logit 采用温度缩放 Logistic Sigmoid 校准（`1 / (1 + exp(-x / T))`），避免线性 min-max 把低相关候选误拉为满分。
-- **多轮连续追问与证据高亮**：支持携带近 3 轮对话历史进行指代消解与上下文检索，命中证据自动高亮查询词；每条回答均输出「核心结论 / 适用条件 / 冲突与缺失 / 引用来源」，证据不足时明确拒答且绝不伪造引用。
+### 2. RRF 混合检索与原文摘录核验
+- **四路融合排序**（`src/main/search.ts`、`src/main/schema.ts`）：中英文停用词过滤 + `Intl.Segmenter` BM25、SQLite 持久化向量缓存、ASCII 词边界 TF-IDF 互索引、精确技术参数提权与温度缩放 Logistic Sigmoid 精排校准。
 
-### 3. 容错存储、版本治理与安全边界
-- **崩溃自愈与原子写盘**（`src/main/safe-write.ts`）：写入锁文件记录进程 PID，异常崩溃遗留的死锁在毫秒级自动检测回收；Markdown 写入走「临时文件 → `fsync` → 原子重命名（Windows `EPERM/EBUSY` 退避重试）」。
-- **代码块保护体检修复**（`src/main/linter.ts`）：自动巡检无依据页面、过期原件、断链、孤立页、重复标题、Schema 缺项与过薄内容；一键修复断链时严格跳过围栏代码与行内代码中的 `[[...]]`。
-- **安全默认项**（`src/main/admin-auth.ts`、`src/server/index.ts`）：服务端默认绑定 `127.0.0.1`，未配置 Token 时自动生成强随机令牌并通过常量时间比对校验；`/api/source` 禁止读取 `.localwiki`/`.git` 等内部隐藏路径；CORS 支持来源白名单；后台账号支持 `superadmin` / `reviewer` 分级，密码采用随机盐 `scrypt`。
+### 3. 安全基线与服务端 RBAC 权限矩阵
+- **移除通用默认密码**（`src/main/admin-auth.ts`）：
+  - 密码最低长度提升至 **12 位**（拒绝弱口令与旧默认密码，随机盐 `scrypt` + `timingSafeEqual`）。
+  - 桌面端/本机环回首次启动强制引导初始化超级管理员密码（`/api/auth/setup`）。
+  - 非本机监听（如 Docker `0.0.0.0`）未提供强 `ZHIXU_ADMIN_PASSWORD`（≥12 位）或检测到旧弱口令时**直接拒绝启动**。
+  - 登录接口按 IP / 账号限流，支持渐进延迟、连续失败锁定（返回 `HTTP 429` + `Retry-After`）与结构化失败日志。
+- **统一服务端 RBAC 与权威会话身份**（`src/main/rbac.ts`、`src/server/index.ts`）：
+  - 所有操作人（`reviewedBy` / `createdBy`）一律取服务端会话身份，忽略客户端传入的 `reviewer` / `author`。
+  - `/api/source` 与 `/api/remove-source` 拦截路径穿越与 `.localwiki/`、`.git/` 等隐藏路径。
+
+| 角色 | 允许操作 | 拦截操作（返回 `403 Forbidden`） |
+| :--- | :--- | :--- |
+| **`reviewer`（审核员）** | 检索、问答、反馈、查看页面/差异/版本/体检、新建编辑草稿、提交初审/终审、审批发布、驳回删除 | 模型接口配置、上传/删除资料、触发/取消/撤销整理、自动修复断链、批量全部发布、版本回滚、确认移入回收站、恢复回收站、彻底清理、账号增删 |
+| **`superadmin`（超级管理员）** | 全部 `reviewer` 权限 + 高危管理与系统配置操作 | 无 |
+
+---
+
+## 实测基准与已知限制
+
+执行 `npm run build && npm run eval` 可复现端到端固定语料基准（`tests/eval_benchmark.mjs`，直连编译后的 `out/main/server.js`，测试确定性检索、原文核验、拒答与备份恢复链路）：
+
+| 评估指标 | 实测结果 | 测试条件说明 |
+| :--- | :--- | :--- |
+| **固定语料规模** | 7 篇 Markdown 规范 + 1 份 `.xlsx` | 15 条可回答技术/制度问题 + 5 条无依据越界问题 |
+| **Recall@1 / @3 / @5** | **100.0% / 100.0% / 100.0%** | 端到端 `POST /api/v1/search` |
+| **MRR** | **1.000** | 可回答问题集 |
+| **原文摘录一致率** | **100.0% (7 / 7)** | 已发布页面引用回查不可变原件 |
+| **无依据问题拒答/低分拦截率** | **100.0% (5 / 5)** | 越界查询无高分误召回（`< 0.25`） |
+| **HTTP 检索延迟（p50 / p95）** | **15.4 ms / 16.3 ms** | 本机环回 Node 24（`out/main/server.js`） |
+| **进程内存占用（RSS）** | **63.8 MB** | 单节点 SQLite + 内存 Orama 索引 |
+| **冷备份恢复与会话过期** | **PASS** | 目录拷贝重启可正常检索；过期令牌返回 `401` |
+
+### 已知限制
+- **真实模型评测差异**：CI 自动化测试覆盖确定性检索、权限/安全边界与 Mock 模型路由；真实环境下的总结与问答质量仍取决于所接入的 `LLLM` / `LLM` / `Embedding` / `Rerank` 模型能力。
+- **纯图片扫描版 PDF**：带文本层 PDF 通过 `pdfjs-dist` 直接解析，无文本层的纯扫描图片 PDF 需后续接入 OCR。
+- **单节点存储边界**：SQLite + 本地文件系统 + Git 面向单机与部门级部署，不面向多区域水平分片集群。
+- **Windows 证书性质**：仓库内 `certs/zhixu-codesign.cer` 为**自签名证书**，并非公共商业 CA 颁发。
 
 ---
 
@@ -162,7 +185,7 @@ flowchart LR
 ## 快速开始
 
 > [!IMPORTANT]
-> **初始默认账密**：账号 `zhixu` / 密码 `123456789`（可通过环境变量 `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD` 覆盖，首次登录后可在「系统后台 → 账号安全」修改）。
+> **首次启动安全策略**：不再提供通用默认密码。桌面端或本机环回首次启动时会引导设置超级管理员密码（至少 **12 位**）；非本机监听（如 Docker `0.0.0.0`）未设置强密码环境变量 `ZHIXU_ADMIN_PASSWORD` 时将拒绝启动。
 
 > **环境要求**：Node.js `>= 22.13`（推荐 `24.x`，原生内置 `node:sqlite`）
 
@@ -178,15 +201,14 @@ npm run dev
 - 国内网络安装 Electron 可选设置 `ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/`。
 - 快捷键：`Ctrl + K` 唤起全局命令面板；编辑模式下 `Ctrl + S` 快速保存草稿。
 
-### 类型检查、构建与自动化验证
+### 类型检查、安全测试与检索基准
 
 ```bash
 npm run typecheck
 npm run build
-npm test
+npm test          # 核心单元测试 + 服务端安全/RBAC/限流测试 + 固定语料检索基准
+npm run eval      # 单独运行固定语料端到端评测基准
 ```
-
-`npm test` 会运行全部 **14 项自动化验证**（结构切块、OOXML 解析、词边界互索引、Sigmoid 校准、死进程锁自愈、强制鉴权、三层路由、持久向量缓存、诚实引用、删除审批回收站及人工编辑器版本链）。
 
 ### 打包 Windows 客户端
 
@@ -201,10 +223,11 @@ npm run package       # NSIS 安装包 -> release/
 
 ### Docker Compose 一键启动服务端
 
+复制 `.env.example` 为 `.env`，填写强密码 `ZHIXU_ADMIN_PASSWORD`（≥12 位）与 `ZHIXU_API_KEY` 后启动：
+
 ```bash
-ZHIXU_API_KEY=your-api-key \
-ZHIXU_SERVER_TOKEN=your-strong-token \
-ZHIXU_ADMIN_PASSWORD=your-strong-password \
+cp .env.example .env
+# 编辑 .env，设置 ZHIXU_ADMIN_PASSWORD（至少 12 位）与 ZHIXU_API_KEY
 docker compose up -d --build
 ```
 
@@ -214,6 +237,7 @@ docker compose up -d --build
 ZHIXU_ROOT=/data/knowledge-base \
 ZHIXU_API_KEY=your-api-key \
 ZHIXU_SERVER_TOKEN=your-strong-token \
+ZHIXU_ADMIN_PASSWORD=YourStrongPassword#2026 \
 npm run server
 ```
 
@@ -223,7 +247,8 @@ npm run server
 | 变量 | 说明 | 默认值 |
 | :--- | :--- | :--- |
 | `ZHIXU_HOST` / `ZHIXU_PORT` | 服务端监听地址与端口 | `127.0.0.1` / `8787` |
-| `ZHIXU_ROOT` | 知识库数据根目录 | `./data` |
+| `ZHIXU_ROOT` | Node 进程 / Docker 容器内知识库根目录 | `./data`（Docker 内为 `/data/knowledge-base`） |
+| `ZHIXU_HOST_DATA_DIR` | Docker Compose 宿主机挂载目录（兼容旧名 `ZHIXU_DATA_DIR`） | `./data` |
 | `ZHIXU_MODE` | 运行模式：`cloud`（外部 API 优先）/ `lan_gpu` / `local` | `cloud` |
 | `ZHIXU_MODEL_BASE_URL` | 主模型网关地址（OpenAI 兼容） | `https://api.deepseek.com/v1` |
 | `ZHIXU_API_KEY` | 默认共享 API Key | 空 |
@@ -234,7 +259,7 @@ npm run server
 | `ZHIXU_RERANK_BASE_URL` / `ZHIXU_RERANK_MODEL` | 可选 Cross-Encoder 精排服务 | 空 |
 | `ZHIXU_SERVER_TOKEN` | 服务端 Bearer 令牌（留空自动生成高强度随机令牌） | 自动生成 |
 | `ZHIXU_CORS_ORIGIN` | 允许跨域来源白名单（逗号分隔） | 本机环回 |
-| `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD` | 初始超级管理员账密 | `zhixu` / `123456789` |
+| `ZHIXU_ADMIN_USER` / `ZHIXU_ADMIN_PASSWORD` | 初始超级管理员账密（≥12 位，非本机监听必填） | `zhixu` / 本机首次启动交互设置 |
 
 </details>
 
@@ -272,10 +297,10 @@ npm run server
 
 ---
 
-## 开源许可与代码签名证书
+## 开源许可与 Windows 自签名证书
 
 - **开源协议**：本项目基于 **[Apache License 2.0](./LICENSE)** 开源（可商用、支持二次开发，含专利授权；分发修改版请保留 [LICENSE](./LICENSE) 与 [NOTICE](./NOTICE) 声明）。
 - **第三方许可**：依赖组件开源协议清单见 [THIRD_PARTY_LICENSES.md](./THIRD_PARTY_LICENSES.md)。
 - **安全策略**：默认安全基线与漏洞披露流程见 [SECURITY.md](./SECURITY.md)。
 - **贡献指南与更新日志**：见 [CONTRIBUTING.md](./CONTRIBUTING.md) 与 [CHANGELOG.md](./CHANGELOG.md)。
-- **Windows 代码签名证书**：仓库提供公开校验签名证书 [`certs/zhixu-codesign.cer`](./certs/zhixu-codesign.cer)（RSA 4096 / SHA-256，指纹 `252C0ECD64B70B122EF0FEF369120D624B1175D2`），支持内网分发校验与企业信任导入；签名脚本与商业 CA 替换方式见 [`certs/README.md`](./certs/README.md)。
+- **Windows 自签名证书**：[`certs/zhixu-codesign.cer`](./certs/zhixu-codesign.cer) 为**自签名** RSA 4096 / SHA-256 证书（指纹 `252C0ECD64B70B122EF0FEF369120D624B1175D2`），仅用于内网构建完整性校验与企业内部信任导入，**不代表公共商业 CA 信任**。面向公网分发请通过 `CSC_LINK` / `CSC_KEY_PASSWORD` 接入商业 OV/EV 证书（详见 [`certs/README.md`](./certs/README.md)）。

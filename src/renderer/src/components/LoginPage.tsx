@@ -7,9 +7,12 @@ import { useI18n } from '../i18n'
 
 type Props = {
   theme: 'light' | 'dark'
+  needsSetup?: boolean
+  minPasswordLength?: number
   error: string
   onClearError: () => void
   onToggleTheme: (next: 'light' | 'dark') => void
+  onSetup?: (username: string, password: string) => Promise<void>
   onLogin: (username: string, password: string) => Promise<void>
   windowControls?: {
     minimize: () => Promise<void>
@@ -20,15 +23,20 @@ type Props = {
 
 export default function LoginPage({
   theme,
+  needsSetup = false,
+  minPasswordLength = 12,
   error,
   onClearError,
   onToggleTheme,
+  onSetup,
   onLogin,
   windowControls
 }: Props) {
   const { locale, setLocale, tx } = useI18n()
   const [username, setUsername] = useState('zhixu')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [localError, setLocalError] = useState('')
   const [showPwd, setShowPwd] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [scene, setScene] = useState<'sky' | 'sunset'>(theme === 'dark' ? 'sunset' : 'sky')
@@ -44,10 +52,30 @@ export default function LoginPage({
     event.preventDefault()
     if (!username.trim() || !password || submitting) return
     onClearError()
+    setLocalError('')
+    if (needsSetup) {
+      if (password.length < minPasswordLength) {
+        setLocalError(
+          locale === 'en'
+            ? `Password must be at least ${minPasswordLength} characters.`
+            : `初始密码长度至少 ${minPasswordLength} 位`
+        )
+        return
+      }
+      if (password !== confirmPassword) {
+        setLocalError(tx('两次输入的密码不一致', 'Passwords do not match'))
+        return
+      }
+    }
     setSubmitting(true)
     try {
-      await onLogin(username.trim(), password)
+      if (needsSetup && onSetup) {
+        await onSetup(username.trim(), password)
+      } else {
+        await onLogin(username.trim(), password)
+      }
       setPassword('')
+      setConfirmPassword('')
     } finally {
       setSubmitting(false)
     }
@@ -148,13 +176,13 @@ export default function LoginPage({
           <form className="login-form-pane" onSubmit={event => void handleSubmit(event)}>
             <div className="login-form-head">
               <img src={logo} alt={tx('知序', 'ZHIXU')} />
-              <h1>{tx('登录知序', 'Sign in to ZHIXU')}</h1>
+              <h1>{needsSetup ? tx('初始化管理员', 'Initialize Superadmin') : tx('登录知序', 'Sign in to ZHIXU')}</h1>
             </div>
 
-            {error && (
+            {(localError || error) && (
               <div className="login-error" role="alert">
                 <CircleAlert />
-                <span>{error}</span>
+                <span>{localError || error}</span>
               </div>
             )}
 
@@ -173,7 +201,13 @@ export default function LoginPage({
               </div>
 
               <div className="field-row">
-                <label htmlFor="login-password">{tx('密码', 'Password')}</label>
+                <label htmlFor="login-password">
+                  {needsSetup
+                    ? locale === 'en'
+                      ? `New Password (min ${minPasswordLength} chars)`
+                      : `设置初始密码（至少 ${minPasswordLength} 位）`
+                    : tx('密码', 'Password')}
+                </label>
                 <div className="pwd-wrap">
                   <input
                     id="login-password"
@@ -181,8 +215,14 @@ export default function LoginPage({
                     type={showPwd ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
-                    placeholder={tx('输入密码', 'Enter password')}
-                    autoComplete="current-password"
+                    placeholder={
+                      needsSetup
+                        ? locale === 'en'
+                          ? `At least ${minPasswordLength} chars (letters + digits)`
+                          : `至少 ${minPasswordLength} 位（字母+数字/符号）`
+                        : tx('输入密码', 'Enter password')
+                    }
+                    autoComplete={needsSetup ? 'new-password' : 'current-password'}
                   />
                   <button
                     type="button"
@@ -194,15 +234,34 @@ export default function LoginPage({
                   </button>
                 </div>
               </div>
+
+              {needsSetup && (
+                <div className="field-row">
+                  <label htmlFor="login-confirm-password">{tx('确认密码', 'Confirm Password')}</label>
+                  <input
+                    id="login-confirm-password"
+                    className="login-input"
+                    type={showPwd ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder={tx('再次输入初始密码', 'Re-enter password')}
+                    autoComplete="new-password"
+                  />
+                </div>
+              )}
             </div>
 
             <button
               className="btn-primary login-submit"
               type="submit"
-              disabled={submitting || !username.trim() || !password}
+              disabled={submitting || !username.trim() || !password || (needsSetup && !confirmPassword)}
             >
               {submitting ? <LoaderCircle className="spin" /> : <KeyRound />}
-              {submitting ? tx('正在验证…', 'Verifying…') : tx('登录工作台', 'Sign In')}
+              {submitting
+                ? tx('正在验证…', 'Verifying…')
+                : needsSetup
+                  ? tx('创建管理员并进入', 'Create Admin & Sign In')
+                  : tx('登录工作台', 'Sign In')}
             </button>
           </form>
         </div>
