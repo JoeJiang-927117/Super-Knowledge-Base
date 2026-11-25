@@ -49,7 +49,7 @@ jobs:
           $zipName = "ZHIXU-$tag-windows-x64-portable.zip"
           $zipPath = Join-Path (Get-Location) "release\$zipName"
           Remove-Item -Force -ErrorAction SilentlyContinue $zipPath
-          tar.exe -a -c -f $zipPath -C "release\win-unpacked" .
+          7z a -tzip -mx=5 $zipPath "release\win-unpacked\*"
           if ($LASTEXITCODE -ne 0) { throw "Failed to create portable zip" }
 
           $zipHash = (Get-FileHash $zipPath -Algorithm SHA256).Hash.ToLower()
