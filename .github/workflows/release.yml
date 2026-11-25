@@ -30,9 +30,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Typecheck & verify tests
+      - name: Typecheck, build & verify tests
         run: |
           npm run typecheck
+          npm run build
           npm test
 
       - name: Package Windows desktop binary
