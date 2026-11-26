@@ -6,6 +6,7 @@ import type { DocumentChunkRecord } from '../shared/types'
 import { buildStructuredRecursiveChunks, groupChunksForLlmWindow } from './chunker'
 import type { WikiModelClient } from './model'
 import { parsePptxBuffer, parseXlsxBuffer } from './ooxml'
+import { extractScannedPdfPagePng, SCANNED_PDF_OCR_PROMPT } from './pdf-ocr'
 import { classifyFileStorageDomain } from './schema'
 
 export type DocumentSegment = {
@@ -173,7 +174,7 @@ export async function readDocument(
       : `视觉资产：${file.path}（${extension.slice(1).toUpperCase()}，${sizeKb} KB）。原始图像已安全归档至“具体+图+元数据”存储域，等待视觉模型（VM）补充观察描述。`
     segments = [{ locator: '图像资产', text: visualText, blockKind: 'visual' }]
   } else if (extension === '.pdf') {
-    segments = await readPdf(absolute)
+    segments = await readPdf(absolute, visionClient, signal)
   } else if (extension === '.docx') {
     segments = textSegments(await readDocxText(absolute))
   } else if (extension === '.xlsx') {
@@ -238,14 +239,23 @@ function stripHtmlTags(input: string): string {
   return input.replace(/<[^>]+>/g, '')
 }
 
-async function readPdf(filename: string): Promise<DocumentSegment[]> {
-  const { getDocument } = await import('pdfjs-dist/legacy/build/pdf.mjs')
+async function readPdf(
+  filename: string,
+  visionClient?: WikiModelClient,
+  signal?: AbortSignal
+): Promise<DocumentSegment[]> {
+  const { getDocument, OPS } = await import('pdfjs-dist/legacy/build/pdf.mjs')
   const data = new Uint8Array(await fs.readFile(filename))
   const loadingTask = getDocument({ data, disableFontFace: true })
   const document = await loadingTask.promise
   const segments: DocumentSegment[] = []
+  let scannedEmptyPages = 0
+  let ocrPagesRun = 0
+  const maxOcrPages = 20
+
   try {
     for (let pageNumber = 1; pageNumber <= document.numPages; pageNumber += 1) {
+      if (signal?.aborted) break
       const page = await document.getPage(pageNumber)
       const content = await page.getTextContent()
       let pageText = ''
@@ -266,11 +276,45 @@ async function readPdf(filename: string): Promise<DocumentSegment[]> {
         pageText += piece
         if ('hasEOL' in item && item.hasEOL) pageText += '\n'
       }
-      if (normalizeText(pageText)) segments.push({ locator: `第 ${pageNumber} 页`, text: pageText })
+
+      const normalized = normalizeText(pageText)
+      if (normalized.length >= 24) {
+        segments.push({ locator: `第 ${pageNumber} 页`, text: pageText })
+      } else {
+        scannedEmptyPages += 1
+        let ocrText: string | null = null
+        if (visionClient && ocrPagesRun < maxOcrPages) {
+          const png = await extractScannedPdfPagePng(page as unknown as Parameters<typeof extractScannedPdfPagePng>[0], OPS)
+          if (png) {
+            ocrPagesRun += 1
+            ocrText = await visionClient.analyzeImage(
+              png.toString('base64'),
+              'image/png',
+              SCANNED_PDF_OCR_PROMPT,
+              signal
+            )
+          }
+        }
+        if (ocrText && normalizeText(ocrText)) {
+          segments.push({
+            locator: `第 ${pageNumber} 页 · 视觉OCR`,
+            text: ocrText.trim(),
+            blockKind: 'visual'
+          })
+        } else if (normalized) {
+          segments.push({ locator: `第 ${pageNumber} 页`, text: pageText })
+        }
+      }
       page.cleanup()
     }
   } finally {
     await loadingTask.destroy()
+  }
+
+  if (!segments.length && scannedEmptyPages > 0 && !visionClient) {
+    throw new Error(
+      `${path.basename(filename)} 为扫描版图片 PDF（无可选文字层），请在设置中配置视觉模型（VM，如 Ollama qwen2.5vl:7b 或 qwen-vl-max）以启用自动视觉 OCR 解析`
+    )
   }
   return segments
 }

@@ -1142,3 +1142,355 @@ mark.hit-hl { padding: 0 3px; border-radius: 3px; background: rgba(37, 99, 235, 
   .login-visual, .admin-gate-art { display: none; }
   .admin-hero-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+
+/* ==========================================================================
+   v0.3.0 Interactive Knowledge Graph View
+   ========================================================================== */
+.studio-main.view-graph {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.graph-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  background: var(--bg-canvas);
+}
+
+.graph-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.graph-toolbar-left,
+.graph-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.graph-search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-canvas);
+  min-width: 220px;
+}
+
+.graph-search svg {
+  width: 14px;
+  height: 14px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+.graph-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font-size: 12.5px;
+  width: 100%;
+}
+
+.graph-search button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 2px;
+  display: inline-flex;
+}
+
+.graph-domain-pills {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.domain-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-canvas);
+  color: var(--ink-2);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.domain-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.domain-pill:hover {
+  background: var(--bg-hover);
+}
+
+.domain-pill.active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+}
+
+.graph-stats-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--bg-canvas);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11.5px;
+  font-family: var(--mono);
+}
+
+.graph-stats-badge svg {
+  width: 13px;
+  height: 13px;
+  color: var(--brand);
+}
+
+.graph-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-canvas);
+}
+
+.graph-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.graph-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--muted);
+  text-align: center;
+  padding: 24px;
+}
+
+.graph-empty svg {
+  width: 32px;
+  height: 32px;
+  opacity: 0.6;
+}
+
+.graph-empty h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.graph-empty p {
+  margin: 0;
+  max-width: 420px;
+  line-height: 1.6;
+}
+
+.graph-legend {
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-frame);
+  font-size: 11.5px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.graph-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-wiki {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--brand);
+  display: inline-block;
+}
+
+.legend-entity {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--brand);
+  background: var(--bg-canvas);
+  display: inline-block;
+}
+
+.graph-inspector {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  bottom: 14px;
+  width: 304px;
+  max-width: calc(100% - 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-pop);
+  overflow-y: auto;
+}
+
+.graph-inspector-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.graph-node-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.graph-node-tag svg {
+  width: 12px;
+  height: 12px;
+}
+
+.graph-inspector h3 {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.35;
+  color: var(--ink);
+}
+
+.graph-inspector-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.graph-inspector-meta span {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+  font-size: 11px;
+}
+
+.graph-inspector-summary {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink-2);
+}
+
+.graph-neighbors {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.graph-neighbors h4 {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.graph-neighbor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.graph-neighbor-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: var(--bg-subtle);
+  color: var(--ink);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.14s, border-color 0.14s;
+}
+
+.graph-neighbor-row:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-strong);
+}
+
+.graph-neighbor-row i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.graph-neighbor-row span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-neighbor-row small {
+  color: var(--muted);
+  font-size: 10.5px;
+}

@@ -173,6 +173,8 @@ export function getWorkspaceApi(): WorkspaceApi {
     runLint: () => request('/api/lint'),
     fixLint: () => request('/api/lint/fix', { method: 'POST' }),
     getSchemaOverview: () => request('/api/v1/schema'),
+    getKnowledgeGraph: maxEntities =>
+      request(`/api/v1/graph${typeof maxEntities === 'number' ? `?maxEntities=${Math.round(maxEntities)}` : ''}`),
     searchKnowledge: (query, options) =>
       request('/api/v1/search', { method: 'POST', body: JSON.stringify({ query, ...options }) }),
     askKnowledge: (question, options) =>

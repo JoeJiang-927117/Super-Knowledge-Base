@@ -9,6 +9,9 @@ import type {
   AccessLevel,
   DocumentChunkRecord,
   EvidenceLevel,
+  KnowledgeGraphData,
+  KnowledgeGraphEdge,
+  KnowledgeGraphNode,
   ModelCallRecord,
   OrganizeRun,
   PageDiffResult,
@@ -584,6 +587,110 @@ export class WikiStore {
       entityCount: entities.length,
       mutualLinkCount,
       entities: entities.slice(0, 80)
+    }
+  }
+
+  getKnowledgeGraph(maxEntities = 90): KnowledgeGraphData {
+    const overview = this.getSchemaOverview()
+    const pages = this.getPages().filter(p => p.status !== 'deleted')
+    const entities = this.getSchemaEntities()
+    const mutualLinks = this.getMutualIndexLinks()
+
+    const nodeMap = new Map<string, KnowledgeGraphNode>()
+    const slugSet = new Set<string>()
+
+    for (const page of pages) {
+      const id = `wiki:${page.slug}`
+      slugSet.add(page.slug)
+      nodeMap.set(id, {
+        id,
+        label: page.title,
+        kind: 'wiki',
+        storageDomain: page.storageDomain ?? classifyPageStorageDomain(page),
+        slug: page.slug,
+        status: page.status,
+        summary: page.summary,
+        chunkCount: page.sources.length,
+        degree: 0
+      })
+    }
+
+    // Prioritize entities connected to Wiki pages and with highest chunk counts
+    const rankedEntities = [...entities]
+      .sort((a, b) => {
+        const aWiki = a.wikiSlugs.filter(s => slugSet.has(s)).length
+        const bWiki = b.wikiSlugs.filter(s => slugSet.has(s)).length
+        if (bWiki !== aWiki) return bWiki - aWiki
+        return b.chunkCount - a.chunkCount
+      })
+      .slice(0, Math.max(10, Math.min(200, maxEntities)))
+
+    const includedEntityIds = new Set<string>()
+    for (const ent of rankedEntities) {
+      const id = `ent:${ent.id}`
+      includedEntityIds.add(ent.id)
+      nodeMap.set(id, {
+        id,
+        label: ent.name,
+        kind: 'entity',
+        storageDomain: ent.storageDomain,
+        slug: ent.wikiSlugs.find(s => slugSet.has(s)),
+        summary: ent.description,
+        chunkCount: ent.chunkCount,
+        degree: 0
+      })
+    }
+
+    const edgeSet = new Set<string>()
+    const edges: KnowledgeGraphEdge[] = []
+    const pushEdge = (
+      source: string,
+      target: string,
+      relation: KnowledgeGraphEdge['relation'],
+      weight: number
+    ) => {
+      if (source === target || !nodeMap.has(source) || !nodeMap.has(target)) return
+      const key = `${source}|${target}|${relation}`
+      if (edgeSet.has(key)) return
+      edgeSet.add(key)
+      edges.push({ source, target, relation, weight })
+      nodeMap.get(source)!.degree += 1
+      nodeMap.get(target)!.degree += 1
+    }
+
+    // 1. Wiki-to-wiki explicit links
+    for (const page of pages) {
+      const fromId = `wiki:${page.slug}`
+      for (const targetSlug of page.links) {
+        if (!slugSet.has(targetSlug)) continue
+        pushEdge(fromId, `wiki:${targetSlug}`, 'wikilink', 1.2)
+      }
+    }
+
+    // 2. Mutual index links (entity <-> wiki page)
+    for (const link of mutualLinks) {
+      if (link.targetKind !== 'wiki') continue
+      if (!includedEntityIds.has(link.entityId)) continue
+      if (!slugSet.has(link.targetId)) continue
+      pushEdge(`ent:${link.entityId}`, `wiki:${link.targetId}`, link.relation, Number(link.weight.toFixed(2)))
+    }
+
+    // Also link included entities via their wikiSlugs if mutual_index_links didn't emit a wiki edge
+    for (const ent of rankedEntities) {
+      for (const s of ent.wikiSlugs) {
+        if (slugSet.has(s)) {
+          pushEdge(`ent:${ent.id}`, `wiki:${s}`, 'defines', 1.0)
+        }
+      }
+    }
+
+    return {
+      nodes: [...nodeMap.values()],
+      edges,
+      domainCounts: overview.domainCounts,
+      totalWikiPages: pages.length,
+      totalEntities: entities.length,
+      totalMutualLinks: overview.mutualLinkCount
     }
   }
 

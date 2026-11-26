@@ -70,15 +70,15 @@ jobs:
           $tag = $env:RELEASE_TAG
           $zipPath = "release\$($env:ZIP_NAME)"
           $notes = @"
-          ## ZHIXU (知序) $tag — Windows Portable Release & Interactive Polish
+          ## ZHIXU (知序) $tag — MCP Server, Interactive Knowledge Graph & Scanned PDF Vision-OCR
 
           Built reproducibly from source via GitHub Actions (\`windows-latest\`, Node 24).
 
           ### What's New
+          - **Built-in Standard MCP Server (\`out/main/mcp.js\`)**: Connect Claude Code, Cursor, Codex, or Antigravity directly to your local audited Wiki (\`zhixu_search\`, \`zhixu_ask\`, \`zhixu_list_pages\`, \`zhixu_read_page\`, \`zhixu_get_graph\`, and draft-only \`zhixu_propose_draft\`) with one-click JSON config copy in Settings.
+          - **Interactive Knowledge Graph View**: Explore Wiki pages, SPG Schema entities, wikilinks, and TF-IDF mutual-index links on a high-DPI force-directed Canvas with domain filtering, search highlighting, node dragging, and direct Wiki jump.
+          - **Scanned PDF Vision-OCR Fallback**: Zero-native-dependency scanned PDF image extraction + pure-JS PNG encoder automatically routing image-only PDF pages to your \`VM\` tier (e.g. Ollama \`qwen2.5vl:7b\` or cloud Vision API).
           - **One-Click Windows Portable ZIP (\`$($env:ZIP_NAME)\`)**: Extract and double-click \`知序 ZHIXU.exe\` — zero build, zero Docker, zero Elasticsearch.
-          - **Passwordless Local Entry (\`Enter ZHIXU\`)**: Local desktop and loopback (\`127.0.0.1\`) launches open directly into a clean welcome screen (optional password lock remains available in Admin Settings, and non-loopback \`0.0.0.0\` / Docker deployments enforce a mandatory \`>= 12\`-char password + RBAC).
-          - **English Default UI**: Starts in \`English\` by default with one-click switching to \`简体中文\`.
-          - **Unified 3-Layer Isometric Chunk Loader**: Interactive 3-layer isometric stacking loader across app startup, file imports, knowledge compilation, Q&A, diffs, versions, and health checks.
 
           ### Integrity
           - Verify your download against \`SHA256SUMS.txt\`.
@@ -91,7 +91,7 @@ jobs:
             gh release edit $tag --notes-file "release\notes.md" --latest
           } else {
             gh release create $tag $zipPath "release\SHA256SUMS.txt" "certs\zhixu-codesign.cer" `
-              --title "ZHIXU $tag — Windows Portable App, Passwordless Local Entry & Isometric Loader" `
+              --title "ZHIXU $tag — MCP Server, Interactive Knowledge Graph & Scanned PDF OCR" `
               --notes-file "release\notes.md" `
               --latest
           }

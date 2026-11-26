@@ -672,6 +672,14 @@ app.whenReady().then(async () => {
     if (!store) throw new Error('尚未打开知识库')
     return store.getSchemaOverview()
   })
+  ipcMain.handle('workspace:graph', async (_event, maxEntities?: number) => {
+    if (getRemoteServerConfig()) {
+      const q = typeof maxEntities === 'number' ? `?maxEntities=${Math.round(maxEntities)}` : ''
+      return remoteRequest(`/api/v1/graph${q}`)
+    }
+    if (!store) throw new Error('尚未打开知识库')
+    return store.getKnowledgeGraph(typeof maxEntities === 'number' ? maxEntities : 90)
+  })
   ipcMain.handle(
     'workspace:search',
     async (_event, query: string, options?: { includeDrafts?: boolean; includeSources?: boolean; domain?: StorageDomain }) => {

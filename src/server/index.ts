@@ -651,6 +651,14 @@ async function handleApi(request: http.IncomingMessage, response: http.ServerRes
     return
   }
 
+  if (url.pathname === '/api/v1/graph' && request.method === 'GET') {
+    if (!store) throw new Error('尚未打开知识库')
+    const maxParam = Number(url.searchParams.get('maxEntities') ?? '90')
+    const maxEntities = Number.isFinite(maxParam) && maxParam > 0 ? Math.round(maxParam) : 90
+    sendJson(request, response, 200, store.getKnowledgeGraph(maxEntities))
+    return
+  }
+
   if (url.pathname === '/api/v1/pages' && request.method === 'GET') {
     if (!store) throw new Error('尚未打开知识库')
     const includeDrafts = url.searchParams.get('includeDrafts') === 'true'

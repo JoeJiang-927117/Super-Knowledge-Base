@@ -1,6 +1,6 @@
 import {
   BookOpen, CheckCheck, FileText, FolderOpen, History, Languages, LayoutDashboard,
-  Moon, Search, Settings2, Shield, ShieldCheck, Sparkles, Sun, Upload
+  Moon, Network, Search, Settings2, Shield, ShieldCheck, Sparkles, Sun, Upload
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import type { WikiPage } from '../../../shared/types'
@@ -20,7 +20,7 @@ type Props = {
   pages: WikiPage[]
   theme: 'light' | 'dark'
   onClose: () => void
-  onNavigate: (view: 'home' | 'knowledge' | 'review' | 'health' | 'activity' | 'admin') => void
+  onNavigate: (view: 'home' | 'knowledge' | 'graph' | 'review' | 'health' | 'activity' | 'admin') => void
   onOpenPage: (slug: string) => void
   onImport: () => void
   onOrganize: () => void
@@ -83,6 +83,7 @@ export default function CommandPalette({
     const navs: CommandItem[] = [
       { id: 'nav-home', group: grpNav, label: tx('工作台', 'Workspace'), icon: LayoutDashboard, run: () => onNavigate('home') },
       { id: 'nav-knowledge', group: grpNav, label: tx('知识库', 'Knowledge'), icon: BookOpen, run: () => onNavigate('knowledge') },
+      { id: 'nav-graph', group: grpNav, label: tx('知识图谱', 'Knowledge Graph'), icon: Network, run: () => onNavigate('graph') },
       { id: 'nav-review', group: grpNav, label: tx('审核队列', 'Review Queue'), icon: CheckCheck, run: () => onNavigate('review') },
       { id: 'nav-health', group: grpNav, label: tx('知识体检', 'Health Check'), icon: ShieldCheck, run: () => onNavigate('health') },
       { id: 'nav-activity', group: grpNav, label: tx('版本审计', 'Version Audit'), icon: History, run: () => onNavigate('activity') },

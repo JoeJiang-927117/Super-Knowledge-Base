@@ -28,6 +28,7 @@ const api: WorkspaceApi = {
   runLint: () => ipcRenderer.invoke('workspace:lint'),
   fixLint: () => ipcRenderer.invoke('workspace:lint-fix'),
   getSchemaOverview: () => ipcRenderer.invoke('workspace:schema-overview'),
+  getKnowledgeGraph: maxEntities => ipcRenderer.invoke('workspace:graph', maxEntities),
   searchKnowledge: (query, options) => ipcRenderer.invoke('workspace:search', query, options),
   askKnowledge: (question, options) => ipcRenderer.invoke('workspace:ask', question, options),
   submitFeedback: entry => ipcRenderer.invoke('workspace:feedback', entry),

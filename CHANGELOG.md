@@ -1,5 +1,13 @@
 # Changelog / 更新日志
 
+## v0.3.0 (2026-11-26)
+
+### MCP Server, Interactive Knowledge Graph & Scanned PDF Vision-OCR
+- **Built-in Standard MCP Server (`src/mcp/index.ts` → `out/main/mcp.js`, `npm run mcp`)**: Zero-dependency JSON-RPC 2.0 over stdio supporting Claude Code, Cursor, Codex, Antigravity, and any MCP client. Exposes 6 governance-safe tools (`zhixu_search`, `zhixu_ask`, `zhixu_list_pages`, `zhixu_read_page`, `zhixu_propose_draft`, `zhixu_get_graph`) plus `zhixu://wiki/<slug>` and `zhixu://schema` resources. Agent writes strictly enter `draft` status and never mutate source files or overwrite published baselines. Includes a one-click MCP JSON copy snippet in Settings.
+- **Interactive Knowledge Graph View (`KnowledgeGraphView.tsx`, `/api/v1/graph`, `workspace:graph`)**: High-DPI HTML5 Canvas force-directed graph visualizing Wiki pages, SPG Schema entities, wikilinks, and TF-IDF mutual-index relations across all storage domains with pan/zoom, node dragging, domain filtering, live search highlighting, and a slide-in inspector that jumps directly to any Wiki page.
+- **Scanned PDF Vision-OCR Fallback (`src/main/pdf-ocr.ts` + `readPdf`)**: Zero-native-dependency embedded scan extractor and pure-JS PNG encoder with automatic downscaling; when a PDF page has no selectable text layer, ZHIXU automatically routes the page image through the configured `VM` tier (e.g., local Ollama `qwen2.5vl:7b` or cloud Vision API) to extract verbatim text and Markdown tables.
+- **v0.3.0 Automated Verification (`tests/verify_zhixu_v3.mjs`)**: Added end-to-end stdio JSON-RPC MCP tests, draft-only governance assertions, graph endpoint verification, and pure-JS PNG/1-bit scan PDF OCR unit tests.
+
 ## v0.2.1 (2026-11-25)
 
 ### Experience & Interactive Polish

@@ -12,25 +12,26 @@
 
 <p>
   <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest">
-    <img alt="下载 Windows 绿色便携版" src="https://img.shields.io/badge/下载_Windows_绿色便携版-v0.2.1_(开箱即用)-2563EB?style=for-the-badge&logo=windows&logoColor=white" />
+    <img alt="下载 Windows 绿色便携版" src="https://img.shields.io/badge/下载_Windows_绿色便携版-v0.3.0_(开箱即用)-2563EB?style=for-the-badge&logo=windows&logoColor=white" />
   </a>
 </p>
 
 <p>
   <a href="#项目简介">项目简介</a> ·
+  <a href="#mcp-server-接入">MCP Server</a> ·
   <a href="#界面预览">界面预览</a> ·
   <a href="#架构与安全权限">架构与安全</a> ·
   <a href="#实测基准与已知限制">基准与限制</a> ·
   <a href="#模型路由与推荐搭配">模型搭配</a> ·
   <a href="#快速开始">快速开始</a> ·
-  <a href="#部署与-api">部署与 API</a> ·
-  <a href="#开源许可与-windows-自签名证书">许可与证书</a>
+  <a href="#部署与-api">部署与 API</a>
 </p>
 
 <p>
   <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest"><img alt="Release" src="https://img.shields.io/badge/Release-v0.2.1-059669?style=flat-square" /></a>
+  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest"><img alt="Release" src="https://img.shields.io/badge/Release-v0.3.0-059669?style=flat-square" /></a>
+  <img alt="MCP Server" src="https://img.shields.io/badge/MCP-Stdio_Server-7C3AED?style=flat-square" />
   <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-English%20%2F%20中文-0EA5E9?style=flat-square" />
   <img alt="TypeScript 7" src="https://img.shields.io/badge/TypeScript-7.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
   <img alt="Electron" src="https://img.shields.io/badge/Electron-Desktop-0F172A?style=flat-square&logo=electron&logoColor=38BDF8" />
@@ -71,7 +72,26 @@
 | **杂乱目录自动编译为结构化 Wiki** | 原生两阶段编译 + 原文行/页摘录回查 | 仅切片检索（无 Wiki 治理） | 侧重对话问答（无 Wiki 编译） | 需纯人工维护 |
 | **原始文件严格只读不动** | SHA-256 追踪，绝不改写原件 | 切片入库 | 切片入库 | 直接编辑 |
 | **变更治理与 AI 删除拦截** | `草稿 → 审核 → 发布` + `待删回收站` + Git 回滚 | 较弱 | 无 | XWiki 有 / Obsidian 无 |
-| **本地 Ollama / 离线大模型** | 原生三层模型路由（`LLLM / LLM / VM`） | 支持 | 支持 | 依赖第三方插件 |
+| **本地 Ollama / 离线大模型** | 原生三层模型路由（`LLLM / LLM / VM` + 扫描版 PDF 视觉 OCR） | 支持 | 支持 | 依赖第三方插件 |
+| **原生 MCP Server 与知识图谱** | 内置 `zhixu-mcp`（仅写草稿）+ 交互式 Canvas 知识图谱 | 需外部集成 | 较弱 | 依赖插件 |
+
+## MCP Server 接入
+
+知序内置零依赖标准 **Model Context Protocol (MCP)** 服务（`out/main/mcp.js`），可一键接入 **Claude Code、Cursor、Codex、Antigravity** 等 AI 编程客户端，让 Agent 在绝不改写原文件的前提下检索本地知识库并提交待审草稿：
+
+```json
+{
+  "mcpServers": {
+    "zhixu": {
+      "command": "node",
+      "args": ["/path/to/zhixu/out/main/mcp.js", "--root", "/path/to/your-knowledge-base"]
+    }
+  }
+}
+```
+
+- **暴露工具**：`zhixu_search`、`zhixu_ask`、`zhixu_list_pages`、`zhixu_read_page`、`zhixu_get_graph` 及治理安全写入工具 `zhixu_propose_draft`（强制以草稿进入人工审核队列，绝不覆盖正式基线）。
+- **暴露资源**：`zhixu://schema` 与 `zhixu://wiki/<slug>`。
 
 ### 典型企业落地场景
 

@@ -1,12 +1,12 @@
 import {
   ArrowRight, ArrowUp, BookmarkPlus, BookOpen, Check, CheckCheck, ChevronRight, CircleAlert, Clock3,
-  FileText, FolderOpen, History, Languages, Layers, LayoutDashboard, Minus, Moon,
+  FileText, FolderOpen, History, Languages, Layers, LayoutDashboard, Minus, Moon, Network,
   PanelLeftClose, PanelLeftOpen, Paperclip, Plus, Search, Settings2, Shield, ShieldCheck,
   Sparkles, Square, Sun, Upload, X
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
 import type {
-  AdminRole, KnowledgeQueryResult, ManualPageInput, ModelProviderSettings, OrganizeRun, ProgressEvent,
+  AdminRole, KnowledgeGraphData, KnowledgeQueryResult, ManualPageInput, ModelProviderSettings, OrganizeRun, ProgressEvent,
   SchemaOverview, SearchHit, StorageDomain, WikiLintReport, WikiPage, WorkflowAction, WorkspaceSnapshot
 } from '../../shared/types'
 import { getWorkspaceApi } from './api'
@@ -16,13 +16,14 @@ import wallpaperSunset from './assets/wallpaper-sunset.jpg'
 import AdminConsole from './components/AdminConsole'
 import BootLoader, { ZhixuChunkProgress, ZhixuIsoLoader } from './components/BootLoader'
 import CommandPalette from './components/CommandPalette'
+import KnowledgeGraphView from './components/KnowledgeGraphView'
 import LoginPage from './components/LoginPage'
 import SettingsDialog, { fillDraftFromMode } from './components/SettingsDialog'
 import { ActivityView, HealthView, PageView } from './components/views'
 import { useI18n } from './i18n'
 import { folderName, providerLabel, storageDomainLabel, workflowStatusLabel } from './labels'
 
-type View = 'home' | 'knowledge' | 'review' | 'health' | 'activity' | 'admin'
+type View = 'home' | 'knowledge' | 'graph' | 'review' | 'health' | 'activity' | 'admin'
 type QueryOptions = { includeDrafts: boolean; includeSources: boolean; domain?: StorageDomain }
 type ThemeMode = 'light' | 'dark'
 type QaTurnItem = {
@@ -85,6 +86,8 @@ export default function App() {
   const [error, setError] = useState('')
   const [lintReport, setLintReport] = useState<WikiLintReport | null>(null)
   const [schemaOverview, setSchemaOverview] = useState<SchemaOverview | null>(null)
+  const [graphData, setGraphData] = useState<KnowledgeGraphData | null>(null)
+  const [graphLoading, setGraphLoading] = useState(false)
   const [lintLoading, setLintLoading] = useState(false)
   const [lintFixing, setLintFixing] = useState(false)
   const [modelDraft, setModelDraft] = useState<ModelProviderSettings>({
@@ -133,6 +136,7 @@ export default function App() {
     () => ({
       home: tx('工作台', 'Workspace'),
       knowledge: tx('知识库', 'Knowledge'),
+      graph: tx('知识图谱', 'Knowledge Graph'),
       review: tx('审核队列', 'Review Queue'),
       health: tx('知识体检', 'Health Check'),
       activity: tx('版本审计', 'Version Audit'),
@@ -217,6 +221,17 @@ export default function App() {
     window.setTimeout(() => composerInput.current?.focus(), 40)
   }
 
+  async function refreshGraph() {
+    setGraphLoading(true)
+    try {
+      setGraphData(await api.getKnowledgeGraph(90))
+    } catch (reason) {
+      showError(reason)
+    } finally {
+      setGraphLoading(false)
+    }
+  }
+
   function navigate(next: View) {
     setView(next)
     setCreatingNewPage(false)
@@ -224,6 +239,7 @@ export default function App() {
       setSelectedSlug(pages[0]?.slug ?? 'index')
     }
     if (next === 'health') void refreshLint()
+    if (next === 'graph') void refreshGraph()
   }
 
   function openPage(slug: string) {
@@ -647,6 +663,7 @@ export default function App() {
   const navItems: { id: View; label: string; icon: typeof LayoutDashboard; badge?: number }[] = [
     { id: 'home', label: viewTitles.home, icon: LayoutDashboard },
     { id: 'knowledge', label: viewTitles.knowledge, icon: BookOpen, badge: snapshot.publishedCount },
+    { id: 'graph', label: viewTitles.graph, icon: Network, badge: snapshot.entityCount || undefined },
     { id: 'review', label: viewTitles.review, icon: CheckCheck, badge: snapshot.draftCount },
     { id: 'health', label: viewTitles.health, icon: ShieldCheck },
     { id: 'activity', label: viewTitles.activity, icon: History },
@@ -1306,6 +1323,16 @@ export default function App() {
                 <div className="empty-box"><CheckCheck /><h2>{tx('暂无待审核项', 'No items pending review')}</h2></div>
               )}
             </section>
+          )}
+
+          {view === 'graph' && (
+            <KnowledgeGraphView
+              data={graphData}
+              loading={graphLoading}
+              theme={theme}
+              onRefresh={() => void refreshGraph()}
+              onOpenPage={openPage}
+            />
           )}
 
           {view === 'health' && (

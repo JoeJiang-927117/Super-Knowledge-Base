@@ -388,6 +388,37 @@ export function createDemoApi(): WorkspaceApi {
           ]
       return { domainCounts: { foundation: 1, domain_knowledge: snapshot.pages.filter(page => page.storageDomain === 'domain_knowledge').length, cases: 2, concrete_media: 3, permissions: 1, versions: snapshot.pages.length * 2 }, chunkCount: snapshot.chunkCount, entityCount: snapshot.entityCount, mutualLinkCount: snapshot.mutualLinkCount, entities }
     },
+    getKnowledgeGraph: async () => {
+      const nodes = snapshot.pages.map(page => ({
+        id: `wiki:${page.slug}`,
+        label: page.title,
+        kind: 'wiki' as const,
+        storageDomain: page.storageDomain ?? ('foundation' as const),
+        slug: page.slug,
+        status: page.status,
+        summary: page.summary,
+        chunkCount: page.sources.length,
+        degree: page.links.length + 1
+      }))
+      const edges = snapshot.pages.flatMap(page =>
+        page.links
+          .filter(target => snapshot.pages.some(p => p.slug === target))
+          .map(target => ({
+            source: `wiki:${page.slug}`,
+            target: `wiki:${target}`,
+            relation: 'wikilink' as const,
+            weight: 1.2
+          }))
+      )
+      return {
+        nodes,
+        edges,
+        domainCounts: { foundation: 1, domain_knowledge: 2, cases: 2, concrete_media: 1, permissions: 0, versions: snapshot.pages.length * 2 },
+        totalWikiPages: snapshot.pages.length,
+        totalEntities: 3,
+        totalMutualLinks: edges.length
+      }
+    },
     searchKnowledge: async (query, options) => { await pause(420); return clone(search(query, options)) },
     askKnowledge: async (question, options): Promise<KnowledgeQueryResult> => {
       await pause(720)

@@ -1,5 +1,5 @@
-import { Check, Globe, RefreshCw, ShieldCheck, X } from 'lucide-react'
-import type { RefObject } from 'react'
+import { Check, Copy, Globe, RefreshCw, ShieldCheck, X } from 'lucide-react'
+import { useState, type RefObject } from 'react'
 import type { DeploymentMode, ModelProviderSettings, WorkspaceSnapshot } from '../../../shared/types'
 import { useI18n } from '../i18n'
 import { deploymentModeLabel, providerLabel } from '../labels'
@@ -52,6 +52,28 @@ export default function SettingsDialog({
   onSelectWorkspace
 }: Props) {
   const { locale, tx } = useI18n()
+  const [mcpCopied, setMcpCopied] = useState(false)
+  const mcpSnippet = JSON.stringify(
+    {
+      mcpServers: {
+        zhixu: {
+          command: 'node',
+          args: ['/path/to/zhixu/out/main/mcp.js', '--root', snapshot.root || '/path/to/your-knowledge-base']
+        }
+      }
+    },
+    null,
+    2
+  )
+  const copyMcpConfig = async () => {
+    try {
+      await navigator.clipboard.writeText(mcpSnippet)
+      setMcpCopied(true)
+      window.setTimeout(() => setMcpCopied(false), 1800)
+    } catch {
+      // Ignore clipboard restriction
+    }
+  }
   const mode = draft.mode ?? 'cloud'
   const activeProfileSnap = snapshot.modelProvider.profiles?.[mode]
   const update = (patch: Partial<ModelProviderSettings>) => onDraftChange({ ...draft, ...patch })
@@ -296,6 +318,34 @@ export default function SettingsDialog({
               </div>
             </div>
           )}
+        </details>
+
+        <details className="advanced-box">
+          <summary>{tx('MCP Server 接入（Claude Code / Cursor / Codex / Antigravity）', 'MCP Server Integration (Claude Code / Cursor / Codex / Antigravity)')}</summary>
+          <p className="tier-desc" style={{ marginBottom: 8 }}>
+            {tx(
+              '一键接入本地知识库：支持 zhixu_search、zhixu_ask、zhixu_read_page、zhixu_get_graph 与仅写草稿的 zhixu_propose_draft（绝不改写原文件）。',
+              'Connect AI coding agents to this audited Wiki: exposes zhixu_search, zhixu_ask, zhixu_read_page, zhixu_get_graph, and draft-only zhixu_propose_draft (source files stay read-only).'
+            )}
+          </p>
+          <pre
+            style={{
+              margin: '0 0 8px',
+              padding: '10px 12px',
+              borderRadius: 10,
+              background: 'var(--bg-subtle)',
+              border: '1px solid var(--border)',
+              fontSize: 11.5,
+              lineHeight: 1.5,
+              overflowX: 'auto'
+            }}
+          >
+            {mcpSnippet}
+          </pre>
+          <button type="button" className="btn-outline" onClick={copyMcpConfig}>
+            {mcpCopied ? <Check /> : <Copy />}{' '}
+            {mcpCopied ? tx('已复制 MCP 配置', 'Copied MCP Config') : tx('复制 MCP JSON 配置', 'Copy MCP JSON Config')}
+          </button>
         </details>
 
         <button className="btn-primary btn-block settings-save" onClick={onSave}>

@@ -9,7 +9,8 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: path.resolve(__dirname, 'src/main/index.ts'),
-          server: path.resolve(__dirname, 'src/server/index.ts')
+          server: path.resolve(__dirname, 'src/server/index.ts'),
+          mcp: path.resolve(__dirname, 'src/mcp/index.ts')
         }
       }
     }

@@ -12,25 +12,26 @@
 
 <p>
   <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest">
-    <img alt="Download Windows Portable" src="https://img.shields.io/badge/Download_Windows_Portable-v0.2.1_(No_Build_Required)-2563EB?style=for-the-badge&logo=windows&logoColor=white" />
+    <img alt="Download Windows Portable" src="https://img.shields.io/badge/Download_Windows_Portable-v0.3.0_(No_Build_Required)-2563EB?style=for-the-badge&logo=windows&logoColor=white" />
   </a>
 </p>
 
 <p>
   <a href="#overview">Overview</a> ·
+  <a href="#mcp-server-integration">MCP Server</a> ·
   <a href="#interface-preview">Preview</a> ·
   <a href="#architecture--security">Architecture &amp; RBAC</a> ·
   <a href="#measured-benchmarks--known-limitations">Benchmarks &amp; Limits</a> ·
   <a href="#model-routing">Model Routing</a> ·
   <a href="#quick-start">Quick Start</a> ·
-  <a href="#deployment--api">Deployment &amp; API</a> ·
-  <a href="#license--self-signed-windows-certificate">License &amp; Cert</a>
+  <a href="#deployment--api">Deployment &amp; API</a>
 </p>
 
 <p>
   <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest"><img alt="Release" src="https://img.shields.io/badge/Release-v0.2.1-059669?style=flat-square" /></a>
+  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest"><img alt="Release" src="https://img.shields.io/badge/Release-v0.3.0-059669?style=flat-square" /></a>
+  <img alt="MCP Server" src="https://img.shields.io/badge/MCP-Stdio_Server-7C3AED?style=flat-square" />
   <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-English%20%2F%20中文-0EA5E9?style=flat-square" />
   <img alt="TypeScript 7" src="https://img.shields.io/badge/TypeScript-7.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
   <img alt="Electron" src="https://img.shields.io/badge/Electron-Desktop-0F172A?style=flat-square&logo=electron&logoColor=38BDF8" />
@@ -71,7 +72,26 @@ In engineering, operations, compliance, and project delivery, critical knowledge
 | **Auto-Compiles Messy Folders → Structured Wiki** | Built-in 2-stage compiler + excerpt verification | Chunk RAG only (no Wiki governance) | Chat over files (no Wiki compilation) | Manual writing |
 | **Source Files Strictly Untouched (Read-Only)** | SHA-256 tracked, zero mutation | Indexed copies | Indexed copies | Direct editing |
 | **Change Governance & AI Delete Guard** | `Draft → Review → Published` + `Pending Delete` + Git Rollback | Limited | None | XWiki yes / Obsidian no |
-| **Offline Local LLM / Ollama Support** | Native (`LLLM / LLM / VM` 3-tier routing) | Supported | Supported | Via plugins |
+| **Offline Local LLM / Ollama Support** | Native (`LLLM / LLM / VM` 3-tier routing + Scanned PDF Vision-OCR) | Supported | Supported | Via plugins |
+| **Native MCP Server & Knowledge Graph** | Built-in `zhixu-mcp` (draft-only writes) + interactive Canvas Graph | External | Limited | Plugins |
+
+## MCP Server Integration
+
+ZHIXU ships a zero-dependency **Model Context Protocol (MCP)** stdio server (`out/main/mcp.js`) so **Claude Code, Cursor, Codex, and Antigravity** can search, cite, and explore your local audited knowledge base without hallucinating or modifying original files:
+
+```json
+{
+  "mcpServers": {
+    "zhixu": {
+      "command": "node",
+      "args": ["/path/to/zhixu/out/main/mcp.js", "--root", "/path/to/your-knowledge-base"]
+    }
+  }
+}
+```
+
+- **Exposed Tools**: `zhixu_search`, `zhixu_ask`, `zhixu_list_pages`, `zhixu_read_page`, `zhixu_get_graph`, and governance-safe `zhixu_propose_draft` (strictly writes `draft` pages into the human Review Queue—never overwrites published baselines).
+- **Exposed Resources**: `zhixu://schema` and `zhixu://wiki/<slug>`.
 
 ### Typical Enterprise Scenarios
 

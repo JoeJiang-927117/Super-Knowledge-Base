@@ -127,6 +127,34 @@ export type SchemaOverview = {
   entities: SchemaEntityRecord[]
 }
 
+export type KnowledgeGraphNode = {
+  id: string
+  label: string
+  kind: 'wiki' | 'entity'
+  storageDomain: StorageDomain
+  slug?: string
+  status?: WikiPageStatus
+  summary?: string
+  chunkCount?: number
+  degree: number
+}
+
+export type KnowledgeGraphEdge = {
+  source: string
+  target: string
+  relation: 'wikilink' | 'defines' | 'mentions' | 'belongs_to'
+  weight: number
+}
+
+export type KnowledgeGraphData = {
+  nodes: KnowledgeGraphNode[]
+  edges: KnowledgeGraphEdge[]
+  domainCounts: Record<StorageDomain, number>
+  totalWikiPages: number
+  totalEntities: number
+  totalMutualLinks: number
+}
+
 export type QaFeedbackEntry = {
   id: string
   createdAt: string
@@ -452,6 +480,7 @@ export type WorkspaceApi = {
   runLint: () => Promise<WikiLintReport>
   fixLint: () => Promise<WikiLintFixResult>
   getSchemaOverview: () => Promise<SchemaOverview>
+  getKnowledgeGraph: (maxEntities?: number) => Promise<KnowledgeGraphData>
   searchKnowledge: (
     query: string,
     options?: { includeDrafts?: boolean; includeSources?: boolean; domain?: StorageDomain }
