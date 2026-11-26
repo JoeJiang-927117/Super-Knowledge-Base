@@ -48,7 +48,7 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 export function getWorkspaceApi(): WorkspaceApi {
   if (window.localWiki) return window.localWiki
-  if (import.meta.env.DEV) return createDemoApi()
+  if (import.meta.env.DEV || import.meta.env.VITE_DEMO_MODE === 'true') return createDemoApi()
 
   async function request<T>(url: string, init?: RequestInit): Promise<T> {
     const token = resolveWebToken()

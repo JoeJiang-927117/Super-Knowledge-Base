@@ -1148,6 +1148,8 @@ mark.hit-hl { padding: 0 3px; border-radius: 3px; background: rgba(37, 99, 235, 
    v0.3.0 Interactive Knowledge Graph View
    ========================================================================== */
 .studio-main.view-graph {
+  grid-row: 2 / -1;
+  height: 100%;
   padding: 0;
   overflow: hidden;
   display: flex;
@@ -1288,6 +1290,8 @@ mark.hit-hl { padding: 0 3px; border-radius: 3px; background: rgba(37, 99, 235, 
 }
 
 .graph-canvas {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   display: block;

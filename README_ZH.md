@@ -11,7 +11,11 @@
 </p>
 
 <p>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest">
+  <a href="https://joejiang-927117.github.io/zhixu/">
+    <img alt="浏览器在线体验 Demo" src="https://img.shields.io/badge/▶_在线体验_Live_Demo-免安装_2秒即玩-059669?style=for-the-badge" />
+  </a>
+  &nbsp;
+  <a href="https://github.com/JoeJiang-927117/zhixu/releases/latest">
     <img alt="下载 Windows 绿色便携版" src="https://img.shields.io/badge/下载_Windows_绿色便携版-v0.3.0_(开箱即用)-2563EB?style=for-the-badge&logo=windows&logoColor=white" />
   </a>
 </p>
@@ -28,9 +32,9 @@
 </p>
 
 <p>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml/badge.svg" /></a>
+  <a href="https://github.com/JoeJiang-927117/zhixu/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/JoeJiang-927117/zhixu/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest"><img alt="Release" src="https://img.shields.io/badge/Release-v0.3.0-059669?style=flat-square" /></a>
+  <a href="https://github.com/JoeJiang-927117/zhixu/releases/latest"><img alt="Release" src="https://img.shields.io/badge/Release-v0.3.0-059669?style=flat-square" /></a>
   <img alt="MCP Server" src="https://img.shields.io/badge/MCP-Stdio_Server-7C3AED?style=flat-square" />
   <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-English%20%2F%20中文-0EA5E9?style=flat-square" />
   <img alt="TypeScript 7" src="https://img.shields.io/badge/TypeScript-7.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
@@ -42,7 +46,7 @@
 
 <br />
 
-<img src="./docs/screenshots/02-workspace.png" alt="知序工作台" width="96%" />
+<img src="./docs/screenshots/zhixu-showcase.gif" alt="知序交互式知识图谱、溯源问答与 Markdown 百科演示" width="96%" />
 
 </div>
 
@@ -229,7 +233,7 @@ flowchart LR
 ### 桌面端本地运行
 
 ```bash
-git clone https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base.git
+git clone https://github.com/JoeJiang-927117/zhixu.git
 cd ZHIXUAgentic-Knowledge-Base
 npm install
 npm run dev

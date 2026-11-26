@@ -110,9 +110,9 @@ export function createDemoApi(): WorkspaceApi {
   const initialPages: WikiPage[] = isEn
     ? [
         {
-          slug: 'index', title: 'ZHIXU Knowledge Index', summary: 'Enterprise engineering standards, incident runbooks, and DR procedures.',
-          content: '# ZHIXU Knowledge Index\n\nStructured, auditable engineering knowledge compiled from immutable local source files.\n\n## Core Topics\n\n- [API Gateway Rate-Limit Policy](api-gateway-ratelimit)\n- [Production Incident Runbook](k8s-incident-runbook)\n- [PostgreSQL Backup & DR SOP](postgres-backup-dr)\n\nEvery answer traces back to verified source excerpts with explicit applicability and gaps.',
-          sources: [], links: ['api-gateway-ratelimit', 'k8s-incident-runbook', 'postgres-backup-dr'], updatedAt: iso(15), pageType: 'index', status: 'published', evidenceLevel: 'official_doc', applicability: 'Workspace overview', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(20), hasPublishedVersion: true, storageDomain: 'foundation', accessLevel: 'internal', versionLabel: 'V1.2', schemaEntities: ['ZHIXU', 'Engineering Standards']
+          slug: 'index', title: 'ZHIXU Knowledge Index', summary: 'Enterprise engineering standards, MCP governance, incident runbooks, and DR procedures.',
+          content: '# ZHIXU Knowledge Index\n\nStructured, auditable engineering knowledge compiled from immutable local source files.\n\n## Core Topics\n\n- [API Gateway Rate-Limit Policy](api-gateway-ratelimit)\n- [Production Incident Runbook](k8s-incident-runbook)\n- [PostgreSQL Backup & DR SOP](postgres-backup-dr)\n- [MCP Agent Governance Protocol](mcp-agent-governance)\n- [RBAC & Network Security Policy](rbac-security-baseline)\n- [Scanned PDF Vision-OCR Pipeline](scanned-pdf-ocr-pipeline)\n\nEvery answer traces back to verified source excerpts with explicit applicability and gaps.',
+          sources: [], links: ['api-gateway-ratelimit', 'k8s-incident-runbook', 'postgres-backup-dr', 'mcp-agent-governance', 'rbac-security-baseline', 'scanned-pdf-ocr-pipeline'], updatedAt: iso(15), pageType: 'index', status: 'published', evidenceLevel: 'official_doc', applicability: 'Workspace overview', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(20), hasPublishedVersion: true, storageDomain: 'foundation', accessLevel: 'internal', versionLabel: 'V1.2', schemaEntities: ['ZHIXU', 'Engineering Standards']
         },
         {
           slug: 'api-gateway-ratelimit', title: 'API Gateway Rate-Limit Policy', summary: 'Tenant quotas, burst caps, and upstream 5xx circuit-breaker thresholds.',
@@ -127,36 +127,66 @@ export function createDemoApi(): WorkspaceApi {
         {
           slug: 'postgres-backup-dr', title: 'PostgreSQL Backup & DR SOP', summary: 'WAL archiving targets (RPO <= 60s, RTO <= 15m) and quarterly restore drills.',
           content: '## Recovery Objectives\n\n- **RPO**: <= 60 seconds via continuous WAL archiving.\n- **RTO**: <= 15 minutes using warm standby promotion.\n\n## Quarterly Validation\n\nRun automated checksum verification in an isolated staging cluster before signing off quarterly compliance.\n\n## Review Note\n\nAuto-compiled from DR drill report; verify cluster storage quotas before publishing.',
-          sources: [sources.backup], links: ['k8s-incident-runbook'], updatedAt: iso(8), pageType: 'case', status: 'moderating', evidenceLevel: 'field_record', applicability: 'Primary relational databases', modelVersion: 'deepseek-reasoner', reviewedBy: null, reviewedAt: null, hasPublishedVersion: false, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V0.3', workflowNote: 'Pending SRE moderation', schemaEntities: ['PostgreSQL', 'WAL Archiving', 'Disaster Recovery']
+          sources: [sources.backup], links: ['k8s-incident-runbook', 'rbac-security-baseline'], updatedAt: iso(8), pageType: 'case', status: 'moderating', evidenceLevel: 'field_record', applicability: 'Primary relational databases', modelVersion: 'deepseek-reasoner', reviewedBy: null, reviewedAt: null, hasPublishedVersion: false, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V0.3', workflowNote: 'Pending SRE moderation', schemaEntities: ['PostgreSQL', 'WAL Archiving', 'Disaster Recovery']
+        },
+        {
+          slug: 'mcp-agent-governance', title: 'MCP Agent Governance Protocol', summary: 'Draft-only write guardrails for Claude Code, Cursor, and Codex integrations.',
+          content: '## Read-Only Source Guarantee\n\nConnected MCP agents query verified Markdown Wiki pages and SHA-256 tracked source chunks without mutating original PDFs or Office documents.\n\n## Draft-Only Agent Writes\n\nCalls to `zhixu_propose_draft` strictly enter `draft` status in the Review Queue, preserving published baselines and Git rollback history.',
+          sources: [sources.gateway], links: ['rbac-security-baseline', 'api-gateway-ratelimit', 'scanned-pdf-ocr-pipeline'], updatedAt: iso(24), pageType: 'protocol', status: 'published', evidenceLevel: 'official_doc', applicability: 'All AI coding agents via stdio MCP', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(20), hasPublishedVersion: true, storageDomain: 'domain_knowledge', accessLevel: 'internal', versionLabel: 'V1.0', schemaEntities: ['MCP Server', 'Draft Approval', 'Claude Code', 'Cursor']
+        },
+        {
+          slug: 'rbac-security-baseline', title: 'RBAC & Network Security Policy', summary: 'Loopback passwordless entry vs mandatory 12-char auth and RBAC on 0.0.0.0.',
+          content: '## Access Control Matrix\n\n- `superadmin`: Full model routing, source lifecycle, version rollback, and account management.\n- `reviewer`: Draft review, moderation, and Q&A feedback; blocked (`403`) on high-risk operations.\n\n## Rate Limiting\n\nPer-IP and per-account sliding windows trigger `HTTP 429` lockouts on repeated failed attempts.',
+          sources: [sources.runbook], links: ['api-gateway-ratelimit', 'mcp-agent-governance'], updatedAt: iso(52), pageType: 'regulation', status: 'published', evidenceLevel: 'official_doc', applicability: 'Self-hosted & Docker deployments', modelVersion: 'deepseek-reasoner', reviewedBy: 'sec-lead', reviewedAt: iso(48), hasPublishedVersion: true, storageDomain: 'permissions', accessLevel: 'restricted', versionLabel: 'V2.0', schemaEntities: ['RBAC', 'Rate Limit', 'Session Auth']
+        },
+        {
+          slug: 'scanned-pdf-ocr-pipeline', title: 'Scanned PDF Vision-OCR Pipeline', summary: 'Pure-JS embedded scan extraction routed to local Ollama or cloud Vision models.',
+          content: '## Zero Native Build Dependencies\n\nWhen `pdfjs` detects an image-only page (< 24 text chars), ZHIXU extracts the largest scan bitmap and encodes a downscaled PNG using built-in `zlib`.\n\n## Vision Model Routing\n\nEncoded page images route to the configured `VM` tier (e.g., Ollama `qwen2.5vl:7b`) to recover verbatim text and Markdown tables.',
+          sources: [sources.backup], links: ['mcp-agent-governance', 'postgres-backup-dr'], updatedAt: iso(19), pageType: 'ops', status: 'published', evidenceLevel: 'operational_doc', applicability: 'Scanned PDFs & visual assets', modelVersion: 'qwen2.5vl:7b', reviewedBy: 'zhixu', reviewedAt: iso(16), hasPublishedVersion: true, storageDomain: 'concrete_media', accessLevel: 'internal', versionLabel: 'V1.0', schemaEntities: ['Vision OCR', 'Ollama VM', 'PDF Parser']
         }
       ]
     : [
         {
-          slug: 'index', title: '知序知识导览', summary: '汇集研发规范、运维应急规程与容灾实践的企业知识入口。',
-          content: '# 知序知识导览\n\n这里沉淀研发架构规范、生产应急处置与数据库容灾演练知识。\n\n## 推荐入口\n\n- [API 网关限流与熔断规范](api-gateway-ratelimit)\n- [生产集群故障应急处置规程](k8s-incident-runbook)\n- [PostgreSQL 备份与容灾方案](postgres-backup-dr)\n\n所有回答都可追溯至原始依据，并明确适用条件与待核查缺口。',
-          sources: [], links: ['api-gateway-ratelimit', 'k8s-incident-runbook', 'postgres-backup-dr'], updatedAt: iso(15), pageType: 'index', status: 'published', evidenceLevel: 'official_doc', applicability: '知识库导览', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(20), hasPublishedVersion: true, storageDomain: 'foundation', accessLevel: 'internal', versionLabel: 'V1.2', schemaEntities: ['知序知识库', '研发规范']
+          slug: 'index', title: '知序知识导览', summary: '汇集研发规范、运维应急规程、MCP 治理与容灾实践的企业知识入口。',
+          content: '# 知序知识导览\n\n这里沉淀研发架构规范、生产应急处置、MCP 代理治理与数据库容灾演练知识。\n\n## 推荐入口\n\n- [API 网关限流与熔断规范](api-gateway-ratelimit)\n- [生产集群故障应急处置规程](k8s-incident-runbook)\n- [PostgreSQL 备份与容灾方案](postgres-backup-dr)\n- [MCP 智能体接入与草稿治理规范](mcp-agent-governance)\n- [RBAC 权限与内网安全基线](rbac-security-baseline)\n- [扫描版 PDF 视觉 OCR 解析流水线](scanned-pdf-ocr-pipeline)\n\n所有回答都可追溯至原始依据，并明确适用条件与待核查缺口。',
+          sources: [], links: ['api-gateway-ratelimit', 'k8s-incident-runbook', 'postgres-backup-dr', 'mcp-agent-governance', 'rbac-security-baseline', 'scanned-pdf-ocr-pipeline'], updatedAt: iso(15), pageType: 'index', status: 'published', evidenceLevel: 'official_doc', applicability: '知识库导览', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(20), hasPublishedVersion: true, storageDomain: 'foundation', accessLevel: 'internal', versionLabel: 'V1.2', schemaEntities: ['知序知识库', '研发规范']
         },
         {
           slug: 'api-gateway-ratelimit', title: 'API 网关限流与熔断规范', summary: '租户限流配额、突发上限与上游 5xx 熔断降级阈值规范。',
           content: '## 限流配额\n\n公网租户接口默认按令牌桶执行 **1200 次/分钟** 稳态限流，突发上限 **200**。\n\n## 熔断策略\n\n1. 按 30 秒滑动窗口监控上游 5xx 错误率。\n2. 错误率超过 **5%** 自动触发熔断，返回降级缓存或 `503 Retry-After`。\n3. 60 秒后进入半开状态，放行 10% 探针流量验证恢复。\n\n> 生产环境配额调整须经安全评审并留痕。',
-          sources: [sources.gateway], links: ['k8s-incident-runbook'], updatedAt: iso(38), pageType: 'regulation', status: 'published', evidenceLevel: 'official_doc', applicability: '生产边缘网关', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(35), hasPublishedVersion: true, storageDomain: 'domain_knowledge', accessLevel: 'internal', versionLabel: 'V2.1', schemaEntities: ['API 网关', '令牌桶限流', '熔断降级']
+          sources: [sources.gateway], links: ['k8s-incident-runbook', 'rbac-security-baseline'], updatedAt: iso(38), pageType: 'regulation', status: 'published', evidenceLevel: 'official_doc', applicability: '生产边缘网关', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(35), hasPublishedVersion: true, storageDomain: 'domain_knowledge', accessLevel: 'internal', versionLabel: 'V2.1', schemaEntities: ['API 网关', '令牌桶限流', '熔断降级']
         },
         {
           slug: 'k8s-incident-runbook', title: '生产集群故障应急处置规程', summary: 'P1 故障排查顺序、10 分钟灰度回滚红线与复盘闭环流程。',
           content: '## P1 排查顺序\n\n1. 优先查看主看板网关 5xx 错误率与 p99 延迟变化。\n2. 核查 PostgreSQL 连接池水位与慢查询锁等待。\n3. 若 **10 分钟** 内未收敛，立即执行灰度回滚并保留现场日志。\n\n关联规范：[API 网关限流与熔断规范](api-gateway-ratelimit)。',
-          sources: [sources.runbook], links: ['api-gateway-ratelimit'], updatedAt: iso(95), pageType: 'protocol', status: 'published', evidenceLevel: 'operational_doc', applicability: '值班 SRE 与后端团队', modelVersion: 'deepseek-chat', reviewedBy: 'reviewer01', reviewedAt: iso(90), hasPublishedVersion: true, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V1.4', schemaEntities: ['P1 故障', '灰度回滚', 'SRE']
+          sources: [sources.runbook], links: ['api-gateway-ratelimit', 'postgres-backup-dr'], updatedAt: iso(95), pageType: 'protocol', status: 'published', evidenceLevel: 'operational_doc', applicability: '值班 SRE 与后端团队', modelVersion: 'deepseek-chat', reviewedBy: 'reviewer01', reviewedAt: iso(90), hasPublishedVersion: true, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V1.4', schemaEntities: ['P1 故障', '灰度回滚', 'SRE']
         },
         {
           slug: 'postgres-backup-dr', title: 'PostgreSQL 备份与容灾方案', summary: 'WAL 连续归档指标（RPO <= 60s、RTO <= 15m）与季度演练要求。',
           content: '## 容灾目标\n\n- **RPO**：借助 WAL 连续归档控制在 60 秒以内。\n- **RTO**：通过热备切换控制在 15 分钟以内。\n\n## 季度恢复演练\n\n每季度在隔离预发环境自动执行全量恢复与校验和比对，归档演练记录。\n\n## 待审核说明\n\n本页由容灾演练报告自动整理，请核对最新存储配额后审批发布。',
-          sources: [sources.backup], links: ['k8s-incident-runbook'], updatedAt: iso(8), pageType: 'case', status: 'moderating', evidenceLevel: 'field_record', applicability: '核心关系型数据库', modelVersion: 'deepseek-reasoner', reviewedBy: null, reviewedAt: null, hasPublishedVersion: false, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V0.3', workflowNote: '等待 SRE 初审', schemaEntities: ['PostgreSQL', 'WAL 归档', '容灾恢复']
+          sources: [sources.backup], links: ['k8s-incident-runbook', 'rbac-security-baseline'], updatedAt: iso(8), pageType: 'case', status: 'moderating', evidenceLevel: 'field_record', applicability: '核心关系型数据库', modelVersion: 'deepseek-reasoner', reviewedBy: null, reviewedAt: null, hasPublishedVersion: false, storageDomain: 'cases', accessLevel: 'internal', versionLabel: 'V0.3', workflowNote: '等待 SRE 初审', schemaEntities: ['PostgreSQL', 'WAL 归档', '容灾恢复']
+        },
+        {
+          slug: 'mcp-agent-governance', title: 'MCP 智能体接入与草稿治理规范', summary: '面向 Claude Code、Cursor 与 Codex 的只读原件与仅写草稿安全边界。',
+          content: '## 原始资料只读保障\n\n接入 MCP 的编程智能体仅通过 SHA-256 只读索引查询已验证 Wiki 与原文切片，绝不改写原始 PDF/Office 文件。\n\n## 强制草稿写入\n\n调用 `zhixu_propose_draft` 写入的知识强制进入审核队列（Draft），绝不覆盖已发布基线。',
+          sources: [sources.gateway], links: ['rbac-security-baseline', 'api-gateway-ratelimit', 'scanned-pdf-ocr-pipeline'], updatedAt: iso(24), pageType: 'protocol', status: 'published', evidenceLevel: 'official_doc', applicability: '所有 stdio MCP 客户端', modelVersion: 'deepseek-reasoner', reviewedBy: 'zhixu', reviewedAt: iso(20), hasPublishedVersion: true, storageDomain: 'domain_knowledge', accessLevel: 'internal', versionLabel: 'V1.0', schemaEntities: ['MCP Server', '草稿审批', 'Claude Code', 'Cursor']
+        },
+        {
+          slug: 'rbac-security-baseline', title: 'RBAC 权限与内网安全基线', summary: '本机免密进入与 0.0.0.0 强制 12 位密码、服务端 RBAC 与限流策略。',
+          content: '## 角色权限矩阵\n\n- `superadmin`：完整模型配置、原文件管理、版本回滚与账号管理权限。\n- `reviewer`：草稿审阅与反馈，高危操作统一返回 `403 Forbidden`。\n\n## 登录防爆破\n\n按 IP 与账号滑动窗口限流，连续失败触发 `429` 锁定。',
+          sources: [sources.runbook], links: ['api-gateway-ratelimit', 'mcp-agent-governance'], updatedAt: iso(52), pageType: 'regulation', status: 'published', evidenceLevel: 'official_doc', applicability: '内网与 Docker 部署', modelVersion: 'deepseek-reasoner', reviewedBy: 'sec-lead', reviewedAt: iso(48), hasPublishedVersion: true, storageDomain: 'permissions', accessLevel: 'restricted', versionLabel: 'V2.0', schemaEntities: ['RBAC', '登录限流', '会话鉴权']
+        },
+        {
+          slug: 'scanned-pdf-ocr-pipeline', title: '扫描版 PDF 视觉 OCR 解析流水线', summary: '零 C++ 依赖提取 PDF 扫描图并路由至本地 Ollama 或云端视觉模型。',
+          content: '## 零原生编译依赖\n\n当 `pdfjs` 检测到页面无可选文字层时，自动提取扫描位图并用 Node 内置 `zlib` 编码为缩放后的 PNG。\n\n## 视觉模型路由\n\n页面图像自动路由至已配置的 `VM` 视觉模型层（如 Ollama `qwen2.5vl:7b`）还原正文与 Markdown 表格。',
+          sources: [sources.backup], links: ['mcp-agent-governance', 'postgres-backup-dr'], updatedAt: iso(19), pageType: 'ops', status: 'published', evidenceLevel: 'operational_doc', applicability: '扫描件 PDF 与视觉资产', modelVersion: 'qwen2.5vl:7b', reviewedBy: 'zhixu', reviewedAt: iso(16), hasPublishedVersion: true, storageDomain: 'concrete_media', accessLevel: 'internal', versionLabel: 'V1.0', schemaEntities: ['视觉 OCR', 'Ollama VM', 'PDF 解析']
         }
       ]
 
   let snapshot: WorkspaceSnapshot = {
     root: isEn ? 'demo-enterprise-kb' : '演示知识库 · 企业研发', modelProvider, models: ['deepseek-chat', 'deepseek-reasoner', 'qwen-vl-max'], modelOnline: true,
-    deploymentMode: 'cloud', remoteConnected: false, fileCount: 3, pendingCount: 0, draftCount: 1, pendingDeleteCount: 0, deletedCount: 0, publishedCount: 2,
-    chunkCount: 86, entityCount: 12, mutualLinkCount: 18, cachedEmbeddingCount: 86,
+    deploymentMode: 'cloud', remoteConnected: false, fileCount: 3, pendingCount: 0, draftCount: 1, pendingDeleteCount: 0, deletedCount: 0, publishedCount: 5,
+    chunkCount: 124, entityCount: 20, mutualLinkCount: 36, cachedEmbeddingCount: 124,
     adminAuth: {
       authenticated: false,
       passwordRequired: false,
@@ -389,7 +419,7 @@ export function createDemoApi(): WorkspaceApi {
       return { domainCounts: { foundation: 1, domain_knowledge: snapshot.pages.filter(page => page.storageDomain === 'domain_knowledge').length, cases: 2, concrete_media: 3, permissions: 1, versions: snapshot.pages.length * 2 }, chunkCount: snapshot.chunkCount, entityCount: snapshot.entityCount, mutualLinkCount: snapshot.mutualLinkCount, entities }
     },
     getKnowledgeGraph: async () => {
-      const nodes = snapshot.pages.map(page => ({
+      const wikiNodes = snapshot.pages.map(page => ({
         id: `wiki:${page.slug}`,
         label: page.title,
         kind: 'wiki' as const,
@@ -398,9 +428,35 @@ export function createDemoApi(): WorkspaceApi {
         status: page.status,
         summary: page.summary,
         chunkCount: page.sources.length,
-        degree: page.links.length + 1
+        degree: page.links.length + (page.schemaEntities?.length ?? 1)
       }))
-      const edges = snapshot.pages.flatMap(page =>
+      const entityMap = new Map<string, { id: string; label: string; domain: StorageDomain; slugs: string[]; chunks: number }>()
+      for (const page of snapshot.pages) {
+        const dom = page.storageDomain ?? 'foundation'
+        for (const name of page.schemaEntities ?? []) {
+          const id = `ent:${name.toLowerCase().replace(/\s+/g, '-')}`
+          const existing = entityMap.get(id)
+          if (existing) {
+            existing.slugs.push(page.slug)
+            existing.chunks += 4
+          } else {
+            entityMap.set(id, { id, label: name, domain: dom, slugs: [page.slug], chunks: 6 })
+          }
+        }
+      }
+      const entityNodes = [...entityMap.values()].map(ent => ({
+        id: ent.id,
+        label: ent.label,
+        kind: 'entity' as const,
+        storageDomain: ent.domain,
+        slug: ent.slugs[0],
+        summary: isEn
+          ? `Extracted SPG entity linked across ${ent.slugs.length} Wiki page(s) and ${ent.chunks} verified source chunks.`
+          : `提取自原始文档的 SPG 知识实体，关联 ${ent.slugs.length} 篇 Wiki 与 ${ent.chunks} 个可溯源切片。`,
+        chunkCount: ent.chunks,
+        degree: ent.slugs.length
+      }))
+      const wikiEdges = snapshot.pages.flatMap(page =>
         page.links
           .filter(target => snapshot.pages.some(p => p.slug === target))
           .map(target => ({
@@ -410,12 +466,21 @@ export function createDemoApi(): WorkspaceApi {
             weight: 1.2
           }))
       )
+      const entityEdges = [...entityMap.values()].flatMap(ent =>
+        ent.slugs.map(slug => ({
+          source: ent.id,
+          target: `wiki:${slug}`,
+          relation: 'defines' as const,
+          weight: 1.0
+        }))
+      )
+      const edges = [...wikiEdges, ...entityEdges]
       return {
-        nodes,
+        nodes: [...wikiNodes, ...entityNodes],
         edges,
-        domainCounts: { foundation: 1, domain_knowledge: 2, cases: 2, concrete_media: 1, permissions: 0, versions: snapshot.pages.length * 2 },
-        totalWikiPages: snapshot.pages.length,
-        totalEntities: 3,
+        domainCounts: { foundation: 1, domain_knowledge: 2, cases: 2, concrete_media: 1, permissions: 1, versions: snapshot.pages.length * 2 },
+        totalWikiPages: wikiNodes.length,
+        totalEntities: entityNodes.length,
         totalMutualLinks: edges.length
       }
     },
@@ -427,11 +492,35 @@ export function createDemoApi(): WorkspaceApi {
       const pages = wikiHits.map(hit => snapshot.pages.find(page => page.slug === hit.slug)).filter((page): page is WikiPage => Boolean(page))
       const citations = pages.flatMap(page => page.sources.map((source, index) => ({ label: `[${index + 1}] ${page.title}`, kind: 'wiki' as const, slug: page.slug, file: source.file, locator: source.locator, excerpt: source.excerpt })))
       return {
-        conclusion: pages.length ? `根据当前已发布的知识，${pages.map(page => `《${page.title}》指出：${page.summary.replace(/[。；]+$/, '')}`).join('；')}。实际执行时应以对应的批复文件、属地制度和项目设计为准。` : '当前知识范围内没有找到足够依据，暂不生成确定性结论。请调整关键词、扩大检索范围，或先导入并整理相关资料。',
-        applicability: pages.length ? [...new Set(pages.map(page => page.applicability))].join('；') : '证据不足，无法判断适用条件。',
-        citations, conflicts: pages.length > 1 ? '不同资料的管理层级与适用场景可能不同，应分别核验。' : '当前证据中未发现明显冲突。',
-        missingInfo: '具体数值、时间和责任主体仍需查阅原文确认。', knowledgeVersion: `演示知识快照 · ${new Date().toLocaleDateString('zh-CN')}`,
-        insufficientEvidence: !pages.length, hits
+        conclusion: pages.length
+          ? isEn
+            ? `Based on published knowledge, ${pages.map(page => `"${page.title}" specifies: ${page.summary.replace(/[.;。；]+$/, '')}`).join('; ')}. Always verify operational changes against the linked source documents.`
+            : `根据当前已发布的知识，${pages.map(page => `《${page.title}》指出：${page.summary.replace(/[。；]+$/, '')}`).join('；')}。实际执行时应以对应的批复文件、属地制度和项目设计为准。`
+          : isEn
+            ? 'Insufficient verified evidence in the current knowledge scope. Please refine keywords, include drafts, or import relevant source documents.'
+            : '当前知识范围内没有找到足够依据，暂不生成确定性结论。请调整关键词、扩大检索范围，或先导入并整理相关资料。',
+        applicability: pages.length
+          ? [...new Set(pages.map(page => page.applicability))].join(isEn ? '; ' : '；')
+          : isEn
+            ? 'Insufficient evidence to determine applicability.'
+            : '证据不足，无法判断适用条件。',
+        citations,
+        conflicts:
+          pages.length > 1
+            ? isEn
+              ? 'Cross-check scope boundaries across multiple cited policies before applying.'
+              : '不同资料的管理层级与适用场景可能不同，应分别核验。'
+            : isEn
+              ? 'No conflicts detected across verified evidence.'
+              : '当前证据中未发现明显冲突。',
+        missingInfo: isEn
+          ? 'Verify exact numeric thresholds and owners directly in the linked source files.'
+          : '具体数值、时间和责任主体仍需查阅原文确认。',
+        knowledgeVersion: isEn
+          ? `Live Demo Snapshot · ${new Date().toLocaleDateString('en-US')}`
+          : `演示知识快照 · ${new Date().toLocaleDateString('zh-CN')}`,
+        insufficientEvidence: !pages.length,
+        hits
       }
     },
     submitFeedback: async entry => {

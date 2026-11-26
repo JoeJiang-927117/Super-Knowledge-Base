@@ -11,8 +11,12 @@
 </p>
 
 <p>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest">
-    <img alt="Download Windows Portable" src="https://img.shields.io/badge/Download_Windows_Portable-v0.3.0_(No_Build_Required)-2563EB?style=for-the-badge&logo=windows&logoColor=white" />
+  <a href="https://joejiang-927117.github.io/zhixu/">
+    <img alt="Try Live Demo in Browser" src="https://img.shields.io/badge/▶_Try_Live_Demo-Instant_Browser_Preview-059669?style=for-the-badge" />
+  </a>
+  &nbsp;
+  <a href="https://github.com/JoeJiang-927117/zhixu/releases/latest">
+    <img alt="Download Windows Portable" src="https://img.shields.io/badge/Download_Windows_Portable-v0.3.0_(No_Build)-2563EB?style=for-the-badge&logo=windows&logoColor=white" />
   </a>
 </p>
 
@@ -28,9 +32,9 @@
 </p>
 
 <p>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/actions/workflows/ci.yml/badge.svg" /></a>
+  <a href="https://github.com/JoeJiang-927117/zhixu/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/JoeJiang-927117/zhixu/actions/workflows/ci.yml/badge.svg" /></a>
   <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
-  <a href="https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base/releases/latest"><img alt="Release" src="https://img.shields.io/badge/Release-v0.3.0-059669?style=flat-square" /></a>
+  <a href="https://github.com/JoeJiang-927117/zhixu/releases/latest"><img alt="Release" src="https://img.shields.io/badge/Release-v0.3.0-059669?style=flat-square" /></a>
   <img alt="MCP Server" src="https://img.shields.io/badge/MCP-Stdio_Server-7C3AED?style=flat-square" />
   <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-English%20%2F%20中文-0EA5E9?style=flat-square" />
   <img alt="TypeScript 7" src="https://img.shields.io/badge/TypeScript-7.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
@@ -42,7 +46,7 @@
 
 <br />
 
-<img src="./docs/screenshots/02-workspace-en.png" alt="ZHIXU Workspace" width="96%" />
+<img src="./docs/screenshots/zhixu-showcase.gif" alt="ZHIXU Interactive Knowledge Graph, Grounded Q&A & Markdown Wiki" width="96%" />
 
 </div>
 
@@ -233,7 +237,7 @@ ZHIXU defaults to **Cloud API First** while supporting **LAN GPU** (`vLLM` / `SG
 ### Run Desktop App Locally
 
 ```bash
-git clone https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base.git
+git clone https://github.com/JoeJiang-927117/zhixu.git
 cd ZHIXUAgentic-Knowledge-Base
 npm install
 npm run dev
@@ -350,6 +354,6 @@ Protected endpoints require `Authorization: Bearer <TOKEN>` (server token or adm
 
 ## Star History
 
-<a href="https://star-history.com/#JoeJiang-927117/ZHIXUAgentic-Knowledge-Base&Date">
-  <img src="https://api.star-history.com/svg?repos=JoeJiang-927117/ZHIXUAgentic-Knowledge-Base&type=Date" alt="Star History Chart" width="640" />
+<a href="https://star-history.com/#JoeJiang-927117/zhixu&Date">
+  <img src="https://api.star-history.com/svg?repos=JoeJiang-927117/zhixu&type=Date" alt="Star History Chart" width="640" />
 </a>

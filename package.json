@@ -4,16 +4,17 @@
   "private": true,
   "license": "Apache-2.0",
   "author": "Joe Jiang (Felix Joe)",
-  "homepage": "https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base",
+  "homepage": "https://joejiang-927117.github.io/zhixu/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/JoeJiang-927117/ZHIXUAgentic-Knowledge-Base.git"
+    "url": "https://github.com/JoeJiang-927117/zhixu.git"
   },
   "description": "知序 ZHIXU — Enterprise-oriented local-first AI knowledge base compiler & governance studio",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
+    "build:demo": "vite build --config vite.demo.config.ts",
     "start": "electron-vite preview",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-transform-types tests/verify_zhixu_core_upgrades.mjs && node tests/verify_zhixu_v2.mjs && node --experimental-transform-types tests/verify_zhixu_v3.mjs && node tests/eval_benchmark.mjs",
