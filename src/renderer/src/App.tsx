@@ -985,7 +985,7 @@ export default function App() {
                           shine={1.1}
                           glare={0.48}
                           bevel={2}
-                          tiltStrength={6}
+                          tiltStrength={5}
                           intro={false}
                           width="100%"
                           height={148}
