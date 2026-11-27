@@ -3,13 +3,13 @@ import {
 } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import type { AdminRole, ModelProviderSettings, WikiPage, WorkspaceSnapshot, WorkflowAction } from '../../../shared/types'
-import wallpaperSky from '../assets/wallpaper-sky.jpg'
-import wallpaperSunset from '../assets/wallpaper-sunset.jpg'
 import { useI18n } from '../i18n'
 import { workflowStatusLabel } from '../labels'
+import SpotlightCard from './SpotlightCard'
 
 type Props = {
   snapshot: WorkspaceSnapshot
+  theme?: 'light' | 'dark'
   onLogin: (username: string, password: string) => Promise<void>
   onLogout: () => Promise<void>
   onChangePassword: (oldPassword: string, newPassword: string) => Promise<void>
@@ -24,6 +24,7 @@ type Props = {
 
 export default function AdminConsole({
   snapshot,
+  theme = 'dark',
   onLogin,
   onLogout,
   onChangePassword,
@@ -91,11 +92,7 @@ export default function AdminConsole({
   if (!adminAuth.authenticated || !adminAuth.user) {
     return (
       <section className="admin-inline-gate">
-        <div className="admin-gate-split">
-          <div className="admin-gate-art">
-            <img src={wallpaperSunset} alt="" />
-            <div className="admin-gate-art-overlay" />
-          </div>
+        <SpotlightCard theme={theme} className="admin-gate-minimal" intensity={0.14} borderGlow={0.55}>
           <form className="admin-gate-form" onSubmit={event => void handleLoginSubmit(event)}>
             <div className="admin-login-icon"><Shield /></div>
             <h1>{tx('管理员验证', 'Admin Verification')}</h1>
@@ -124,124 +121,79 @@ export default function AdminConsole({
               <KeyRound /> {submitting ? tx('验证中…', 'Verifying…') : tx('登录后台', 'Sign In')}
             </button>
           </form>
-        </div>
+        </SpotlightCard>
       </section>
     )
   }
 
   return (
-    <section className="page-container admin-executive">
-      {/* Panoramic Sunset Architectural Executive Hero Banner */}
-      <header className="admin-hero" style={{ backgroundImage: `url(${wallpaperSunset})` }}>
-        <div className="admin-hero-scrim" />
-        <div className="admin-hero-content">
-          <div className="admin-hero-top">
-            <div className="admin-identity">
-              <span className="admin-avatar"><Shield /></span>
-              <div>
-                <h1>{tx('系统控制中心', 'Admin Control Center')}</h1>
-                <div className="admin-identity-meta">
-                  <span className="hero-badge">{adminAuth.user.username}</span>
-                  <span className="hero-badge subtle">{adminAuth.user.role === 'superadmin' ? tx('超级管理员', 'Superadmin') : tx('审核员', 'Reviewer')}</span>
-                  <span className="hero-badge ok"><ShieldCheck /> {tx('鉴权保护已启用', 'Auth Guard Active')}</span>
-                </div>
-              </div>
-            </div>
-            <div className="head-actions">
-              <button className="hero-glass-btn" onClick={onOpenSettings}><Sliders /> {tx('模型接口', 'Model API')}</button>
-              <button className="hero-glass-btn danger" onClick={() => void onLogout()}><LogOut /> {tx('退出登录', 'Sign Out')}</button>
-            </div>
+    <section className="page-container admin-minimal">
+      <header className="admin-minimal-head">
+        <div className="admin-minimal-title">
+          <span className="admin-minimal-kicker">SYSTEM · GOVERNANCE</span>
+          <h1>{tx('系统后台', 'Admin Console')}</h1>
+          <div className="admin-minimal-meta">
+            <span>{adminAuth.user.username}</span>
+            <span>·</span>
+            <span>{adminAuth.user.role === 'superadmin' ? tx('超级管理员', 'Superadmin') : tx('审核员', 'Reviewer')}</span>
+            <span>·</span>
+            <span>{snapshot.modelOnline ? tx('模型就绪', 'Model Ready') : tx('待配置', 'Setup Needed')}</span>
           </div>
-
-          <div className="admin-hero-kpis">
-            <div className="hero-kpi"><span>{tx('已发布知识', 'Published')}</span><strong>{snapshot.publishedCount}</strong></div>
-            <div className="hero-kpi"><span>{tx('持久向量', 'Vectors')}</span><strong>{snapshot.cachedEmbeddingCount}</strong></div>
-            <div className="hero-kpi"><span>{tx('待删审批', 'Pending Del')}</span><strong>{snapshot.pendingDeleteCount}</strong></div>
-            <div className="hero-kpi"><span>{tx('回收站', 'Recycle Bin')}</span><strong>{snapshot.deletedCount}</strong></div>
-            <div className="hero-kpi"><span>{tx('后台账号', 'Accounts')}</span><strong>{adminAuth.users.length}</strong></div>
-          </div>
+        </div>
+        <div className="head-actions">
+          <button className="btn-secondary btn-sm" onClick={onOpenSettings}><Sliders /> {tx('模型与 MCP', 'Models & MCP')}</button>
+          <button className="btn-secondary btn-sm" onClick={() => void onLogout()}><LogOut /> {tx('退出', 'Sign Out')}</button>
         </div>
       </header>
 
       <div className="admin-tab-bar" role="tablist">
-        <button className={tab === 'overview' ? 'active' : ''} onClick={() => setTab('overview')}>{tx('系统总览', 'Overview')}</button>
+        <button className={tab === 'overview' ? 'active' : ''} onClick={() => setTab('overview')}>{tx('总览', 'Overview')}</button>
         <button className={tab === 'recycle' ? 'active' : ''} onClick={() => setTab('recycle')}>
-          {tx('待删与回收站', 'Recycle Bin')} ({pendingDeletePages.length + deletedPages.length})
+          {tx('回收站', 'Recycle Bin')}{pendingDeletePages.length + deletedPages.length > 0 ? ` (${pendingDeletePages.length + deletedPages.length})` : ''}
         </button>
         <button className={tab === 'accounts' ? 'active' : ''} onClick={() => setTab('accounts')}>
-          {tx('账号安全', 'Accounts')} ({adminAuth.users.length})
+          {tx('账号', 'Accounts')}
         </button>
         <button className={tab === 'audit' ? 'active' : ''} onClick={() => setTab('audit')}>
-          {tx('调用与反馈', 'Audit & Feedback')} ({snapshot.modelCalls.length})
+          {tx('审计', 'Audit')}
         </button>
       </div>
 
       {tab === 'overview' && (
-        <div className="admin-overview-grid">
-          <div className="stack-md">
-            <article className="panel-card exec-card">
-              <div className="panel-card-head">
-                <h2>{tx('三类 API 路由', '3-Tier API Routing')}</h2>
-                <button className="btn-secondary btn-xs" onClick={onOpenSettings}><Sliders /> {tx('编辑接口', 'Configure')}</button>
+        <div className="admin-minimal-grid">
+          <SpotlightCard theme={theme} className="admin-spotlight-card" intensity={0.12} borderGlow={0.5}>
+            <div className="panel-card-head">
+              <h2>{tx('模型路由', 'Model Routing')}</h2>
+              <button className="btn-secondary btn-xs" onClick={onOpenSettings}><Sliders /> {tx('配置', 'Configure')}</button>
+            </div>
+            <div className="tier-mono-grid">
+              <div className="tier-mono-item">
+                <span>LLLM · Synthesis</span>
+                <strong>{snapshot.modelProvider.lllmModel || snapshot.modelProvider.model}</strong>
               </div>
-              <div className="tier-grid-3">
-                <div className="tier-card accent-lllm">
-                  <span className="tier-badge lllm">LLLM</span>
-                  <strong>{snapshot.modelProvider.lllmModel || snapshot.modelProvider.model}</strong>
-                  <small className="mono">{snapshot.modelProvider.lllmBaseUrl || snapshot.modelProvider.baseUrl}</small>
-                </div>
-                <div className="tier-card accent-llm">
-                  <span className="tier-badge llm">LLM</span>
-                  <strong>{snapshot.modelProvider.llmModel || snapshot.modelProvider.model}</strong>
-                  <small className="mono">{snapshot.modelProvider.llmBaseUrl || snapshot.modelProvider.baseUrl}</small>
-                </div>
-                <div className="tier-card accent-vm">
-                  <span className="tier-badge vm">VM</span>
-                  <strong>{snapshot.modelProvider.visionModel || tx('未配置', 'Not configured')}</strong>
-                  <small className="mono">{snapshot.modelProvider.vmBaseUrl || snapshot.modelProvider.baseUrl}</small>
-                </div>
+              <div className="tier-mono-item">
+                <span>LLM · Retrieval</span>
+                <strong>{snapshot.modelProvider.llmModel || snapshot.modelProvider.model}</strong>
               </div>
-            </article>
-
-            <article className="panel-card exec-card">
-              <div className="panel-card-head">
-                <h2>{tx('安全与治理策略', 'Security & Governance')}</h2>
-                <span className="status-pill published"><ShieldCheck /> {tx('运行正常', 'Healthy')}</span>
-              </div>
-              <div className="security-grid">
-                <div className="security-item">
-                  <Check />
-                  <span>
-                    {locale === 'en' ? (
-                      <>Server binds <code className="mono">127.0.0.1</code> by default + mandatory Bearer auth</>
-                    ) : (
-                      <>服务端默认绑定 <code className="mono">127.0.0.1</code> + 强制鉴权</>
-                    )}
-                  </span>
-                </div>
-                <div className="security-item"><Check /><span>{tx('AI 删除拦截：待删审批 → 回收站', 'AI Delete Guard: Approval → Recycle Bin')}</span></div>
-                <div className="security-item"><Check /><span>{tx('SQLite 持久化向量缓存', 'Persistent SQLite Vector Cache')}</span></div>
-                <div className="security-item"><Check /><span>{tx('证据不足不补全伪引用', 'Strict Refusal Without Evidence')}</span></div>
-              </div>
-            </article>
-          </div>
-
-          {/* Right Vertical Sky Visual Status Card */}
-          <aside className="admin-side-visual" style={{ backgroundImage: `url(${wallpaperSky})` }}>
-            <div className="admin-side-scrim" />
-            <div className="admin-side-body">
-              <span className="side-status-pill">
-                <i className={snapshot.modelOnline ? 'online' : ''} />
-                {snapshot.modelOnline ? tx('模型服务在线', 'Model Online') : tx('待配置密钥', 'API Key Needed')}
-              </span>
-              <div className="admin-side-metrics">
-                <div><span>{tx('原件资料', 'Source Files')}</span><strong className="mono">{snapshot.fileCount}</strong></div>
-                <div><span>{tx('结构切块', 'Chunks')}</span><strong className="mono">{snapshot.chunkCount}</strong></div>
-                <div><span>{tx('知识实体', 'Entities')}</span><strong className="mono">{snapshot.entityCount}</strong></div>
-                <div><span>{tx('双向互索引', 'Mutual Links')}</span><strong className="mono">{snapshot.mutualLinkCount}</strong></div>
+              <div className="tier-mono-item">
+                <span>VM · Vision OCR</span>
+                <strong>{snapshot.modelProvider.visionModel || tx('未配置', 'Not configured')}</strong>
               </div>
             </div>
-          </aside>
+          </SpotlightCard>
+
+          <SpotlightCard theme={theme} className="admin-spotlight-card" intensity={0.12} borderGlow={0.5}>
+            <div className="panel-card-head">
+              <h2>{tx('安全边界', 'Security Boundaries')}</h2>
+              <span className="minimal-status-dot"><ShieldCheck /> {tx('正常', 'Active')}</span>
+            </div>
+            <div className="security-mono-list">
+              <div><Check /><span>{tx('默认绑定 127.0.0.1，外网强制 12 位强密码与服务端 RBAC', 'Loopback-first bind with mandatory 12-char auth & server RBAC on 0.0.0.0')}</span></div>
+              <div><Check /><span>{tx('原始文件 SHA-256 只读追踪，绝不改写原件', 'Original files stay strictly read-only with SHA-256 verification')}</span></div>
+              <div><Check /><span>{tx('AI 删除强制拦截至待删审批与回收站', 'AI delete proposals intercepted into Pending Delete & Recycle Bin')}</span></div>
+              <div><Check /><span>{tx('MCP 写入强制锁定为草稿状态，保留已发布基线', 'MCP agent writes hard-locked to Draft status, preserving baselines')}</span></div>
+            </div>
+          </SpotlightCard>
         </div>
       )}
 

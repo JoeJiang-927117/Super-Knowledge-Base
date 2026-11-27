@@ -2,12 +2,12 @@
 
 <img src="./assets/zhixu-icon.png" alt="ZHIXU" width="108" />
 
-<h1>ZHIXU · 知序</h1>
+<h1>ZHIXU</h1>
 
-<p><strong>Drop a messy folder of PDFs, Word, Excel, PPT &amp; Markdown. Get an auditable local Markdown Wiki + Git history + grounded Q&amp;A — zero Docker, zero Elasticsearch, zero cloud.</strong></p>
+<p><strong>Drop a messy folder of PDFs, Word, Excel, PPT &amp; Markdown. Get an auditable local Markdown Wiki + Git history + Knowledge Graph + MCP Server — zero Docker, zero Elasticsearch, zero cloud.</strong></p>
 
 <p>
-  <strong>English</strong> | <a href="./README_ZH.md">简体中文</a>
+  <strong>English</strong> | <a href="./README_ZH.md">Chinese</a>
 </p>
 
 <p>
@@ -36,7 +36,7 @@
   <a href="./LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache--2.0-2563EB?style=flat-square" /></a>
   <a href="https://github.com/JoeJiang-927117/zhixu/releases/latest"><img alt="Release" src="https://img.shields.io/badge/Release-v0.3.0-059669?style=flat-square" /></a>
   <img alt="MCP Server" src="https://img.shields.io/badge/MCP-Stdio_Server-7C3AED?style=flat-square" />
-  <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-English%20%2F%20中文-0EA5E9?style=flat-square" />
+  <img alt="Bilingual UI" src="https://img.shields.io/badge/UI-EN%20%2F%20ZH-0EA5E9?style=flat-square" />
   <img alt="TypeScript 7" src="https://img.shields.io/badge/TypeScript-7.x-2563EB?style=flat-square&logo=typescript&logoColor=white" />
   <img alt="Electron" src="https://img.shields.io/badge/Electron-Desktop-0F172A?style=flat-square&logo=electron&logoColor=38BDF8" />
   <img alt="React 19" src="https://img.shields.io/badge/React-19-1D4ED8?style=flat-square&logo=react&logoColor=white" />
@@ -54,7 +54,7 @@
 
 ## Overview
 
-**ZHIXU (知序)** is benchmarked directly against **enterprise open-source knowledge base architectures** (such as RAGFlow, Dify, AnythingLLM, and XWiki), built for teams that need **enterprise governance, auditability, and strict security boundaries without the operational overhead of Elasticsearch + MinIO + Redis + MySQL multi-container stacks**.
+**ZHIXU** is benchmarked directly against **enterprise open-source knowledge base architectures** (such as RAGFlow, Dify, AnythingLLM, and XWiki), built for teams that need **enterprise governance, auditability, and strict security boundaries without the operational overhead of Elasticsearch + MinIO + Redis + MySQL multi-container stacks**.
 
 In engineering, operations, compliance, and project delivery, critical knowledge lives scattered across PDF specs, Word SOPs, Excel inventories, PowerPoint decks, and field photos. Existing options leave three common gaps:
 - **Traditional Enterprise Wikis (Confluence / XWiki / Outline)**: Mature review workflows, but entirely manual—legacy documents cannot be compiled into structured knowledge automatically.
@@ -66,11 +66,11 @@ In engineering, operations, compliance, and project delivery, critical knowledge
 1. **Immutable Evidence Base**: Imported PDF, DOCX, XLSX, PPTX, Markdown, and image files are stored locally as immutable source records tracked by SHA-256 hashes. AI never mutates original files.
 2. **Two-Stage Knowledge Compilation & Excerpt Verification**: Structure-aware chunking, zero-bloat OOXML parsing, and two-stage compilation turn heterogeneous sources into a structured Markdown Wiki across six knowledge domains with TF-IDF mutual entity indexing. Cited excerpts are verified back against original line/page locators; unverifiable hallucinations are dropped.
 3. **Enterprise Change Governance**: AI creations and updates enter a declarative review workflow (`Draft → Moderating → Validating → Published → Archived`). AI delete proposals are intercepted into `Pending Delete → Recycle Bin`. A built-in split Markdown editor allows human editing with baseline line-level diffs, SQLite version snapshots, and `isomorphic-git` rollback.
-4. **Open Data Sovereignty & Bilingual Experience**: Knowledge lives as plain Markdown, indexes and persistent vectors live in local SQLite, and revision history lives in standard `.git`. Supports one-click **English / Chinese (`EN / 中文`)** UI switching and deploys as a desktop app, single Node process, or single Docker container.
+4. **Open Data Sovereignty & Bilingual Experience**: Knowledge lives as plain Markdown, indexes and persistent vectors live in local SQLite, and revision history lives in standard `.git`. Supports one-click **English / Chinese (`EN / ZH`)** UI switching and deploys as a desktop app, single Node process, or single Docker container.
 
 ### Why ZHIXU vs Alternatives
 
-| Capability | ZHIXU (知序) | RAGFlow / Dify | AnythingLLM | Obsidian / XWiki |
+| Capability | ZHIXU | RAGFlow / Dify | AnythingLLM | Obsidian / XWiki |
 | --- | --- | --- | --- | --- |
 | **Runtime Footprint** | Single Desktop App or 1 Node process (`SQLite + Git`) | Multi-container (`ES + MinIO + Redis + MySQL`) | Single container / Desktop | Local / Java + DB |
 | **Auto-Compiles Messy Folders → Structured Wiki** | Built-in 2-stage compiler + excerpt verification | Chunk RAG only (no Wiki governance) | Chat over files (no Wiki compilation) | Manual writing |
@@ -108,7 +108,7 @@ ZHIXU ships a zero-dependency **Model Context Protocol (MCP)** stdio server (`ou
 
 ## Comparison with Enterprise Open-Source KB Architectures
 
-| Dimension | Heavyweight Open-Source RAG<br/>(RAGFlow / Dify) | Lightweight Local AI<br/>(AnythingLLM) | Traditional Enterprise Wiki<br/>(XWiki / Outline) | ZHIXU · 知序 |
+| Dimension | Heavyweight Open-Source RAG<br/>(RAGFlow / Dify) | Lightweight Local AI<br/>(AnythingLLM) | Traditional Enterprise Wiki<br/>(XWiki / Outline) | ZHIXU |
 | :--- | :--- | :--- | :--- | :--- |
 | **Core Focus** | Multi-tenant RAG orchestration | Personal / small-team local chat | Manual collaborative docs | **Lightweight Enterprise AI Knowledge Compiler & Governance Studio** |
 | **Deployment** | Heavy (ES / DB / MinIO / Redis) | Light (Desktop / single container) | Medium (DB + web services) | **Ultra-light (Desktop app, single Node process, or 1 Docker container)** |
@@ -125,26 +125,26 @@ ZHIXU ships a zero-dependency **Model Context Protocol (MCP)** stdio server (`ou
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/01-login-en.png" alt="Login Page" />
+      <img src="./docs/screenshots/01-login-en.png" alt="Monumental Vault Entry" />
       <br />
-      <strong>Login Page</strong>
+      <strong>Vault Entry</strong> · WebGL2 Brushed-Metal ReflectiveCard
     </td>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/03-knowledge-en.png" alt="3-Pane Knowledge Studio" />
+      <img src="./docs/screenshots/02-workspace-en.png" alt="Minimalist Workspace" />
       <br />
-      <strong>3-Pane Knowledge Studio</strong> · Split Editor / Line Diff / Source Inspector
+      <strong>Minimalist Workspace</strong> · Vault Monolith &amp; Grounded Q&amp;A
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/04-admin-en.png" alt="Admin Control Center" />
+      <img src="./docs/screenshots/03-knowledge-en.png" alt="Knowledge Studio" />
       <br />
-      <strong>Admin Control Center</strong> · 3-Tier API Routing / Recycle Bin / Accounts
+      <strong>Knowledge Studio</strong> · Editorial Reader, Line Diff &amp; Source Excerpts
     </td>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/02-workspace-en.png" alt="Multi-Turn Q&A Workspace" />
+      <img src="./docs/screenshots/05-graph-dark.png" alt="Interactive Knowledge Graph" />
       <br />
-      <strong>Multi-Turn Q&amp;A Workspace</strong> · Context Follow-ups / Highlighting / Save as Draft
+      <strong>Knowledge Graph</strong> · Schema Entities &amp; Mutual-Index Links
     </td>
   </tr>
 </table>
@@ -243,7 +243,7 @@ npm install
 npm run dev
 ```
 
-- Switch between **English** and **简体中文** anytime from the login bar, workspace titlebar (`EN / 中文`), or Command Palette (`Ctrl + K`).
+- Switch between **English** and **Chinese** anytime from the vault bar, workspace titlebar, or Command Palette (`Ctrl + K`).
 - Shortcuts: `Ctrl + K` opens the Command Palette; `Ctrl + S` saves draft in the split Markdown editor.
 
 ### Typecheck, Build, Security Tests & Benchmark

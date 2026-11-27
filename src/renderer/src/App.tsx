@@ -11,8 +11,6 @@ import type {
 } from '../../shared/types'
 import { getWorkspaceApi } from './api'
 import logo from './assets/zhixu-icon.png'
-import wallpaperSky from './assets/wallpaper-sky.jpg'
-import wallpaperSunset from './assets/wallpaper-sunset.jpg'
 import AdminConsole from './components/AdminConsole'
 import BootLoader, { ZhixuChunkProgress, ZhixuIsoLoader } from './components/BootLoader'
 import CommandPalette from './components/CommandPalette'
@@ -663,12 +661,12 @@ export default function App() {
 
   const navItems: { id: View; label: string; icon: typeof LayoutDashboard; badge?: number }[] = [
     { id: 'home', label: viewTitles.home, icon: LayoutDashboard },
-    { id: 'knowledge', label: viewTitles.knowledge, icon: BookOpen, badge: snapshot.publishedCount },
-    { id: 'graph', label: viewTitles.graph, icon: Network, badge: snapshot.entityCount || undefined },
-    { id: 'review', label: viewTitles.review, icon: CheckCheck, badge: snapshot.draftCount },
+    { id: 'knowledge', label: viewTitles.knowledge, icon: BookOpen },
+    { id: 'graph', label: viewTitles.graph, icon: Network },
+    { id: 'review', label: viewTitles.review, icon: CheckCheck, badge: snapshot.draftCount || undefined },
     { id: 'health', label: viewTitles.health, icon: ShieldCheck },
     { id: 'activity', label: viewTitles.activity, icon: History },
-    { id: 'admin', label: viewTitles.admin, icon: Shield, badge: snapshot.pendingDeleteCount || undefined }
+    { id: 'admin', label: viewTitles.admin, icon: Shield }
   ]
 
   return (
@@ -695,9 +693,8 @@ export default function App() {
       <aside className="studio-sidebar">
         <div className="sidebar-brand-bar">
           <button className="brand-home-btn" onClick={resetConversation}>
-            <img src={logo} alt={tx('知序', 'ZHIXU')} />
-            <span className="brand-title">{tx('知序', 'ZHIXU')}</span>
-            <span className="brand-ver">PRO</span>
+            <img src={logo} alt="ZHIXU" />
+            <span className="brand-title">ZHIXU</span>
           </button>
           <button className="icon-btn-sm" onClick={() => setSidebarOpen(false)} aria-label={tx('收起侧栏', 'Collapse sidebar')} title={tx('收起侧栏', 'Collapse sidebar')}>
             <PanelLeftClose />
@@ -761,7 +758,7 @@ export default function App() {
         </div>
 
         <div className="sidebar-footer">
-          <button className="btn-primary btn-block btn-sm" onClick={() => fileInput.current?.click()} disabled={importing}>
+          <button className="btn-secondary btn-block btn-sm" onClick={() => fileInput.current?.click()} disabled={importing}>
             {importing ? <ZhixuIsoLoader size="xs" /> : <Upload />}
             {importing ? tx('导入中…', 'Importing…') : tx('导入资料', 'Import Files')}
           </button>
@@ -802,18 +799,13 @@ export default function App() {
           </div>
 
           <div className="titlebar-right">
-            <button className="tier-pill-btn" onClick={openSettings} title={tx('点击配置 LLLM / LLM / VM', 'Configure LLLM / LLM / VM')}>
-              <i className={snapshot.modelOnline ? 'online' : ''} />
-              <span>{providerLabel(snapshot.modelProvider, locale)}</span>
-            </button>
-
             {busy ? (
               <button className="btn-secondary btn-sm" onClick={() => void api.cancelOrganize()}>
-                <Square /> {tx('取消整理', 'Cancel')}
+                <Square /> {tx('取消', 'Cancel')}
               </button>
             ) : (
               <button className="btn-primary btn-sm" onClick={() => void organize()} disabled={!snapshot.fileCount}>
-                <Sparkles /> {snapshot.pages.length ? tx('更新知识库', 'Compile Wiki') : tx('开始整理', 'Build Wiki')}
+                <Sparkles /> {snapshot.pages.length ? tx('更新', 'Compile') : tx('整理', 'Build')}
               </button>
             )}
 
@@ -866,22 +858,10 @@ export default function App() {
         )}
 
         <main className={`studio-main view-${view}`} tabIndex={-1}>
-          {/* VIEW 1: Commercial Operations + AI Copilot Workspace */}
+          {/* VIEW 1: Minimalist Architectural Workspace */}
           {view === 'home' && (
-            <div className="copilot-layout">
+            <div className="copilot-layout is-minimal">
               <div className="copilot-primary">
-                <div className="kpi-grid cols-5 compact-kpi">
-                  <button className="kpi-cell clickable" onClick={() => navigate('knowledge')}>
-                    <span>{tx('已发布', 'Published')}</span><strong>{snapshot.publishedCount}</strong>
-                  </button>
-                  <button className="kpi-cell clickable" onClick={() => navigate('review')}>
-                    <span>{tx('待审核', 'Pending')}</span><strong>{snapshot.draftCount}</strong>
-                  </button>
-                  <div className="kpi-cell"><span>{tx('原件资料', 'Sources')}</span><strong>{snapshot.fileCount}</strong></div>
-                  <div className="kpi-cell"><span>{tx('结构切块', 'Chunks')}</span><strong>{snapshot.chunkCount}</strong></div>
-                  <div className="kpi-cell"><span>{tx('持久向量', 'Vectors')}</span><strong>{snapshot.cachedEmbeddingCount}</strong></div>
-                </div>
-
                 <div className="copilot-stream">
                   {thread.length > 0 ? (
                     <div className="qa-thread">
@@ -994,111 +974,93 @@ export default function App() {
                       <span>{tx('正在检索并生成回答…', 'Searching and generating answer…')}</span>
                     </div>
                   ) : (
-                    <div className="workspace-overview">
+                    <div className="workspace-minimal-stage">
                       <div className="workspace-monolith-banner">
                         <ReflectiveCard
                           theme={theme}
                           tint={theme === 'dark' ? '#e4e4e7' : '#ffffff'}
                           metalness={0.95}
-                          roughness={0.32}
+                          roughness={0.3}
                           blurStrength={6}
-                          shine={1.05}
-                          glare={0.45}
+                          shine={1.1}
+                          glare={0.48}
                           bevel={2}
                           tiltStrength={6}
                           intro={false}
                           width="100%"
-                          height={152}
-                          radius={14}
+                          height={148}
+                          radius={16}
                           className="workspace-reflective-banner"
                         >
                           <div className="monolith-banner-inner">
                             <div className="monolith-banner-left">
                               <img src={logo} alt="ZHIXU" className="monolith-banner-logo" />
                               <div>
-                                <span className="monolith-banner-kicker">
-                                  {tx('LOCAL KNOWLEDGE MONOLITH · V0.3', 'LOCAL KNOWLEDGE MONOLITH · V0.3')}
-                                </span>
-                                <h2>{snapshot.root ? folderName(snapshot.root) : tx('知序知识库', 'ZHIXU Vault')}</h2>
+                                <span className="monolith-banner-kicker">ZHIXU · LOCAL KNOWLEDGE VAULT</span>
+                                <h2>{snapshot.root ? folderName(snapshot.root) : 'ZHIXU Vault'}</h2>
                                 <p>
                                   {tx(
-                                    `${snapshot.publishedCount} 篇已发布百科 · ${snapshot.entityCount} 个 Schema 实体 · ${snapshot.mutualLinkCount} 条互索引`,
-                                    `${snapshot.publishedCount} Published Wiki Pages · ${snapshot.entityCount} Schema Entities · ${snapshot.mutualLinkCount} Mutual Links`
+                                    `${snapshot.publishedCount} 篇知识 · 原文件只读 · 本地就绪`,
+                                    `${snapshot.publishedCount} Pages · Read-Only Source · Ready`
                                   )}
                                 </p>
                               </div>
                             </div>
                             <div className="monolith-banner-actions">
                               <button className="btn-primary btn-sm" onClick={() => navigate('graph')}>
-                                <Network /> {tx('打开知识图谱', 'Open Graph')}
+                                <Network /> {tx('知识图谱', 'Graph')}
                               </button>
                               <button className="btn-secondary btn-sm" onClick={openSettings}>
-                                <Settings2 /> {tx('MCP 接入', 'MCP Setup')}
+                                <Settings2 /> MCP
                               </button>
                             </div>
                           </div>
                         </ReflectiveCard>
                       </div>
 
-                      <div className="quick-strip">
-                        <button className="quick-tile" onClick={() => fileInput.current?.click()}>
-                          <Upload />
-                          <div><strong>{tx('导入资料', 'Import Files')}</strong><small>{tx('PDF / DOCX / XLSX / PPTX / 图片', 'PDF / DOCX / XLSX / PPTX / Images')}</small></div>
-                          <ArrowRight />
-                        </button>
-                        <button className="quick-tile" onClick={startNewManualPage}>
-                          <Plus />
-                          <div><strong>{tx('新建知识页', 'New Wiki Page')}</strong><small>{tx('内置分栏 Markdown 编辑', 'Split Markdown Editor')}</small></div>
-                          <ArrowRight />
-                        </button>
-                        <button className="quick-tile" onClick={() => navigate('review')}>
-                          <CheckCheck />
-                          <div><strong>{tx('审核队列', 'Review Queue')}</strong><small>{locale === 'en' ? `${snapshot.draftCount} pending` : `${snapshot.draftCount} 项待审批`}</small></div>
-                          <ArrowRight />
-                        </button>
-                      </div>
-
-                      <div className="section-bar">
-                        <h3>{tx('最近更新文档', 'Recently Updated')}</h3>
-                        <button className="link-btn" onClick={() => navigate('knowledge')}>{tx('进入知识库', 'Browse All')}</button>
-                      </div>
-
-                      {recentPages.length ? (
-                        <div className="data-table">
-                          <div className="table-head cols-doc">
-                            <span>{tx('标题', 'Title')}</span>
-                            <span>{tx('知识域', 'Domain')}</span>
-                            <span>{tx('状态', 'Status')}</span>
-                            <span>{tx('更新时间', 'Updated')}</span>
-                          </div>
-                          {recentPages.map(page => (
-                            <button className="table-row cols-doc clickable-row" key={page.slug} onClick={() => openPage(page.slug)}>
-                              <span className="doc-cell-title"><FileText /> {page.title}</span>
-                              <span className="muted-text">{storageDomainLabel(page.storageDomain ?? 'foundation', locale)}</span>
-                              <span><em className={`status-pill ${page.status}`}>{workflowStatusLabel(page.status, locale)}</em></span>
-                              <span className="mono muted-text">{formatDate(page.updatedAt)}</span>
-                            </button>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="empty-box muted">
-                          <BookOpen />
-                          <h2>{tx('暂无知识页面', 'No knowledge pages')}</h2>
-                          <div className="head-actions">
-                            <button className="btn-primary btn-sm" onClick={() => fileInput.current?.click()}>
-                              <Plus /> {tx('导入资料', 'Import Files')}
-                            </button>
-                            <button className="btn-secondary btn-sm" onClick={startNewManualPage}>
-                              <Plus /> {tx('新建页面', 'New Page')}
-                            </button>
+                      <div className="minimal-list-section">
+                        <div className="minimal-section-head">
+                          <span>{tx('近期文档', 'RECENT PAGES')}</span>
+                          <div className="minimal-head-links">
+                            <button className="link-btn" onClick={startNewManualPage}>{tx('新建', 'New')}</button>
+                            <button className="link-btn" onClick={() => navigate('knowledge')}>{tx('全部', 'All')}</button>
                           </div>
                         </div>
-                      )}
+
+                        {recentPages.length ? (
+                          <div className="minimal-page-list">
+                            {recentPages.slice(0, 6).map(page => (
+                              <button className="minimal-page-row" key={page.slug} onClick={() => openPage(page.slug)}>
+                                <span className="minimal-row-title">
+                                  <FileText />
+                                  <span>{page.title}</span>
+                                </span>
+                                <span className="minimal-row-meta">
+                                  {storageDomainLabel(page.storageDomain ?? 'foundation', locale)}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="empty-box muted">
+                            <BookOpen />
+                            <h2>{tx('暂无知识页面', 'No knowledge pages')}</h2>
+                            <div className="head-actions">
+                              <button className="btn-primary btn-sm" onClick={() => fileInput.current?.click()}>
+                                <Plus /> {tx('导入资料', 'Import Files')}
+                              </button>
+                              <button className="btn-secondary btn-sm" onClick={startNewManualPage}>
+                                <Plus /> {tx('新建页面', 'New Page')}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
 
-                {/* Docked Commercial Command Composer */}
+                {/* Minimal Floating Command Composer */}
                 <div className="docked-composer">
                   <div className="composer-box">
                     <textarea
@@ -1106,7 +1068,7 @@ export default function App() {
                       value={question}
                       onChange={event => setQuestion(event.target.value)}
                       onKeyDown={composerKeyDown}
-                      placeholder={tx('输入问题检索或向知识库提问（Enter 发送，Shift+Enter 换行）…', 'Search or ask the knowledge base (Enter to ask, Shift+Enter for newline)…')}
+                      placeholder={tx('向知识库提问或检索…', 'Ask or search your vault…')}
                       aria-label={tx('向知识库提问', 'Ask the knowledge base')}
                       rows={2}
                     />
@@ -1119,13 +1081,13 @@ export default function App() {
                           className={`toggle-chip ${includeSources ? 'active' : ''}`}
                           onClick={() => setIncludeSources(!includeSources)}
                         >
-                          <Layers /> {tx('原文切块', 'Source Chunks')}
+                          <Layers /> {tx('溯源切块', 'Sources')}
                         </button>
                         <button
                           className={`toggle-chip ${includeDrafts ? 'active' : ''}`}
                           onClick={() => setIncludeDrafts(!includeDrafts)}
                         >
-                          {tx('含待审', 'Include Drafts')}
+                          {tx('含草稿', 'Drafts')}
                         </button>
                         <select
                           className="domain-select"
@@ -1133,7 +1095,7 @@ export default function App() {
                           value={domain}
                           onChange={event => setDomain(event.target.value as StorageDomain | '')}
                         >
-                          <option value="">{tx('全部知识域', 'All Domains')}</option>
+                          <option value="">{tx('全部域', 'All Domains')}</option>
                           <option value="foundation">{tx('基础概念', 'Foundation')}</option>
                           <option value="domain_knowledge">{tx('专业知识', 'Domain Knowledge')}</option>
                           <option value="cases">{tx('案例复盘', 'Cases')}</option>
@@ -1153,83 +1115,6 @@ export default function App() {
                   </div>
                 </div>
               </div>
-
-              {/* Right Operations Dock */}
-              <aside className="copilot-dock">
-                <div
-                  className="dock-visual-card"
-                  style={{ backgroundImage: `url(${theme === 'dark' ? wallpaperSunset : wallpaperSky})` }}
-                >
-                  <div className="dock-visual-scrim" />
-                  <div className="dock-visual-meta">
-                    <span className="dock-visual-status">
-                      <i className={snapshot.modelOnline ? 'online' : ''} />
-                      {snapshot.modelOnline ? tx('服务在线', 'Online') : tx('待配置', 'Setup Needed')}
-                    </span>
-                    <button
-                      className="dock-theme-chip"
-                      onClick={() => setTheme(prev => (prev === 'light' ? 'dark' : 'light'))}
-                      title={tx('切换晴空 / 暮光', 'Switch Sky / Sunset')}
-                    >
-                      {theme === 'light' ? <Moon /> : <Sun />}
-                    </button>
-                  </div>
-                  <div className="dock-visual-foot">
-                    <strong>{snapshot.root ? folderName(snapshot.root) : tx('知序工作区', 'ZHIXU Workspace')}</strong>
-                    <span className="mono">{snapshot.adminAuth.user?.username ?? 'zhixu'}</span>
-                  </div>
-                </div>
-
-                <section className="dock-section">
-                  <div className="dock-head">
-                    <h3>{tx('三类接口路由', '3-Tier Routing')}</h3>
-                    <button className="link-btn" onClick={openSettings}>{tx('配置', 'Edit')}</button>
-                  </div>
-                  <div className="tier-mini-list">
-                    <button className="tier-mini-row" onClick={openSettings}>
-                      <span className="tier-badge lllm">LLLM</span>
-                      <span>{snapshot.modelProvider.lllmModel || snapshot.modelProvider.model}</span>
-                    </button>
-                    <button className="tier-mini-row" onClick={openSettings}>
-                      <span className="tier-badge llm">LLM</span>
-                      <span>{snapshot.modelProvider.llmModel || snapshot.modelProvider.model}</span>
-                    </button>
-                    <button className="tier-mini-row" onClick={openSettings}>
-                      <span className="tier-badge vm">VM</span>
-                      <span>{snapshot.modelProvider.visionModel || tx('未配置', 'Not set')}</span>
-                    </button>
-                  </div>
-                </section>
-
-                <section className="dock-section">
-                  <div className="dock-head">
-                    <h3>{tx('待审队列', 'Pending Review')} ({reviewPages.length})</h3>
-                    {reviewPages.length > 0 && <button className="link-btn" onClick={() => navigate('review')}>{tx('全部', 'All')}</button>}
-                  </div>
-                  {reviewPages.length ? (
-                    <div className="dock-queue-list">
-                      {reviewPages.slice(0, 6).map(page => (
-                        <button key={page.slug} onClick={() => openPage(page.slug)}>
-                          <span className="dock-q-title">{page.title}</span>
-                          <em className={`status-pill ${page.status}`}>{workflowStatusLabel(page.status, locale)}</em>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="dock-empty">{tx('无待审核项', 'Queue clear')}</div>
-                  )}
-                </section>
-
-                <section className="dock-section">
-                  <div className="dock-head"><h3>{tx('知识底座', 'Index Metrics')}</h3></div>
-                  <div className="stat-kv-list">
-                    <div><span>{tx('Schema 实体', 'Schema Entities')}</span><strong className="mono">{snapshot.entityCount}</strong></div>
-                    <div><span>{tx('双向互索引', 'Mutual Links')}</span><strong className="mono">{snapshot.mutualLinkCount}</strong></div>
-                    <div><span>{tx('待删审批', 'Pending Delete')}</span><strong className="mono">{snapshot.pendingDeleteCount}</strong></div>
-                    <div><span>{tx('回收站', 'Recycle Bin')}</span><strong className="mono">{snapshot.deletedCount}</strong></div>
-                  </div>
-                </section>
-              </aside>
             </div>
           )}
 
@@ -1401,6 +1286,7 @@ export default function App() {
           {view === 'admin' && (
             <AdminConsole
               snapshot={snapshot}
+              theme={theme}
               onLogin={adminLogin}
               onLogout={adminLogout}
               onChangePassword={adminChangePassword}

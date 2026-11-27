@@ -6,6 +6,7 @@ import logo from '../assets/zhixu-icon.png'
 import { useI18n } from '../i18n'
 import { ZhixuIsoLoader } from './BootLoader'
 import ReflectiveCard from './ReflectiveCard'
+import ShinyText from './ShinyText'
 
 type Props = {
   theme: 'light' | 'dark'
@@ -126,13 +127,27 @@ export default function LoginPage({
               <>
                 KNOWLEDGE,
                 <br />
-                <span className="vault-headline-metal">ARCHITECTED.</span>
+                <ShinyText
+                  text="ARCHITECTED."
+                  color={isDark ? '#a1a1aa' : '#52525b'}
+                  shineColor={isDark ? '#ffffff' : '#111114'}
+                  speed={3.2}
+                  delay={1.4}
+                  shineWidth={28}
+                />
               </>
             ) : (
               <>
                 知序 ·
                 <br />
-                <span className="vault-headline-metal">秩序即知识。</span>
+                <ShinyText
+                  text="秩序即知识。"
+                  color={isDark ? '#a1a1aa' : '#52525b'}
+                  shineColor={isDark ? '#ffffff' : '#111114'}
+                  speed={3.2}
+                  delay={1.4}
+                  shineWidth={28}
+                />
               </>
             )}
           </h1>
