@@ -432,7 +432,12 @@ function createWindow(): void {
     }
   })
   mainWindow.once('ready-to-show', () => mainWindow?.show())
-  mainWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }))
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https:\/\/(github\.com|joejiang-927117\.github\.io)\//i.test(url)) {
+      void shell.openExternal(url)
+    }
+    return { action: 'deny' }
+  })
   mainWindow.webContents.on('will-navigate', event => event.preventDefault())
   if (process.env.ELECTRON_RENDERER_URL) mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL)
   else mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
