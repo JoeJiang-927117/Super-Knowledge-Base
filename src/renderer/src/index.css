@@ -4,31 +4,33 @@
    ========================================================================== */
 
 :root {
+  color-scheme: light;
   font-family: "Inter", "PingFang SC", "Microsoft YaHei UI", "Segoe UI Variable", -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 13px;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 
-  --bg-chrome: #eff1f5;
-  --bg-canvas: #ffffff;
-  --bg-subtle: #f7f8fa;
-  --bg-hover: #eef0f5;
-  --bg-active: #e7ecf7;
+  --bg-chrome: #ececef;
+  --bg-canvas: #fafafa;
+  --bg-subtle: #f2f2f5;
+  --bg-hover: #e8e8ec;
+  --bg-active: rgba(17, 17, 20, 0.075);
   --bg-elevated: #ffffff;
 
-  --ink: #0f172a;
-  --ink-2: #334155;
-  --muted: #64748b;
-  --faint: #94a3b8;
+  --ink: #111114;
+  --ink-2: #3f3f46;
+  --muted: #71717a;
+  --faint: #a1a1aa;
 
-  --border: #e2e6ef;
-  --border-strong: #cbd3e1;
+  --border: #e4e4e7;
+  --border-strong: #d4d4d8;
 
-  --brand: #2563eb;
-  --brand-hover: #1d4ed8;
-  --brand-soft: rgba(37, 99, 235, 0.1);
-  --brand-ink: #1d4ed8;
+  --brand: #111114;
+  --brand-hover: #27272a;
+  --brand-on: #ffffff;
+  --brand-soft: rgba(17, 17, 20, 0.07);
+  --brand-ink: #111114;
 
   --ok: #10b981;
   --ok-soft: rgba(16, 185, 129, 0.12);
@@ -37,31 +39,33 @@
   --danger: #dc2626;
   --danger-soft: rgba(220, 38, 38, 0.1);
 
-  --shadow-frame: 0 1px 3px rgba(15, 23, 42, 0.06), 0 0 0 1px var(--border);
-  --shadow-pop: 0 20px 56px rgba(15, 23, 42, 0.18), 0 2px 10px rgba(15, 23, 42, 0.08);
+  --shadow-frame: 0 1px 3px rgba(17, 17, 20, 0.06), 0 0 0 1px var(--border);
+  --shadow-pop: 0 24px 60px rgba(17, 17, 20, 0.18), 0 2px 10px rgba(17, 17, 20, 0.08);
   --mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
 }
 
 :root[data-theme="dark"] {
-  --bg-chrome: #0a0d14;
-  --bg-canvas: #111622;
-  --bg-subtle: #161c2c;
-  --bg-hover: #1d2538;
-  --bg-active: rgba(59, 130, 246, 0.16);
-  --bg-elevated: #171e2e;
+  color-scheme: dark;
+  --bg-chrome: #08080a;
+  --bg-canvas: #0f0f12;
+  --bg-subtle: #15151a;
+  --bg-hover: #1d1d24;
+  --bg-active: rgba(255, 255, 255, 0.085);
+  --bg-elevated: #17171d;
 
-  --ink: #f1f5f9;
-  --ink-2: #cbd5e1;
-  --muted: #8b9bb4;
-  --faint: #5c6b84;
+  --ink: #f4f4f5;
+  --ink-2: #d4d4d8;
+  --muted: #8e8e98;
+  --faint: #585862;
 
-  --border: rgba(255, 255, 255, 0.085);
+  --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);
 
-  --brand: #3b82f6;
-  --brand-hover: #2563eb;
-  --brand-soft: rgba(59, 130, 246, 0.18);
-  --brand-ink: #60a5fa;
+  --brand: #f4f4f5;
+  --brand-hover: #ffffff;
+  --brand-on: #09090b;
+  --brand-soft: rgba(255, 255, 255, 0.09);
+  --brand-ink: #f4f4f5;
 
   --ok: #34d399;
   --ok-soft: rgba(52, 211, 153, 0.14);
@@ -70,8 +74,8 @@
   --danger: #f87171;
   --danger-soft: rgba(248, 113, 113, 0.14);
 
-  --shadow-frame: 0 1px 4px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--border);
-  --shadow-pop: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border-strong);
+  --shadow-frame: 0 1px 6px rgba(0, 0, 0, 0.55), 0 0 0 1px var(--border);
+  --shadow-pop: 0 28px 72px rgba(0, 0, 0, 0.72), 0 0 0 1px var(--border-strong);
 }
 
 * { box-sizing: border-box; }
@@ -97,7 +101,7 @@ svg { width: 15px; height: 15px; flex: 0 0 auto; stroke-width: 1.75; }
 .btn-block { width: 100%; }
 
 .btn-primary {
-  background: var(--brand); color: #ffffff; border: 1px solid transparent;
+  background: var(--brand); color: var(--brand-on); border: 1px solid transparent;
 }
 .btn-primary:not(:disabled):hover { background: var(--brand-hover); }
 
@@ -1497,4 +1501,524 @@ mark.hit-hl { padding: 0 3px; border-radius: 3px; background: rgba(37, 99, 235, 
 .graph-neighbor-row small {
   color: var(--muted);
   font-size: 10.5px;
+}
+
+
+/* ==========================================================================
+   Monumental Architectural Vault Entry & ReflectiveCard Monolith
+   ========================================================================== */
+.vault-entry {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: 58px minmax(0, 1fr);
+  overflow: hidden;
+  background: #09090b;
+  color: #f4f4f5;
+}
+
+.vault-entry.theme-light {
+  background: #f3f3f5;
+  color: #111114;
+}
+
+.vault-grid-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.032) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.032) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 85% 85% at 50% 45%, #000 30%, transparent 100%);
+}
+
+.vault-entry.theme-light .vault-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(17, 17, 20, 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(17, 17, 20, 0.045) 1px, transparent 1px);
+}
+
+.vault-spotlight {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(640px 460px at 72% 48%, rgba(255, 255, 255, 0.075), transparent 70%),
+    radial-gradient(520px 380px at 22% 18%, rgba(255, 255, 255, 0.04), transparent 72%);
+}
+
+.vault-entry.theme-light .vault-spotlight {
+  background:
+    radial-gradient(680px 500px at 72% 48%, rgba(255, 255, 255, 0.9), transparent 72%),
+    radial-gradient(500px 360px at 20% 20%, rgba(17, 17, 20, 0.03), transparent 72%);
+}
+
+.vault-topbar {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  -webkit-app-region: drag;
+}
+
+.vault-entry.theme-light .vault-topbar {
+  border-bottom-color: rgba(17, 17, 20, 0.08);
+}
+
+.vault-brand-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vault-brand-lockup img {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+
+.vault-brand-word {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+
+.vault-brand-sep {
+  opacity: 0.25;
+}
+
+.vault-brand-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  opacity: 0.55;
+}
+
+.vault-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  -webkit-app-region: no-drag;
+}
+
+.vault-pill-switch {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.vault-entry.theme-light .vault-pill-switch {
+  border-color: rgba(17, 17, 20, 0.1);
+  background: rgba(17, 17, 20, 0.03);
+}
+
+.vault-pill-switch button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: inherit;
+  opacity: 0.58;
+}
+
+.vault-pill-switch button svg {
+  width: 12px;
+  height: 12px;
+}
+
+.vault-pill-switch button.active {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.vault-entry.theme-light .vault-pill-switch button.active {
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(17, 17, 20, 0.08);
+}
+
+.vault-win-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
+}
+
+.vault-win-controls button {
+  width: 30px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-grid;
+  place-items: center;
+  opacity: 0.65;
+}
+
+.vault-win-controls button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.vault-win-controls button.win-close:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.vault-stage {
+  position: relative;
+  z-index: 2;
+  max-width: 1160px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 40px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) auto;
+  align-items: center;
+  gap: 56px;
+  overflow-y: auto;
+}
+
+.vault-editorial {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  max-width: 580px;
+}
+
+.vault-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  width: fit-content;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  opacity: 0.8;
+}
+
+.vault-entry.theme-light .vault-eyebrow {
+  border-color: rgba(17, 17, 20, 0.12);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.vault-eyebrow-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.7);
+}
+
+.vault-headline {
+  margin: 0;
+  font-size: clamp(38px, 4.6vw, 58px);
+  font-weight: 700;
+  line-height: 1.03;
+  letter-spacing: -0.04em;
+}
+
+.vault-headline-metal {
+  background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 58%, #f4f4f5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.vault-entry.theme-light .vault-headline-metal {
+  background: linear-gradient(135deg, #111114 0%, #71717a 60%, #18181b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.vault-manifesto {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.7;
+  opacity: 0.72;
+  max-width: 520px;
+}
+
+.vault-spec-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.vault-entry.theme-light .vault-spec-strip {
+  border-color: rgba(17, 17, 20, 0.1);
+}
+
+.vault-spec-strip > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vault-spec-strip span {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  opacity: 0.48;
+}
+
+.vault-spec-strip strong {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.vault-access-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.vault-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(248, 113, 113, 0.35);
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+  font-size: 12.5px;
+}
+
+.vault-entry.theme-light .vault-error {
+  color: #b91c1c;
+}
+
+.vault-cred-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 12px;
+}
+
+.vault-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.vault-field span {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  opacity: 0.55;
+}
+
+.vault-field input,
+.vault-pwd-wrap {
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.04);
+  color: inherit;
+}
+
+.vault-entry.theme-light .vault-field input,
+.vault-entry.theme-light .vault-pwd-wrap {
+  border-color: rgba(17, 17, 20, 0.14);
+  background: #ffffff;
+}
+
+.vault-field > input {
+  padding: 0 12px;
+  outline: none;
+}
+
+.vault-pwd-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+}
+
+.vault-pwd-wrap input {
+  border: 0;
+  background: transparent;
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+  outline: none;
+}
+
+.vault-pwd-eye {
+  opacity: 0.6;
+  display: inline-flex;
+}
+
+.vault-cta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.vault-enter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 26px;
+  border-radius: 11px;
+  background: #f4f4f5;
+  color: #09090b;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  box-shadow: 0 14px 36px -12px rgba(255, 255, 255, 0.32), inset 0 1px 0 #ffffff;
+  transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.vault-enter-btn:not(:disabled):hover {
+  background: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 18px 42px -12px rgba(255, 255, 255, 0.42);
+}
+
+.vault-entry.theme-light .vault-enter-btn {
+  background: #111114;
+  color: #ffffff;
+  box-shadow: 0 14px 34px -12px rgba(17, 17, 20, 0.42);
+}
+
+.vault-entry.theme-light .vault-enter-btn:not(:disabled):hover {
+  background: #27272a;
+}
+
+.vault-cta-note {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  opacity: 0.52;
+}
+
+.vault-monolith-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vault-card-medallion {
+  position: relative;
+  margin: auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 0;
+}
+
+.vault-card-ring {
+  position: absolute;
+  width: 158px;
+  height: 158px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 255, 255, 0.16);
+}
+
+.vault-entry.theme-light .vault-card-ring {
+  border-color: rgba(17, 17, 20, 0.14);
+}
+
+.vault-card-emblem {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  border-radius: 26px;
+  box-shadow: 0 20px 44px -14px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.24);
+}
+
+/* Workspace Monumental Reflective Banner */
+.workspace-monolith-banner {
+  margin-bottom: 14px;
+}
+
+.workspace-reflective-banner .reflective-card__content {
+  padding: 18px 22px;
+  justify-content: center;
+}
+
+.monolith-banner-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.monolith-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.monolith-banner-logo {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  flex-shrink: 0;
+  box-shadow: 0 10px 24px -8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.monolith-banner-kicker {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  opacity: 0.58;
+  margin-bottom: 3px;
+}
+
+.monolith-banner-left h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.monolith-banner-left p {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  opacity: 0.7;
+}
+
+.monolith-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 960px) {
+  .vault-stage {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 24px 20px;
+    gap: 32px;
+  }
+  .vault-spec-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

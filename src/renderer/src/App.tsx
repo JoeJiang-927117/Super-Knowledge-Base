@@ -18,6 +18,7 @@ import BootLoader, { ZhixuChunkProgress, ZhixuIsoLoader } from './components/Boo
 import CommandPalette from './components/CommandPalette'
 import KnowledgeGraphView from './components/KnowledgeGraphView'
 import LoginPage from './components/LoginPage'
+import ReflectiveCard from './components/ReflectiveCard'
 import SettingsDialog, { fillDraftFromMode } from './components/SettingsDialog'
 import { ActivityView, HealthView, PageView } from './components/views'
 import { useI18n } from './i18n'
@@ -72,9 +73,9 @@ export default function App() {
   const [cmdOpen, setCmdOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeMode>(() => {
     try {
-      return window.localStorage.getItem('zhixu-theme') === 'dark' ? 'dark' : 'light'
+      return window.localStorage.getItem('zhixu-theme') === 'light' ? 'light' : 'dark'
     } catch {
-      return 'light'
+      return 'dark'
     }
   })
 
@@ -994,6 +995,51 @@ export default function App() {
                     </div>
                   ) : (
                     <div className="workspace-overview">
+                      <div className="workspace-monolith-banner">
+                        <ReflectiveCard
+                          theme={theme}
+                          tint={theme === 'dark' ? '#e4e4e7' : '#ffffff'}
+                          metalness={0.95}
+                          roughness={0.32}
+                          blurStrength={6}
+                          shine={1.05}
+                          glare={0.45}
+                          bevel={2}
+                          tiltStrength={6}
+                          intro={false}
+                          width="100%"
+                          height={152}
+                          radius={14}
+                          className="workspace-reflective-banner"
+                        >
+                          <div className="monolith-banner-inner">
+                            <div className="monolith-banner-left">
+                              <img src={logo} alt="ZHIXU" className="monolith-banner-logo" />
+                              <div>
+                                <span className="monolith-banner-kicker">
+                                  {tx('LOCAL KNOWLEDGE MONOLITH · V0.3', 'LOCAL KNOWLEDGE MONOLITH · V0.3')}
+                                </span>
+                                <h2>{snapshot.root ? folderName(snapshot.root) : tx('知序知识库', 'ZHIXU Vault')}</h2>
+                                <p>
+                                  {tx(
+                                    `${snapshot.publishedCount} 篇已发布百科 · ${snapshot.entityCount} 个 Schema 实体 · ${snapshot.mutualLinkCount} 条互索引`,
+                                    `${snapshot.publishedCount} Published Wiki Pages · ${snapshot.entityCount} Schema Entities · ${snapshot.mutualLinkCount} Mutual Links`
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="monolith-banner-actions">
+                              <button className="btn-primary btn-sm" onClick={() => navigate('graph')}>
+                                <Network /> {tx('打开知识图谱', 'Open Graph')}
+                              </button>
+                              <button className="btn-secondary btn-sm" onClick={openSettings}>
+                                <Settings2 /> {tx('MCP 接入', 'MCP Setup')}
+                              </button>
+                            </div>
+                          </div>
+                        </ReflectiveCard>
+                      </div>
+
                       <div className="quick-strip">
                         <button className="quick-tile" onClick={() => fileInput.current?.click()}>
                           <Upload />

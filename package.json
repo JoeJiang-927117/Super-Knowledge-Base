@@ -49,6 +49,8 @@
     }
   },
   "dependencies": {
+    "@hugeicons/core-free-icons": "^4.4.0",
+    "@hugeicons/react": "^1.1.10",
     "@orama/orama": "^3.1.18",
     "diff": "^9.0.0",
     "dompurify": "^3.4.18",
