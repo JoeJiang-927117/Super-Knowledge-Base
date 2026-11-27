@@ -71,9 +71,9 @@ export default function App() {
   const [cmdOpen, setCmdOpen] = useState(false)
   const [theme, setTheme] = useState<ThemeMode>(() => {
     try {
-      return window.localStorage.getItem('zhixu-theme') === 'light' ? 'light' : 'dark'
+      return window.localStorage.getItem('zhixu-theme') === 'dark' ? 'dark' : 'light'
     } catch {
-      return 'dark'
+      return 'light'
     }
   })
 

@@ -142,9 +142,9 @@ ZHIXU ships a zero-dependency **Model Context Protocol (MCP)** stdio server (`ou
       <strong>Knowledge Studio</strong> · Editorial Reader, Line Diff &amp; Source Excerpts
     </td>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/05-graph-dark.png" alt="Interactive Knowledge Graph" />
+      <img src="./docs/screenshots/05-graph-light.png" alt="Interactive Knowledge Graph" />
       <br />
-      <strong>Knowledge Graph</strong> · Schema Entities &amp; Mutual-Index Links
+      <strong>Knowledge Graph</strong> · Monochrome Constellation &amp; Mutual-Index Links
     </td>
   </tr>
 </table>

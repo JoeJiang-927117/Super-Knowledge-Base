@@ -125,26 +125,26 @@
 <table>
   <tr>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/01-login.png" alt="登录页" />
+      <img src="./docs/screenshots/01-login-en.png" alt="门户登录页" />
       <br />
-      <strong>登录页</strong>
+      <strong>知识库门户</strong> · WebGL2 拉丝金属 ReflectiveCard
     </td>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/03-knowledge.png" alt="三栏知识工作台" />
+      <img src="./docs/screenshots/02-workspace-en.png" alt="极简工作台" />
       <br />
-      <strong>三栏知识工作台</strong> · 分栏编辑 / 版本差异 / 原文依据检查器
+      <strong>极简问答工作台</strong> · 知识库铭牌 / 精准检索 / 多轮问答
     </td>
   </tr>
   <tr>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/04-admin.png" alt="系统控制中心" />
+      <img src="./docs/screenshots/03-knowledge-en.png" alt="知识工作室" />
       <br />
-      <strong>全景系统控制中心</strong> · 三类 API 路由 / 防删回收站 / 多账号管理
+      <strong>知识工作室</strong> · 沉浸阅读 / 分栏编辑 / 原文依据检查器
     </td>
     <td width="50%" align="center">
-      <img src="./docs/screenshots/02-workspace.png" alt="多轮问答工作台" />
+      <img src="./docs/screenshots/05-graph-light.png" alt="极简星图知识图谱" />
       <br />
-      <strong>多轮问答工作台</strong> · 上下文追问 / 命中高亮 / 一键沉淀草稿
+      <strong>星图知识图谱</strong> · 单色架构星盘 / 实体互索引
     </td>
   </tr>
 </table>
