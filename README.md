@@ -342,6 +342,17 @@ Protected endpoints require `Authorization: Bearer <TOKEN>` (server token or adm
 
 ---
 
+## Companion Project — Local-First Agent Stack
+
+Pairing **ZHIXU** with **[Skill-DGM](https://github.com/JoeJiang-927117/Skill-DGM)** gives your AI Agents both auditable long-term knowledge and self-evolving execution skills:
+
+| Project | Role | Highlights |
+| :--- | :--- | :--- |
+| **ZHIXU** *(this repo)* | **Long-Term Knowledge & Grounded Memory** | Local Markdown Wiki + Git version chain + Knowledge Graph + MCP Server for Claude/Cursor (Apache-2.0). |
+| **[Skill-DGM](https://github.com/JoeJiang-927117/Skill-DGM)** | **Self-Evolving Agent Skills Compiler** | Darwin Gödel Machine for standard `SKILL.md` packages — turns execution failures into verified `scripts/`, prunes bloat via empirical `ABLATE`, zero-pollution export (Apache-2.0). |
+
+---
+
 ## License & Self-signed Windows Certificate
 
 - **Open-Source License**: Licensed under the **[Apache License, Version 2.0](./LICENSE)** (commercial-friendly, explicit patent grant; preserve [LICENSE](./LICENSE) and [NOTICE](./NOTICE) when redistributing).

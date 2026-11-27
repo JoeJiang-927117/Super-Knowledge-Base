@@ -338,6 +338,17 @@ npm run server
 
 ---
 
+## 生态姐妹项目 · Local-First Agent 基础设施
+
+将 **知序 ZHIXU** 与 **[Skill-DGM](https://github.com/JoeJiang-927117/Skill-DGM)** 组合使用，为你的 AI Agent 同时提供**可审计长期记忆**与**自进化技能库**：
+
+| 开源项目 | 定位 | 核心亮点 |
+| :--- | :--- | :--- |
+| **知序 · ZHIXU** *(本仓库)* | **长期知识记忆与可信检索底座** | 本地 Markdown Wiki + Git 版本链 + 知识图谱 + MCP Server，零 Docker/ES，Apache-2.0。 |
+| **[Skill-DGM](https://github.com/JoeJiang-927117/Skill-DGM)** | **Agent Skills 自进化编译器** | 面向标准 `SKILL.md` 的达尔文哥德尔机：把失败轨迹沉淀为 `scripts/` 与 L1 单测、留一法 `ABLATE` 自动瘦身、零污染导出给 Claude Code / Codex / Cursor（Apache-2.0）。 |
+
+---
+
 ## 开源许可与 Windows 自签名证书
 
 - **开源协议**：本项目基于 **[Apache License 2.0](./LICENSE)** 开源（可商用、支持二次开发，含专利授权；分发修改版请保留 [LICENSE](./LICENSE) 与 [NOTICE](./NOTICE) 声明）。
