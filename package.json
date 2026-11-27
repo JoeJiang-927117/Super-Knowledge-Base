@@ -4,10 +4,10 @@
   "private": true,
   "license": "Apache-2.0",
   "author": "Joe Jiang (Felix Joe)",
-  "homepage": "https://joejiang-927117.github.io/zhixu/",
+  "homepage": "https://joejiang-927117.github.io/Super-Knowledge-Base/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/JoeJiang-927117/zhixu.git"
+    "url": "https://github.com/JoeJiang-927117/Super-Knowledge-Base.git"
   },
   "description": "知序 ZHIXU — Enterprise-oriented local-first AI knowledge base compiler & governance studio",
   "main": "./out/main/index.js",

@@ -2266,3 +2266,17 @@ mark.hit-hl { padding: 0 3px; border-radius: 3px; background: rgba(37, 99, 235, 
     grid-template-columns: 1fr;
   }
 }
+
+/* Monochrome constellation inspector dots */
+.graph-node-tag {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  color: var(--ink-2);
+}
+.nb-dot-wiki {
+  background: var(--ink) !important;
+}
+.nb-dot-entity {
+  background: transparent !important;
+  border: 1.5px solid var(--muted);
+}

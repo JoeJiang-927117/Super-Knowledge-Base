@@ -23,13 +23,20 @@ type SimNode = KnowledgeGraphNode & {
   radius: number
 }
 
-const DOMAIN_COLORS: Record<StorageDomain, { fill: string; stroke: string; glow: string }> = {
-  foundation: { fill: '#2563EB', stroke: '#60A5FA', glow: 'rgba(37, 99, 235, 0.28)' },
-  domain_knowledge: { fill: '#7C3AED', stroke: '#A78BFA', glow: 'rgba(124, 58, 237, 0.28)' },
-  cases: { fill: '#059669', stroke: '#34D399', glow: 'rgba(5, 150, 105, 0.28)' },
-  concrete_media: { fill: '#D97706', stroke: '#FBBF24', glow: 'rgba(217, 119, 6, 0.28)' },
-  permissions: { fill: '#DC2626', stroke: '#F87171', glow: 'rgba(220, 38, 38, 0.28)' },
-  versions: { fill: '#0891B2', stroke: '#22D3EE', glow: 'rgba(8, 145, 178, 0.28)' }
+/**
+ * Refined monochrome metallic/architectural tones per storage domain.
+ * Zero loud rainbow colors — stays cohesive with ZHIXU's Obsidian & Alabaster identity.
+ */
+const DOMAIN_TONES: Record<
+  StorageDomain,
+  { darkFill: string; darkStroke: string; lightFill: string; lightStroke: string; glyph: string }
+> = {
+  foundation: { darkFill: '#f4f4f5', darkStroke: '#ffffff', lightFill: '#111114', lightStroke: '#09090b', glyph: '01' },
+  domain_knowledge: { darkFill: '#d4d4d8', darkStroke: '#f4f4f5', lightFill: '#27272a', lightStroke: '#18181b', glyph: '02' },
+  cases: { darkFill: '#b4b4be', darkStroke: '#e4e4e7', lightFill: '#3f3f46', lightStroke: '#27272a', glyph: '03' },
+  concrete_media: { darkFill: '#9a9aa6', darkStroke: '#d4d4d8', lightFill: '#52525b', lightStroke: '#3f3f46', glyph: '04' },
+  permissions: { darkFill: '#e4e4e7', darkStroke: '#ffffff', lightFill: '#18181b', lightStroke: '#09090b', glyph: '05' },
+  versions: { darkFill: '#a1a1aa', darkStroke: '#d4d4d8', lightFill: '#52525b', lightStroke: '#3f3f46', glyph: '06' }
 }
 
 const FILTER_DOMAINS: StorageDomain[] = [
@@ -52,7 +59,7 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
 
   const simNodesRef = useRef<SimNode[]>([])
   const nodeIndexRef = useRef<Map<string, SimNode>>(new Map())
-  const cameraRef = useRef({ x: 0, y: 0, zoom: 1 })
+  const cameraRef = useRef({ x: 0, y: 0, zoom: 0.92 })
   const dragRef = useRef<{
     mode: 'none' | 'pan' | 'node'
     nodeId?: string
@@ -69,7 +76,6 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
   hoveredRef.current = hoveredId
   selectedRef.current = selectedId
 
-  // Filter graph nodes & edges based on UI filters
   const filteredGraph = useMemo(() => {
     if (!data) return { nodes: [] as KnowledgeGraphNode[], edges: [] as KnowledgeGraphData['edges'] }
     const nodes = data.nodes.filter(n => {
@@ -117,41 +123,50 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
       .sort((a, b) => (a.kind === 'wiki' ? -1 : 1) - (b.kind === 'wiki' ? -1 : 1) || b.degree - a.degree)
   }, [selectedId, adjacency, filteredGraph.nodes])
 
-  // Initialize deterministic radial layout whenever filtered graph changes
+  // Spacious, collision-free orbital constellation initial layout
   useEffect(() => {
     const wikiNodes = filteredGraph.nodes.filter(n => n.kind === 'wiki')
     const entityNodes = filteredGraph.nodes.filter(n => n.kind === 'entity')
     const nextNodes: SimNode[] = []
     const idxMap = new Map<string, SimNode>()
 
-    const wikiRadius = Math.max(120, Math.min(280, wikiNodes.length * 14))
-    wikiNodes.forEach((n, i) => {
+    const nonIndexWikis = wikiNodes.filter(n => n.slug !== 'index')
+    const wikiRingR = Math.max(200, Math.min(340, nonIndexWikis.length * 36))
+
+    let ringIdx = 0
+    wikiNodes.forEach(n => {
       const isIndex = n.slug === 'index'
-      const angle = (i / Math.max(1, wikiNodes.length)) * Math.PI * 2
-      const r = isIndex ? 0 : wikiRadius
+      const angle = isIndex ? 0 : (ringIdx++ / Math.max(1, nonIndexWikis.length)) * Math.PI * 2 - Math.PI / 2
+      const r = isIndex ? 0 : wikiRingR
       const node: SimNode = {
         ...n,
         x: Math.cos(angle) * r,
         y: Math.sin(angle) * r,
         vx: 0,
         vy: 0,
-        radius: isIndex ? 18 : Math.min(16, 9 + Math.sqrt(Math.max(1, n.degree)) * 1.6)
+        radius: isIndex ? 14 : Math.min(11, 7.5 + Math.sqrt(Math.max(1, n.degree)) * 0.9)
       }
       nextNodes.push(node)
       idxMap.set(node.id, node)
     })
 
-    const entRadius = wikiRadius + 150
+    // Place entity satellites in an outer constellation ring near their parent Wiki angle
+    const entRingR = wikiRingR + 135
     entityNodes.forEach((n, i) => {
-      const angle = (i / Math.max(1, entityNodes.length)) * Math.PI * 2 + 0.27
-      const jitter = ((i * 73) % 90) - 45
+      const parentWiki = n.slug ? idxMap.get(`wiki:${n.slug}`) : null
+      const baseAngle = parentWiki && (parentWiki.x !== 0 || parentWiki.y !== 0)
+        ? Math.atan2(parentWiki.y, parentWiki.x)
+        : (i / Math.max(1, entityNodes.length)) * Math.PI * 2
+      const fanOffset = (((i % 5) - 2) * 0.24)
+      const angle = baseAngle + fanOffset
+      const r = entRingR + ((i % 3) - 1) * 28
       const node: SimNode = {
         ...n,
-        x: Math.cos(angle) * (entRadius + jitter),
-        y: Math.sin(angle) * (entRadius + jitter),
+        x: Math.cos(angle) * r,
+        y: Math.sin(angle) * r,
         vx: 0,
         vy: 0,
-        radius: Math.min(10, 4.5 + Math.sqrt(Math.max(1, n.chunkCount ?? 1)) * 0.7)
+        radius: Math.min(6, 3.6 + Math.sqrt(Math.max(1, n.chunkCount ?? 1)) * 0.35)
       }
       nextNodes.push(node)
       idxMap.set(node.id, node)
@@ -159,8 +174,8 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
 
     simNodesRef.current = nextNodes
     nodeIndexRef.current = idxMap
-    energyRef.current = 1.0
-    cameraRef.current = { x: 0, y: 0, zoom: nextNodes.length > 60 ? 0.78 : 0.96 }
+    energyRef.current = 0.85
+    cameraRef.current = { x: 0, y: 0, zoom: nextNodes.length > 50 ? 0.72 : 0.9 }
     if (selectedId && !idxMap.has(selectedId)) {
       setSelectedId(null)
     }
@@ -183,7 +198,7 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
       const nodes = simNodesRef.current
       for (let i = nodes.length - 1; i >= 0; i -= 1) {
         const n = nodes[i]
-        const hitR = Math.max(n.radius + 5, 10)
+        const hitR = Math.max(n.radius + 7, 12)
         const dx = x - n.x
         const dy = y - n.y
         if (dx * dx + dy * dy <= hitR * hitR) return n
@@ -197,24 +212,23 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
     const target = nodeIndexRef.current.get(id)
     if (!target) return
     setSelectedId(id)
-    const zoom = Math.max(cameraRef.current.zoom, 1.15)
+    const zoom = Math.max(cameraRef.current.zoom, 1.05)
     cameraRef.current = { x: -target.x * zoom, y: -target.y * zoom, zoom }
-    energyRef.current = Math.max(energyRef.current, 0.08)
+    energyRef.current = Math.max(energyRef.current, 0.06)
   }, [])
 
-  // Auto-center when search matches exactly 1–3 nodes
   useEffect(() => {
     if (matchedIds.size > 0 && matchedIds.size <= 3) {
       const firstId = [...matchedIds][0]
       const target = nodeIndexRef.current.get(firstId)
       if (target) {
-        const zoom = Math.max(cameraRef.current.zoom, 1.1)
+        const zoom = Math.max(cameraRef.current.zoom, 1.05)
         cameraRef.current = { x: -target.x * zoom, y: -target.y * zoom, zoom }
       }
     }
   }, [matchedIds])
 
-  // Force simulation + high-DPI Canvas render loop
+  // Collision-free constellation force simulation + monochrome precision Canvas render loop
   useEffect(() => {
     let rafId = 0
     const isDark = theme === 'dark'
@@ -236,11 +250,9 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
         const idxMap = nodeIndexRef.current
         const edges = filteredGraph.edges
 
-        // Run damped physics while active
         if (energyRef.current > 0.008 && nodes.length > 0) {
-          const kRepel = nodes.length > 70 ? 2200 : 3200
-          const damping = 0.84
-          const gravity = 0.012
+          const damping = 0.82
+          const gravity = 0.008
 
           for (let i = 0; i < nodes.length; i += 1) {
             const a = nodes[i]
@@ -250,26 +262,33 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
 
             for (let j = i + 1; j < nodes.length; j += 1) {
               const b = nodes[j]
-              let dx = a.x - b.x
-              let dy = a.y - b.y
-              let distSq = dx * dx + dy * dy + 24
-              if (distSq > 180_000) continue
+              const dx = a.x - b.x
+              const dy = a.y - b.y
+              const distSq = dx * dx + dy * dy + 16
+              if (distSq > 360_000) continue
               const dist = Math.sqrt(distSq)
-              const force = kRepel / distSq
+
+              // Stronger spacing between Wiki hubs so labels NEVER overlap
+              const bothWiki = a.kind === 'wiki' && b.kind === 'wiki'
+              const minSep = bothWiki ? 165 : a.kind === 'wiki' || b.kind === 'wiki' ? 92 : 52
+              let force = (bothWiki ? 12000 : 4800) / distSq
+              if (dist < minSep) {
+                force += (minSep - dist) * (bothWiki ? 0.24 : 0.14)
+              }
+
               const ux = (dx / dist) * force
               const uy = (dy / dist) * force
               fx += ux
               fy += uy
               if (!(dragRef.current.mode === 'node' && dragRef.current.nodeId === b.id)) {
-                b.vx -= ux * 0.08
-                b.vy -= uy * 0.08
+                b.vx -= ux * 0.075
+                b.vy -= uy * 0.075
               }
             }
-            a.vx = (a.vx + fx * 0.08) * damping
-            a.vy = (a.vy + fy * 0.08) * damping
+            a.vx = (a.vx + fx * 0.075) * damping
+            a.vy = (a.vy + fy * 0.075) * damping
           }
 
-          // Spring forces along edges
           for (const edge of edges) {
             const s = idxMap.get(edge.source)
             const t = idxMap.get(edge.target)
@@ -277,8 +296,8 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
             const dx = t.x - s.x
             const dy = t.y - s.y
             const dist = Math.sqrt(dx * dx + dy * dy) || 1
-            const restLen = edge.relation === 'wikilink' ? 145 : 92
-            const spring = (dist - restLen) * (edge.relation === 'wikilink' ? 0.018 : 0.024)
+            const restLen = edge.relation === 'wikilink' ? 210 : 122
+            const spring = (dist - restLen) * (edge.relation === 'wikilink' ? 0.014 : 0.02)
             const ux = (dx / dist) * spring
             const uy = (dy / dist) * spring
             if (!(dragRef.current.mode === 'node' && dragRef.current.nodeId === s.id)) {
@@ -293,42 +312,47 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
 
           for (const n of nodes) {
             if (dragRef.current.mode === 'node' && dragRef.current.nodeId === n.id) continue
-            n.x += Math.max(-14, Math.min(14, n.vx))
-            n.y += Math.max(-14, Math.min(14, n.vy))
+            n.x += Math.max(-12, Math.min(12, n.vx))
+            n.y += Math.max(-12, Math.min(12, n.vy))
           }
 
-          energyRef.current *= 0.985
+          energyRef.current *= 0.982
         }
 
-        // Draw frame
         const ctx = canvas.getContext('2d')
         if (ctx) {
           ctx.save()
           ctx.scale(dpr, dpr)
           ctx.clearRect(0, 0, w, h)
 
-          // Subtle technical dot grid background
           const cam = cameraRef.current
-          const gridStep = 34 * cam.zoom
-          if (gridStep >= 14) {
-            const ox = ((w / 2 + cam.x) % gridStep + gridStep) % gridStep
-            const oy = ((h / 2 + cam.y) % gridStep + gridStep) % gridStep
-            ctx.fillStyle = isDark ? 'rgba(148, 163, 184, 0.12)' : 'rgba(15, 23, 42, 0.07)'
-            for (let gx = ox; gx < w; gx += gridStep) {
-              for (let gy = oy; gy < h; gy += gridStep) {
-                ctx.fillRect(gx, gy, 1.3, 1.3)
-              }
-            }
-          }
 
+          // 1. Subtle architectural radial coordinate rings & drafting crosshairs
+          ctx.save()
           ctx.translate(w / 2 + cam.x, h / 2 + cam.y)
           ctx.scale(cam.zoom, cam.zoom)
+
+          ctx.strokeStyle = isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(17, 17, 20, 0.05)'
+          ctx.lineWidth = 1 / cam.zoom
+          for (const ring of [140, 260, 380]) {
+            ctx.beginPath()
+            ctx.setLineDash([3 / cam.zoom, 6 / cam.zoom])
+            ctx.arc(0, 0, ring, 0, Math.PI * 2)
+            ctx.stroke()
+          }
+          ctx.setLineDash([])
+          ctx.beginPath()
+          ctx.moveTo(-440, 0)
+          ctx.lineTo(440, 0)
+          ctx.moveTo(0, -440)
+          ctx.lineTo(0, 440)
+          ctx.stroke()
 
           const activeFocusId = hoveredRef.current ?? selectedRef.current
           const activeNeighbors = activeFocusId ? adjacency.get(activeFocusId) : null
           const hasSearch = matchedIds.size > 0
 
-          // 1. Draw Edges
+          // 2. Curved architectural constellation edges
           for (const edge of edges) {
             const s = idxMap.get(edge.source)
             const t = idxMap.get(edge.target)
@@ -337,29 +361,37 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
               activeFocusId && (edge.source === activeFocusId || edge.target === activeFocusId)
             const dimmed = Boolean(activeFocusId && !isHighlighted)
 
+            const mx = (s.x + t.x) / 2
+            const my = (s.y + t.y) / 2
+            const dx = t.x - s.x
+            const dy = t.y - s.y
+            const curve = edge.relation === 'wikilink' ? 0.08 : 0.04
+            const cx = mx - dy * curve
+            const cy = my + dx * curve
+
             ctx.beginPath()
             ctx.moveTo(s.x, s.y)
-            ctx.lineTo(t.x, t.y)
+            ctx.quadraticCurveTo(cx, cy, t.x, t.y)
             if (isHighlighted) {
-              ctx.strokeStyle = isDark ? 'rgba(96, 165, 250, 0.78)' : 'rgba(37, 99, 235, 0.72)'
-              ctx.lineWidth = edge.relation === 'wikilink' ? 2.1 : 1.5
+              ctx.strokeStyle = isDark ? 'rgba(244, 244, 245, 0.72)' : 'rgba(17, 17, 20, 0.72)'
+              ctx.lineWidth = edge.relation === 'wikilink' ? 1.55 : 1.15
             } else if (edge.relation === 'wikilink') {
               ctx.strokeStyle = dimmed
-                ? isDark ? 'rgba(148, 163, 184, 0.08)' : 'rgba(100, 116, 139, 0.08)'
-                : isDark ? 'rgba(148, 163, 184, 0.34)' : 'rgba(100, 116, 139, 0.34)'
-              ctx.lineWidth = 1.25
+                ? isDark ? 'rgba(255, 255, 255, 0.04)' : 'rgba(17, 17, 20, 0.05)'
+                : isDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(17, 17, 20, 0.16)'
+              ctx.lineWidth = 1.0
             } else {
               ctx.strokeStyle = dimmed
-                ? isDark ? 'rgba(148, 163, 184, 0.04)' : 'rgba(100, 116, 139, 0.05)'
-                : isDark ? 'rgba(148, 163, 184, 0.16)' : 'rgba(100, 116, 139, 0.18)'
-              ctx.lineWidth = 0.85
+                ? isDark ? 'rgba(255, 255, 255, 0.025)' : 'rgba(17, 17, 20, 0.03)'
+                : isDark ? 'rgba(255, 255, 255, 0.085)' : 'rgba(17, 17, 20, 0.09)'
+              ctx.lineWidth = 0.75
             }
             ctx.stroke()
           }
 
-          // 2. Draw Nodes
+          // 3. Precision monochrome titanium/obsidian nodes
           for (const n of nodes) {
-            const palette = DOMAIN_COLORS[n.storageDomain] ?? DOMAIN_COLORS.foundation
+            const tone = DOMAIN_TONES[n.storageDomain] ?? DOMAIN_TONES.foundation
             const isSelected = n.id === selectedRef.current
             const isHovered = n.id === hoveredRef.current
             const isNeighbor = Boolean(activeNeighbors?.has(n.id))
@@ -368,49 +400,73 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
             const dimmed = Boolean((activeFocusId && !isFocused) || (hasSearch && !isMatched && !activeFocusId))
 
             ctx.save()
-            ctx.globalAlpha = dimmed ? 0.22 : 1
+            ctx.globalAlpha = dimmed ? 0.18 : 1
 
-            // Glow halo for wiki hubs or focused nodes
+            // Outer precision halo ring for index or focused nodes
             if (isSelected || isHovered || isMatched || n.slug === 'index') {
               ctx.beginPath()
               ctx.arc(n.x, n.y, n.radius + 7, 0, Math.PI * 2)
-              ctx.fillStyle = palette.glow
+              ctx.strokeStyle = isDark ? 'rgba(244, 244, 245, 0.28)' : 'rgba(17, 17, 20, 0.22)'
+              ctx.lineWidth = 1
+              ctx.stroke()
+
+              ctx.beginPath()
+              ctx.arc(n.x, n.y, n.radius + 13, 0, Math.PI * 2)
+              ctx.fillStyle = isDark ? 'rgba(244, 244, 245, 0.06)' : 'rgba(17, 17, 20, 0.04)'
               ctx.fill()
             }
 
-            ctx.beginPath()
-            ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2)
-            ctx.fillStyle = n.kind === 'wiki' ? palette.fill : isDark ? '#1E293B' : '#FFFFFF'
-            ctx.fill()
-            ctx.lineWidth = n.kind === 'wiki' ? (isSelected || isHovered ? 2.6 : 1.6) : 1.8
-            ctx.strokeStyle = isSelected || isHovered ? '#FFFFFF' : palette.stroke
-            ctx.stroke()
+            if (n.kind === 'wiki') {
+              // Sculpted monochrome hub node
+              ctx.beginPath()
+              ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2)
+              ctx.fillStyle = isDark ? tone.darkFill : tone.lightFill
+              ctx.fill()
+              ctx.lineWidth = isSelected || isHovered ? 2 : 1
+              ctx.strokeStyle = isDark ? tone.darkStroke : tone.lightStroke
+              ctx.stroke()
 
-            // Crisp readable labels for Wiki pages, focused nodes, or zoomed-in entities
+              // Subtle inner architectural core dot
+              ctx.beginPath()
+              ctx.arc(n.x, n.y, Math.max(2.2, n.radius * 0.3), 0, Math.PI * 2)
+              ctx.fillStyle = isDark ? '#09090b' : '#fafafa'
+              ctx.fill()
+            } else {
+              // Precision diamond / satellite ring for Schema entities
+              ctx.beginPath()
+              ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2)
+              ctx.fillStyle = isDark ? '#0f0f12' : '#fafafa'
+              ctx.fill()
+              ctx.lineWidth = isFocused ? 1.6 : 1.15
+              ctx.strokeStyle = isFocused
+                ? isDark ? '#f4f4f5' : '#111114'
+                : isDark ? 'rgba(212, 212, 216, 0.45)' : 'rgba(63, 63, 70, 0.45)'
+              ctx.stroke()
+            }
+
             const showLabel =
-              n.kind === 'wiki' || isSelected || isHovered || isMatched || isNeighbor || cam.zoom >= 1.45
+              n.kind === 'wiki' || isSelected || isHovered || isMatched || isNeighbor || cam.zoom >= 1.5
             if (showLabel) {
-              const label = n.label.length > 22 ? `${n.label.slice(0, 21)}…` : n.label
-              ctx.font = `${n.kind === 'wiki' ? '600 11.5px' : '500 10px'} "Inter", "Segoe UI", "Microsoft YaHei", sans-serif`
+              const label = n.label.length > 26 ? `${n.label.slice(0, 25)}…` : n.label
+              ctx.font = `${n.kind === 'wiki' ? '500 11.5px' : '400 10px'} "Inter", "Segoe UI", "Microsoft YaHei", sans-serif`
               ctx.textAlign = 'center'
               ctx.textBaseline = 'top'
-              const textY = n.y + n.radius + 5
-              const metrics = ctx.measureText(label)
-              const padX = 5
-              const boxW = metrics.width + padX * 2
-              const boxH = n.kind === 'wiki' ? 17 : 15
+              const textY = n.y + n.radius + 8
 
-              ctx.fillStyle = isDark ? 'rgba(15, 23, 42, 0.84)' : 'rgba(255, 255, 255, 0.88)'
-              ctx.beginPath()
-              ctx.roundRect(n.x - boxW / 2, textY - 2, boxW, boxH, 5)
-              ctx.fill()
-
-              ctx.fillStyle = isDark ? '#F1F5F9' : '#0F172A'
+              // Subtle text halo for legibility without clunky boxed pills
+              ctx.lineWidth = 3.5
+              ctx.strokeStyle = isDark ? 'rgba(15, 15, 18, 0.88)' : 'rgba(250, 250, 250, 0.9)'
+              ctx.strokeText(label, n.x, textY)
+              ctx.fillStyle =
+                n.kind === 'wiki'
+                  ? isDark ? '#f4f4f5' : '#111114'
+                  : isDark ? '#a1a1aa' : '#52525b'
               ctx.fillText(label, n.x, textY)
             }
             ctx.restore()
           }
 
+          ctx.restore()
           ctx.restore()
         }
       }
@@ -421,7 +477,6 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
     return () => window.cancelAnimationFrame(rafId)
   }, [filteredGraph.edges, adjacency, matchedIds, theme])
 
-  // Pointer & wheel interactions
   const handleMouseDown = (event: React.MouseEvent<HTMLCanvasElement>) => {
     const hit = pickNodeAt(event.clientX, event.clientY)
     if (hit) {
@@ -467,7 +522,7 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
         target.y = world.y
         target.vx = 0
         target.vy = 0
-        energyRef.current = Math.max(energyRef.current, 0.22)
+        energyRef.current = Math.max(energyRef.current, 0.2)
       }
       return
     }
@@ -487,17 +542,16 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
   const handleWheel = (event: React.WheelEvent<HTMLCanvasElement>) => {
     event.preventDefault()
     const factor = event.deltaY < 0 ? 1.12 : 0.89
-    const nextZoom = Math.max(0.32, Math.min(2.8, cameraRef.current.zoom * factor))
-    cameraRef.current.zoom = nextZoom
+    cameraRef.current.zoom = Math.max(0.32, Math.min(2.6, cameraRef.current.zoom * factor))
   }
 
   const zoomBy = (factor: number) => {
-    cameraRef.current.zoom = Math.max(0.32, Math.min(2.8, cameraRef.current.zoom * factor))
+    cameraRef.current.zoom = Math.max(0.32, Math.min(2.6, cameraRef.current.zoom * factor))
   }
 
   const resetCamera = () => {
-    cameraRef.current = { x: 0, y: 0, zoom: simNodesRef.current.length > 60 ? 0.78 : 0.96 }
-    energyRef.current = 0.5
+    cameraRef.current = { x: 0, y: 0, zoom: simNodesRef.current.length > 50 ? 0.72 : 0.9 }
+    energyRef.current = 0.45
   }
 
   return (
@@ -509,7 +563,7 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
             <input
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              placeholder={tx('搜索 Wiki 页面或 Schema 实体…', 'Search Wiki pages or Schema entities…')}
+              placeholder={tx('搜索节点或实体…', 'Filter nodes…')}
             />
             {searchTerm && (
               <button onClick={() => setSearchTerm('')} aria-label={tx('清空', 'Clear')}>
@@ -523,7 +577,7 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
               className={`domain-pill ${domainFilter === 'all' ? 'active' : ''}`}
               onClick={() => setDomainFilter('all')}
             >
-              {tx('全部域', 'All Domains')}
+              {tx('全部', 'All')}
             </button>
             {FILTER_DOMAINS.map(dom => (
               <button
@@ -531,7 +585,6 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
                 className={`domain-pill ${domainFilter === dom ? 'active' : ''}`}
                 onClick={() => setDomainFilter(dom)}
               >
-                <i style={{ background: DOMAIN_COLORS[dom].fill }} />
                 {storageDomainLabel(dom, locale)}
               </button>
             ))}
@@ -539,20 +592,13 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
         </div>
 
         <div className="graph-toolbar-right">
-          {data && (
-            <span className="graph-stats-badge">
-              <Network />
-              {data.totalWikiPages} Wiki · {data.totalEntities} {tx('实体', 'Entities')} · {data.totalMutualLinks}{' '}
-              {tx('互索引', 'Links')}
-            </span>
-          )}
           <button
-            className={`btn-secondary btn-xs ${showEntities ? 'active' : ''}`}
+            className={`btn-secondary btn-xs ${showEntities ? 'is-active' : ''}`}
             onClick={() => setShowEntities(prev => !prev)}
-            title={tx('显示或隐藏 Schema 实体节点', 'Toggle Schema entity nodes')}
+            title={tx('显示或隐藏实体卫星节点', 'Toggle entity nodes')}
           >
             {showEntities ? <Eye /> : <EyeOff />}
-            {showEntities ? tx('含实体节点', 'With Entities') : tx('仅 Wiki 页面', 'Wiki Only')}
+            {showEntities ? tx('含实体', 'Entities') : tx('仅百科', 'Wiki Only')}
           </button>
           <button className="icon-btn-sm" onClick={() => zoomBy(1.2)} title={tx('放大', 'Zoom In')}>
             <ZoomIn />
@@ -573,13 +619,13 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
         {loading ? (
           <div className="graph-empty">
             <ZhixuIsoLoader size="lg" interactive />
-            <span>{tx('正在构建知识图谱与双向互索引…', 'Building Knowledge Graph & Mutual Index…')}</span>
+            <span>{tx('正在构建知识星图…', 'Mapping constellation…')}</span>
           </div>
         ) : !data || filteredGraph.nodes.length === 0 ? (
           <div className="graph-empty">
             <Network />
             <h3>{tx('暂无可视化图谱节点', 'No Knowledge Graph nodes yet')}</h3>
-            <p>{tx('导入文档并完成一次知识整理后，这里会自动呈现 Wiki 页面与 Schema 实体的关联网络。', 'Import documents and compile the Wiki to visualize pages, Schema entities, and mutual-index connections here.')}</p>
+            <p>{tx('导入文档并完成整理后，这里会呈现 Wiki 与 Schema 实体的星图网络。', 'Import documents and compile the Wiki to visualize your constellation here.')}</p>
           </div>
         ) : (
           <>
@@ -598,23 +644,17 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
             />
 
             <div className="graph-legend">
-              <span><i className="legend-wiki" /> {tx('实心圆 = Wiki 知识页', 'Solid = Wiki Page')}</span>
-              <span><i className="legend-entity" /> {tx('空心圆 = Schema 实体', 'Ring = Schema Entity')}</span>
-              <span>{tx('拖拽节点 / 滚轮缩放 / 点击查看详情', 'Drag nodes · Wheel to zoom · Click to inspect')}</span>
+              <span><i className="legend-wiki" /> {tx('百科节点', 'Wiki Hub')}</span>
+              <span><i className="legend-entity" /> {tx('实体节点', 'Entity')}</span>
+              <span>{tx('拖拽 / 滚轮缩放 / 点击查看', 'Drag · Zoom · Inspect')}</span>
             </div>
 
             {selectedNode && (
               <aside className="graph-inspector">
                 <div className="graph-inspector-head">
-                  <span
-                    className="graph-node-tag"
-                    style={{
-                      background: `${DOMAIN_COLORS[selectedNode.storageDomain]?.fill ?? '#2563EB'}1A`,
-                      color: DOMAIN_COLORS[selectedNode.storageDomain]?.fill ?? '#2563EB'
-                    }}
-                  >
+                  <span className="graph-node-tag mono">
                     {selectedNode.kind === 'wiki' ? <BookOpen /> : <Sparkles />}
-                    {selectedNode.kind === 'wiki' ? tx('Wiki 页面', 'Wiki Page') : tx('Schema 实体', 'Schema Entity')}
+                    {selectedNode.kind === 'wiki' ? tx('Wiki 页面', 'WIKI HUB') : tx('Schema 实体', 'ENTITY')}
                   </span>
                   <button className="icon-btn-sm" onClick={() => setSelectedId(null)} aria-label={tx('关闭', 'Close')}>
                     <X />
@@ -626,11 +666,6 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
                 <div className="graph-inspector-meta">
                   <span>{storageDomainLabel(selectedNode.storageDomain, locale)}</span>
                   {selectedNode.status && <span>{workflowStatusLabel(selectedNode.status, locale)}</span>}
-                  <span>
-                    {selectedNode.kind === 'wiki'
-                      ? `${selectedNode.chunkCount ?? 0} ${tx('条来源', 'sources')}`
-                      : `${selectedNode.chunkCount ?? 0} ${tx('个关联切片', 'chunks')}`}
-                  </span>
                 </div>
 
                 {selectedNode.summary && <p className="graph-inspector-summary">{selectedNode.summary}</p>}
@@ -639,27 +674,27 @@ export default function KnowledgeGraphView({ data, loading, theme, onRefresh, on
                   <button className="btn-primary btn-sm btn-block" onClick={() => onOpenPage(selectedNode.slug!)}>
                     <ArrowUpRight />
                     {selectedNode.kind === 'wiki'
-                      ? tx('打开此 Wiki 页面', 'Open Wiki Page')
-                      : tx('跳转到关联 Wiki 页', 'Jump to Linked Wiki Page')}
+                      ? tx('打开页面', 'Open Page')
+                      : tx('查看关联页面', 'Open Linked Page')}
                   </button>
                 )}
 
                 <div className="graph-neighbors">
                   <h4>
-                    {tx('关联节点', 'Connected Nodes')} ({selectedNeighbors.length})
+                    {tx('关联节点', 'Connections')} ({selectedNeighbors.length})
                   </h4>
                   {selectedNeighbors.length ? (
                     <div className="graph-neighbor-list">
-                      {selectedNeighbors.slice(0, 18).map(nb => (
+                      {selectedNeighbors.slice(0, 14).map(nb => (
                         <button key={nb.id} className="graph-neighbor-row" onClick={() => focusNode(nb.id)}>
-                          <i style={{ background: DOMAIN_COLORS[nb.storageDomain]?.fill ?? '#2563EB' }} />
+                          <i className={nb.kind === 'wiki' ? 'nb-dot-wiki' : 'nb-dot-entity'} />
                           <span>{nb.label}</span>
                           <small>{nb.kind === 'wiki' ? 'Wiki' : tx('实体', 'Entity')}</small>
                         </button>
                       ))}
                     </div>
                   ) : (
-                    <small className="muted">{tx('当前筛选范围内无直接连线', 'No direct links in current filter')}</small>
+                    <small className="muted">{tx('当前范围内无连线', 'No links in current view')}</small>
                   )}
                 </div>
               </aside>
